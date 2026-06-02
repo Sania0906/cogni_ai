@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CognifyAI</string>
+    <string name="title_activity_main">CognifyAI</string>
+    <string name="package_name">com.cognifyai.app</string>
+    <string name="custom_url_scheme">com.cognifyai.app</string>
+</resources>
