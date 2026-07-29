@@ -38,11 +38,15 @@ function Salary() {
             <div className="h-2 rounded-full bg-muted overflow-hidden relative">
               <div
                 className="absolute h-full bg-gradient-primary rounded-full"
-                style={{ left: `${(r.min / 250) * 100}%`, width: `${((r.max - r.min) / 250) * 100}%` }}
+                style={{
+                  left: `${(r.min / 250) * 100}%`,
+                  width: `${((r.max - r.min) / 250) * 100}%`,
+                }}
               />
             </div>
             <div className="flex justify-between text-xs text-muted-foreground mt-1.5">
-              <span>${r.min}k</span><span>${r.max}k</span>
+              <span>${r.min}k</span>
+              <span>${r.max}k</span>
             </div>
           </div>
         ))}

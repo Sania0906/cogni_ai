@@ -8,23 +8,31 @@ async function resetJohn() {
   const password = "Password123";
 
   // Find user by email
-  const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+  const {
+    data: { users },
+    error: listError,
+  } = await supabaseAdmin.auth.admin.listUsers();
   if (listError) {
     console.error("Failed to list users:", listError.message);
     return;
   }
 
-  const john = users.find(u => u.email === email);
+  const john = users.find((u) => u.email === email);
   if (!john) {
     console.error("User john.test@example.com not found!");
     return;
   }
 
-  console.log(`Resetting password for user ${john.id} (${email}) to: ${password}...`);
+  console.log(
+    `Resetting password for user ${john.id} (${email}) to: ${password}...`,
+  );
 
-  const { data, error } = await supabaseAdmin.auth.admin.updateUserById(john.id, {
-    password
-  });
+  const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
+    john.id,
+    {
+      password,
+    },
+  );
 
   if (error) {
     console.error("❌ Failed to update password:", error.message);
@@ -33,15 +41,19 @@ async function resetJohn() {
 
   console.log("✅ Password updated successfully! Now testing login...");
 
-  const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
+  const { data: loginData, error: loginError } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
   if (loginError) {
     console.error("❌ Login failed:", loginError.message);
   } else {
-    console.log("✅ Login successful! Session token:", !!loginData.session?.access_token);
+    console.log(
+      "✅ Login successful! Session token:",
+      !!loginData.session?.access_token,
+    );
   }
 }
 

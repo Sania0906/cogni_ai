@@ -6,7 +6,7 @@ import nodemailer from "nodemailer";
  */
 export async function sendOtpEmail(
   email: string,
-  otp: string
+  otp: string,
 ): Promise<{ success: boolean; error?: string }> {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const port = parseInt(process.env.SMTP_PORT || "587");
@@ -14,8 +14,11 @@ export async function sendOtpEmail(
   const pass = process.env.SMTP_PASSWORD || process.env.SMTP_PASS;
 
   if (!user || !pass) {
-    const errorMsg = "SMTP credentials (email or password) are not configured in environment variables.";
-    console.warn(`[Email Mock] ${errorMsg} Fallback code for ${email} is ${otp}`);
+    const errorMsg =
+      "SMTP credentials (email or password) are not configured in environment variables.";
+    console.warn(
+      `[Email Mock] ${errorMsg} Fallback code for ${email} is ${otp}`,
+    );
     return { success: false, error: errorMsg };
   }
 
@@ -219,7 +222,7 @@ export async function sendOtpEmail(
  */
 export async function sendConfirmationEmail(
   email: string,
-  link: string
+  link: string,
 ): Promise<{ success: boolean; error?: string }> {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const port = parseInt(process.env.SMTP_PORT || "587");
@@ -227,8 +230,11 @@ export async function sendConfirmationEmail(
   const pass = process.env.SMTP_PASSWORD || process.env.SMTP_PASS;
 
   if (!user || !pass) {
-    const errorMsg = "SMTP credentials (email or password) are not configured in environment variables.";
-    console.warn(`[Email Mock] ${errorMsg} Confirmation link for ${email} is ${link}`);
+    const errorMsg =
+      "SMTP credentials (email or password) are not configured in environment variables.";
+    console.warn(
+      `[Email Mock] ${errorMsg} Confirmation link for ${email} is ${link}`,
+    );
     return { success: false, error: errorMsg };
   }
 
@@ -384,10 +390,12 @@ export async function sendConfirmationEmail(
           </div>
         </body>
         </html>
-      `
+      `,
     });
 
-    console.log(`[Email Sent] Confirmation email sent successfully to ${email}`);
+    console.log(
+      `[Email Sent] Confirmation email sent successfully to ${email}`,
+    );
     return { success: true };
   } catch (err: any) {
     console.error("Nodemailer Error sending confirmation email:", err);

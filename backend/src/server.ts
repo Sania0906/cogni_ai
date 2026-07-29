@@ -28,7 +28,10 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+import compression from "compression";
+
 // Middleware
+app.use(compression());
 app.use(cors());
 app.use(express.json());
 
@@ -57,11 +60,15 @@ if (process.env.NODE_ENV !== "production") {
       (proxyRes) => {
         res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
         proxyRes.pipe(res);
-      }
+      },
     );
 
     proxyReq.on("error", () => {
-      res.status(503).send("Vite Development Server is starting up... Please reload in a moment.");
+      res
+        .status(503)
+        .send(
+          "Vite Development Server is starting up... Please reload in a moment.",
+        );
     });
 
     req.pipe(proxyReq);
@@ -99,29 +106,42 @@ if (process.env.NODE_ENV === "production") {
 }
 
 // Global Error Handler
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error("Unhandled Backend Error:", err.message);
-  res.status(500).json({ error: "Internal Server Error" });
-});
+app.use(
+  (
+    err: Error,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction,
+  ) => {
+    console.error("Unhandled Backend Error:", err.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  },
+);
 
 // Connect to Database and start listening
 async function startServer() {
   if (isSupabaseConfigured()) {
     console.log("Supabase is configured successfully.");
   } else {
-    console.warn("WARNING: Supabase is NOT configured. Running server in local mock failover mode.");
+    console.warn(
+      "WARNING: Supabase is NOT configured. Running server in local mock failover mode.",
+    );
   }
 
   let currentPort = Number(PORT);
 
   function startListening(port: number) {
     const server = app.listen(port, () => {
-      console.log(`CognifyAI Unified Server is running on http://localhost:${port}`);
+      console.log(
+        `CognifyAI Unified Server is running on http://localhost:${port}`,
+      );
     });
 
     server.on("error", (err: any) => {
       if (err.code === "EADDRINUSE") {
-        console.warn(`Port ${port} is already in use. Retrying on port ${port + 1}...`);
+        console.warn(
+          `Port ${port} is already in use. Retrying on port ${port + 1}...`,
+        );
         startListening(port + 1);
       } else {
         console.error("Express server error:", err);

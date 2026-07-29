@@ -52,13 +52,20 @@ function ResetPassword() {
 
     setLoading(true);
     try {
-      const res = await api.resetPassword(email, code, password, confirmPassword);
+      const res = await api.resetPassword(
+        email,
+        code,
+        password,
+        confirmPassword,
+      );
       toast.success(res.message || "Password reset successful! Please log in.");
       localStorage.removeItem("pendingEmail");
       navigate({ to: "/login" });
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || "Failed to reset password. Verify the reset code.");
+      toast.error(
+        err.message || "Failed to reset password. Verify the reset code.",
+      );
     } finally {
       setLoading(false);
     }
@@ -71,10 +78,13 @@ function ResetPassword() {
       <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-pink/30 blur-3xl" />
 
       <div className="relative w-full max-w-sm">
-        <Link to="/forgot-password" className="inline-flex items-center text-white/90 text-sm mb-6">
+        <Link
+          to="/forgot-password"
+          className="inline-flex items-center text-white/90 text-sm mb-6"
+        >
           <ArrowLeft className="h-4 w-4 mr-1" /> Back
         </Link>
-        
+
         <div className="text-white mb-6 text-center">
           <div className="h-16 w-16 mx-auto rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-3 border border-white/30">
             <KeyRound className="h-8 w-8 text-white" />
@@ -110,7 +120,9 @@ function ResetPassword() {
               required
               maxLength={6}
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
+              onChange={(e) =>
+                setCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))
+              }
               placeholder="6-digit reset code"
               className="w-full h-14 rounded-2xl bg-white/10 border border-white/20 pl-12 pr-4 text-white placeholder:text-white/70 focus:outline-none focus:bg-white/15 tracking-widest text-center font-bold"
             />
@@ -147,7 +159,13 @@ function ResetPassword() {
             disabled={loading}
             className="w-full h-14 rounded-2xl bg-white text-primary font-bold flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
           >
-            {loading ? "Resetting..." : <>Reset Password <ArrowRight className="h-5 w-5" /></>}
+            {loading ? (
+              "Resetting..."
+            ) : (
+              <>
+                Reset Password <ArrowRight className="h-5 w-5" />
+              </>
+            )}
           </button>
         </form>
       </div>

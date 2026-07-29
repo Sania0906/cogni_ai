@@ -9,9 +9,24 @@ export const Route = createFileRoute("/settings/account")({
 });
 
 const items = [
-  { icon: User, t: "Personal Information", d: "Update your details", color: "bg-gradient-blue" },
-  { icon: Mail, t: "Email Preferences", d: "Manage email notifications", color: "bg-gradient-pink" },
-  { icon: Lock, t: "Change Password", d: "Update security credentials", color: "bg-gradient-primary" },
+  {
+    icon: User,
+    t: "Personal Information",
+    d: "Update your details",
+    color: "bg-gradient-blue",
+  },
+  {
+    icon: Mail,
+    t: "Email Preferences",
+    d: "Manage email notifications",
+    color: "bg-gradient-pink",
+  },
+  {
+    icon: Lock,
+    t: "Change Password",
+    d: "Update security credentials",
+    color: "bg-gradient-primary",
+  },
 ];
 
 function Account() {
@@ -26,7 +41,9 @@ function Account() {
             to="/profile"
             className={`flex items-center gap-4 p-4 ${i > 0 ? "border-t border-border" : ""}`}
           >
-            <div className={`h-11 w-11 rounded-xl ${it.color} flex items-center justify-center text-white`}>
+            <div
+              className={`h-11 w-11 rounded-xl ${it.color} flex items-center justify-center text-white`}
+            >
               <it.icon className="h-5 w-5" />
             </div>
             <div className="flex-1">
@@ -44,7 +61,9 @@ function Account() {
         </div>
         <div className="flex-1 text-left">
           <p className="font-bold text-destructive">Delete Account</p>
-          <p className="text-xs text-destructive/80">Permanently remove your account</p>
+          <p className="text-xs text-destructive/80">
+            Permanently remove your account
+          </p>
         </div>
         <ChevronRight className="h-5 w-5 text-destructive" />
       </button>

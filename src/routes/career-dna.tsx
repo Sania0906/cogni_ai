@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Sparkles, CheckCircle2, AlertTriangle, HelpCircle } from "lucide-react";
+import {
+  Sparkles,
+  CheckCircle2,
+  AlertTriangle,
+  HelpCircle,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { api } from "@/lib/api/client";
@@ -24,7 +29,8 @@ function CareerDNA() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.getCareerDNA()
+    api
+      .getCareerDNA()
       .then(setData)
       .catch((err) => {
         setError(err.message || "Failed to retrieve Career DNA details");
@@ -41,7 +47,8 @@ function CareerDNA() {
           </div>
           <h3 className="font-bold text-foreground">Locked / Unresolved</h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Please complete onboarding first (Academic details, Resume scan, and Skill test) to unlock your AI Career DNA archetype!
+            Please complete onboarding first (Academic details, Resume scan, and
+            Skill test) to unlock your AI Career DNA archetype!
           </p>
         </div>
       </AppShell>
@@ -74,20 +81,26 @@ function CareerDNA() {
     return { x, y };
   };
 
-  const points = data.dimensions.map(d => {
-    const { x, y } = getCoordinates(d.angle, d.val);
-    return `${x},${y}`;
-  }).join(" ");
+  const points = data.dimensions
+    .map((d) => {
+      const { x, y } = getCoordinates(d.angle, d.val);
+      return `${x},${y}`;
+    })
+    .join(" ");
 
-  const gridPoints50 = data.dimensions.map(d => {
-    const { x, y } = getCoordinates(d.angle, 50);
-    return `${x},${y}`;
-  }).join(" ");
+  const gridPoints50 = data.dimensions
+    .map((d) => {
+      const { x, y } = getCoordinates(d.angle, 50);
+      return `${x},${y}`;
+    })
+    .join(" ");
 
-  const gridPoints100 = data.dimensions.map(d => {
-    const { x, y } = getCoordinates(d.angle, 100);
-    return `${x},${y}`;
-  }).join(" ");
+  const gridPoints100 = data.dimensions
+    .map((d) => {
+      const { x, y } = getCoordinates(d.angle, 100);
+      return `${x},${y}`;
+    })
+    .join(" ");
 
   return (
     <AppShell>
@@ -98,7 +111,9 @@ function CareerDNA() {
         <div className="absolute -right-10 -bottom-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="h-5 w-5 text-pink-300 animate-pulse" />
-          <span className="text-xs uppercase tracking-wider font-semibold text-white/80">AI Archetype Analysis</span>
+          <span className="text-xs uppercase tracking-wider font-semibold text-white/80">
+            AI Archetype Analysis
+          </span>
         </div>
         <h2 className="text-2xl font-bold">{data.archetype}</h2>
         <p className="text-sm text-white/95 mt-2 leading-relaxed">
@@ -112,9 +127,20 @@ function CareerDNA() {
         <div className="relative w-full max-w-[420px] aspect-[7/5] mx-auto">
           <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
             {/* Outer Grid Ring */}
-            <polygon points={gridPoints100} fill="none" stroke="oklch(0.92 0.01 280)" strokeWidth="1" />
+            <polygon
+              points={gridPoints100}
+              fill="none"
+              stroke="oklch(0.92 0.01 280)"
+              strokeWidth="1"
+            />
             {/* Mid Grid Ring */}
-            <polygon points={gridPoints50} fill="none" stroke="oklch(0.92 0.01 280)" strokeWidth="1" strokeDasharray="3,3" />
+            <polygon
+              points={gridPoints50}
+              fill="none"
+              stroke="oklch(0.92 0.01 280)"
+              strokeWidth="1"
+              strokeDasharray="3,3"
+            />
 
             {/* Axis Lines */}
             {data.dimensions.map((d, i) => {
@@ -161,7 +187,12 @@ function CareerDNA() {
             })}
 
             {/* Center point */}
-            <circle cx={centerX} cy={centerY} r="3" fill="oklch(0.55 0.24 280)" />
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r="3"
+              fill="oklch(0.55 0.24 280)"
+            />
           </svg>
         </div>
       </div>
@@ -174,7 +205,10 @@ function CareerDNA() {
           </h3>
           <ul className="space-y-2">
             {data.strengths.map((str, idx) => (
-              <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+              <li
+                key={idx}
+                className="text-sm text-muted-foreground flex items-start gap-2"
+              >
                 <span className="h-1.5 w-1.5 rounded-full bg-success shrink-0 mt-2" />
                 {str}
               </li>
@@ -188,7 +222,10 @@ function CareerDNA() {
           </h3>
           <ul className="space-y-2">
             {data.weaknesses.map((str, idx) => (
-              <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+              <li
+                key={idx}
+                className="text-sm text-muted-foreground flex items-start gap-2"
+              >
                 <span className="h-1.5 w-1.5 rounded-full bg-destructive shrink-0 mt-2" />
                 {str}
               </li>
@@ -204,7 +241,10 @@ function CareerDNA() {
         </h3>
         <div className="space-y-2">
           {data.recommendedEnvironments.map((env, idx) => (
-            <div key={idx} className="p-3 rounded-xl bg-muted/40 text-sm font-semibold flex items-center gap-2">
+            <div
+              key={idx}
+              className="p-3 rounded-xl bg-muted/40 text-sm font-semibold flex items-center gap-2"
+            >
               <span className="text-primary font-bold">#</span>
               {env}
             </div>

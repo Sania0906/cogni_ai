@@ -21,13 +21,28 @@ function CourseDetails() {
     <AppShell>
       <PageHeader title="Course Details" back="/learning/my-courses" />
       <div className="rounded-3xl p-6 bg-gradient-primary text-white shadow-glow">
-        <p className="text-xs text-white/80 uppercase tracking-wider">Featured Course</p>
-        <h2 className="text-2xl font-bold mt-2">Machine Learning Foundations</h2>
-        <p className="text-sm text-white/80 mt-2">Master the essentials of ML with hands-on projects.</p>
+        <p className="text-xs text-white/80 uppercase tracking-wider">
+          Featured Course
+        </p>
+        <h2 className="text-2xl font-bold mt-2">
+          Machine Learning Foundations
+        </h2>
+        <p className="text-sm text-white/80 mt-2">
+          Master the essentials of ML with hands-on projects.
+        </p>
         <div className="grid grid-cols-3 gap-3 mt-5 text-center">
-          <div><Clock className="h-4 w-4 mx-auto mb-1" /><p className="text-xs">8 hrs</p></div>
-          <div><BookOpen className="h-4 w-4 mx-auto mb-1" /><p className="text-xs">24 lessons</p></div>
-          <div><Star className="h-4 w-4 mx-auto mb-1" /><p className="text-xs">4.9 rating</p></div>
+          <div>
+            <Clock className="h-4 w-4 mx-auto mb-1" />
+            <p className="text-xs">8 hrs</p>
+          </div>
+          <div>
+            <BookOpen className="h-4 w-4 mx-auto mb-1" />
+            <p className="text-xs">24 lessons</p>
+          </div>
+          <div>
+            <Star className="h-4 w-4 mx-auto mb-1" />
+            <p className="text-xs">4.9 rating</p>
+          </div>
         </div>
       </div>
 
@@ -35,7 +50,9 @@ function CourseDetails() {
         <div className="h-11 w-11 rounded-full bg-gradient-pink" />
         <div className="flex-1">
           <p className="font-bold">Dr. Amara Chen</p>
-          <p className="text-xs text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> 12,480 students</p>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Users className="h-3 w-3" /> 12,480 students
+          </p>
         </div>
       </div>
 
@@ -48,8 +65,14 @@ function CourseDetails() {
             params={{ lessonId: l.id }}
             className="flex items-center gap-3 p-3 rounded-2xl bg-card shadow-card"
           >
-            <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${l.done ? "bg-gradient-primary text-white" : "bg-muted text-muted-foreground"}`}>
-              {l.done ? <PlayCircle className="h-5 w-5" /> : <span className="text-sm font-bold">{i + 1}</span>}
+            <div
+              className={`h-10 w-10 rounded-xl flex items-center justify-center ${l.done ? "bg-gradient-primary text-white" : "bg-muted text-muted-foreground"}`}
+            >
+              {l.done ? (
+                <PlayCircle className="h-5 w-5" />
+              ) : (
+                <span className="text-sm font-bold">{i + 1}</span>
+              )}
             </div>
             <div className="flex-1">
               <p className="font-semibold text-sm">{l.title}</p>

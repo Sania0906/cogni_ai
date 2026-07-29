@@ -31,12 +31,13 @@ function AddSkill() {
 
     setLoading(true);
     try {
-      const proficiency = level >= 85 ? "Advanced" : level >= 60 ? "Intermediate" : "Beginner";
+      const proficiency =
+        level >= 85 ? "Advanced" : level >= 60 ? "Intermediate" : "Beginner";
       await api.addSkill({
         name: name.trim(),
         category,
         level: proficiency,
-        progress: level
+        progress: level,
       });
       toast.success("Skill added successfully!");
       navigate({ to: "/skills" });
@@ -64,7 +65,7 @@ function AddSkill() {
         </div>
         <div>
           <label className="text-sm font-semibold mb-2 block">Category</label>
-          <select 
+          <select
             className="w-full h-14 rounded-2xl bg-card shadow-card px-4 focus:outline-none text-foreground"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -77,7 +78,9 @@ function AddSkill() {
           </select>
         </div>
         <div>
-          <label className="text-sm font-semibold mb-2 block">Proficiency · {level}%</label>
+          <label className="text-sm font-semibold mb-2 block">
+            Proficiency · {level}%
+          </label>
           <input
             type="range"
             min={0}
@@ -88,7 +91,7 @@ function AddSkill() {
             disabled={loading}
           />
         </div>
-        <button 
+        <button
           type="submit"
           className="w-full h-14 mt-4 rounded-2xl bg-gradient-primary text-white font-bold shadow-glow flex items-center justify-center disabled:opacity-50"
           disabled={loading}

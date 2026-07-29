@@ -9,10 +9,26 @@ export const Route = createFileRoute("/skills/timeline")({
 });
 
 const events = [
-  { date: "May 2026", title: "Mastered Machine Learning", desc: "Reached level 87" },
-  { date: "Apr 2026", title: "Completed Python Cert", desc: "AI Foundations track" },
-  { date: "Mar 2026", title: "Started SQL Path", desc: "Database fundamentals" },
-  { date: "Feb 2026", title: "Joined CognifyAI", desc: "Initial skill assessment" },
+  {
+    date: "May 2026",
+    title: "Mastered Machine Learning",
+    desc: "Reached level 87",
+  },
+  {
+    date: "Apr 2026",
+    title: "Completed Python Cert",
+    desc: "AI Foundations track",
+  },
+  {
+    date: "Mar 2026",
+    title: "Started SQL Path",
+    desc: "Database fundamentals",
+  },
+  {
+    date: "Feb 2026",
+    title: "Joined CognifyAI",
+    desc: "Initial skill assessment",
+  },
 ];
 
 function Timeline() {

@@ -4,7 +4,10 @@ import { supabaseAdmin } from "./supabase";
 dotenv.config();
 
 async function checkAuthUsers() {
-  const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
+  const {
+    data: { users },
+    error,
+  } = await supabaseAdmin.auth.admin.listUsers();
 
   if (error) {
     console.error("Error listing auth users:", error);

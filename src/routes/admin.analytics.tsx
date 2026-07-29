@@ -38,7 +38,9 @@ function Analytics() {
                 className="w-full rounded-t-md bg-gradient-primary"
                 style={{ height: `${b}%` }}
               />
-              <span className="text-[10px] text-muted-foreground">{months[i]}</span>
+              <span className="text-[10px] text-muted-foreground">
+                {months[i]}
+              </span>
             </div>
           ))}
         </div>
@@ -54,7 +56,10 @@ function Analytics() {
                 <span className="text-muted-foreground">{s.val}%</span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
-                <div className="h-full bg-gradient-primary rounded-full" style={{ width: `${s.val}%` }} />
+                <div
+                  className="h-full bg-gradient-primary rounded-full"
+                  style={{ width: `${s.val}%` }}
+                />
               </div>
             </div>
           ))}
@@ -62,8 +67,15 @@ function Analytics() {
       </div>
 
       <div className="grid grid-cols-3 gap-3 mt-5">
-        {[{ l: "Sessions", v: "84k" }, { l: "Avg time", v: "12m" }, { l: "Retention", v: "76%" }].map((s) => (
-          <div key={s.l} className="rounded-2xl bg-card shadow-card p-4 text-center">
+        {[
+          { l: "Sessions", v: "84k" },
+          { l: "Avg time", v: "12m" },
+          { l: "Retention", v: "76%" },
+        ].map((s) => (
+          <div
+            key={s.l}
+            className="rounded-2xl bg-card shadow-card p-4 text-center"
+          >
             <p className="text-xl font-bold">{s.v}</p>
             <p className="text-xs text-muted-foreground">{s.l}</p>
           </div>

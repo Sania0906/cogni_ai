@@ -11,11 +11,17 @@ async function testLogin() {
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
-    password
+    password,
   });
 
   if (error) {
-    console.error("❌ Login failed:", error.message, "(status:", error.status, ")");
+    console.error(
+      "❌ Login failed:",
+      error.message,
+      "(status:",
+      error.status,
+      ")",
+    );
   } else {
     console.log("✅ Login successful!");
     console.log("User details:", data.user?.id, data.user?.email);

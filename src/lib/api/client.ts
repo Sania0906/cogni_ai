@@ -1,11 +1,15 @@
 // CognifyAI API Client for REST Server
 const BASE_URL = "/api";
 
-async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+async function fetchAPI<T>(
+  endpoint: string,
+  options?: RequestInit,
+): Promise<T> {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
   const headers: Record<string, string> = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options?.headers as Record<string, string> || {}),
+    ...((options?.headers as Record<string, string>) || {}),
   };
 
   if (!(options?.body instanceof FormData)) {
@@ -24,7 +28,9 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
     } catch (_) {
       // ignore
     }
-    const errMsg = errorData?.message || `API Error: ${response.status} ${response.statusText}`;
+    const errMsg =
+      errorData?.message ||
+      `API Error: ${response.status} ${response.statusText}`;
     const err = new Error(errMsg);
     (err as any).status = response.status;
     (err as any).data = errorData;
@@ -43,18 +49,29 @@ export const api = {
     });
   },
 
-  signup: async (name: string, email: string, password: string, confirmPassword: string) => {
-    return fetchAPI<{ message: string; email: string; otp?: string }>("/auth/signup", {
-      method: "POST",
-      body: JSON.stringify({ name, email, password, confirmPassword }),
-    });
+  signup: async (
+    name: string,
+    email: string,
+    password: string,
+    confirmPassword: string,
+  ) => {
+    return fetchAPI<{ message: string; email: string; otp?: string }>(
+      "/auth/signup",
+      {
+        method: "POST",
+        body: JSON.stringify({ name, email, password, confirmPassword }),
+      },
+    );
   },
 
   sendOtp: async (email: string) => {
-    return fetchAPI<{ message: string; email: string; otp?: string }>("/auth/send-otp", {
-      method: "POST",
-      body: JSON.stringify({ email }),
-    });
+    return fetchAPI<{ message: string; email: string; otp?: string }>(
+      "/auth/send-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      },
+    );
   },
 
   verifyOtp: async (email: string, code: string) => {
@@ -65,13 +82,21 @@ export const api = {
   },
 
   forgotPassword: async (email: string) => {
-    return fetchAPI<{ message: string; email: string; otp?: string }>("/auth/forgot-password", {
-      method: "POST",
-      body: JSON.stringify({ email }),
-    });
+    return fetchAPI<{ message: string; email: string; otp?: string }>(
+      "/auth/forgot-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      },
+    );
   },
 
-  resetPassword: async (email: string, code: string, password: string, confirmPassword: string) => {
+  resetPassword: async (
+    email: string,
+    code: string,
+    password: string,
+    confirmPassword: string,
+  ) => {
     return fetchAPI<{ message: string }>("/auth/reset-password", {
       method: "POST",
       body: JSON.stringify({ email, code, password, confirmPassword }),
@@ -93,21 +118,21 @@ export const api = {
   completeProfile: async (data: any) => {
     return fetchAPI<any>("/auth/profile/complete", {
       method: "POST",
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
   },
 
   completeOnboarding: async (category: string, score: number) => {
     return fetchAPI<any>("/auth/onboarding/complete", {
       method: "POST",
-      body: JSON.stringify({ category, score })
+      body: JSON.stringify({ category, score }),
     });
   },
 
   submitAssessment: async (category: string, score: number) => {
     return fetchAPI<any>("/assessments", {
       method: "POST",
-      body: JSON.stringify({ category, score })
+      body: JSON.stringify({ category, score }),
     });
   },
 
@@ -116,7 +141,9 @@ export const api = {
   },
 
   getDynamicQuestions: async () => {
-    return fetchAPI<{ category: string; questions: any[] }>("/assessments/questions");
+    return fetchAPI<{ category: string; questions: any[] }>(
+      "/assessments/questions",
+    );
   },
 
   getRecommendedCourses: async () => {
@@ -128,23 +155,31 @@ export const api = {
     return fetchAPI<any[]>("/skills");
   },
 
-  addSkill: async (skill: { name: string; category: string; level: string; progress: number }) => {
+  addSkill: async (skill: {
+    name: string;
+    category: string;
+    level: string;
+    progress: number;
+  }) => {
     return fetchAPI<any>("/skills", {
       method: "POST",
-      body: JSON.stringify(skill)
+      body: JSON.stringify(skill),
     });
   },
 
-  updateSkill: async (id: string, skill: { progress?: number; level?: string }) => {
+  updateSkill: async (
+    id: string,
+    skill: { progress?: number; level?: string },
+  ) => {
     return fetchAPI<any>(`/skills/${id}`, {
       method: "PUT",
-      body: JSON.stringify(skill)
+      body: JSON.stringify(skill),
     });
   },
 
   deleteSkill: async (id: string) => {
     return fetchAPI<any>(`/skills/${id}`, {
-      method: "DELETE"
+      method: "DELETE",
     });
   },
 
@@ -152,7 +187,13 @@ export const api = {
     return fetchAPI<{
       targetRole: string;
       matchPercentage: number;
-      skills: { name: string; current: number; required: number; gap: number; status: string }[];
+      skills: {
+        name: string;
+        current: number;
+        required: number;
+        gap: number;
+        status: string;
+      }[];
     }>("/skills/gap");
   },
 
@@ -210,7 +251,13 @@ export const api = {
 
   getIndustryDemand: async () => {
     return fetchAPI<{
-      categories: { name: string; growth: number; openings: number; salary: number; trend: string }[];
+      categories: {
+        name: string;
+        growth: number;
+        openings: number;
+        salary: number;
+        trend: string;
+      }[];
       marketDrivers: string[];
     }>("/ai/industry-demand");
   },
@@ -218,7 +265,7 @@ export const api = {
   generateRoadmap: async (data: { company: string; role: string }) => {
     return fetchAPI<any>("/ai/roadmap/generate", {
       method: "POST",
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
   },
 
@@ -226,18 +273,26 @@ export const api = {
     return fetchAPI<any>("/ai/roadmap/latest");
   },
 
-  updateMilestoneStatus: async (milestoneId: string, status: string, roadmapId: string) => {
+  updateMilestoneStatus: async (
+    milestoneId: string,
+    status: string,
+    roadmapId: string,
+  ) => {
     return fetchAPI<any>(`/ai/roadmap/milestone/${milestoneId}/status`, {
       method: "POST",
-      body: JSON.stringify({ status, roadmapId })
+      body: JSON.stringify({ status, roadmapId }),
     });
   },
 
   // Recruiter
-  getRecruiterCandidates: async (skills: string = "", min_experience: number = 0) => {
+  getRecruiterCandidates: async (
+    skills: string = "",
+    min_experience: number = 0,
+  ) => {
     let query = "";
     if (skills) query += `?skills=${encodeURIComponent(skills)}`;
-    if (min_experience > 0) query += `${query ? "&" : "?"}min_experience=${min_experience}`;
+    if (min_experience > 0)
+      query += `${query ? "&" : "?"}min_experience=${min_experience}`;
     return fetchAPI<any[]>(`/recruiter/candidates${query}`);
   },
 
@@ -248,10 +303,9 @@ export const api = {
   toggleShortlist: async (candidateId: string) => {
     return fetchAPI<{ shortlisted: boolean }>("/recruiter/shortlist", {
       method: "POST",
-      body: JSON.stringify({ candidateId })
+      body: JSON.stringify({ candidateId }),
     });
   },
-
 
   getEmployability: async () => {
     return fetchAPI<{
@@ -262,14 +316,16 @@ export const api = {
   },
 
   getCareerPaths: async () => {
-    return fetchAPI<{
-      role: string;
-      matchPercentage: number;
-      salaryRange: string;
-      requiredSkills: string[];
-      missingSkills: string[];
-      learningRoadmap: string[];
-    }[]>("/ai/career-paths");
+    return fetchAPI<
+      {
+        role: string;
+        matchPercentage: number;
+        salaryRange: string;
+        requiredSkills: string[];
+        missingSkills: string[];
+        learningRoadmap: string[];
+      }[]
+    >("/ai/career-paths");
   },
 
   optimizeResume: async (resumeData: string | FormData, targetJob?: string) => {
@@ -277,7 +333,11 @@ export const api = {
       return fetchAPI<{
         score: number;
         targetJob: string;
-        keywordMatch: { word: string; status: "found" | "missing"; suggestion?: string }[];
+        keywordMatch: {
+          word: string;
+          status: "found" | "missing";
+          suggestion?: string;
+        }[];
         improvements: string[];
       }>("/ai/resume-optimize", {
         method: "POST",
@@ -288,7 +348,11 @@ export const api = {
     return fetchAPI<{
       score: number;
       targetJob: string;
-      keywordMatch: { word: string; status: "found" | "missing"; suggestion?: string }[];
+      keywordMatch: {
+        word: string;
+        status: "found" | "missing";
+        suggestion?: string;
+      }[];
       improvements: string[];
     }>("/ai/resume-optimize", {
       method: "POST",
@@ -310,7 +374,13 @@ export const api = {
 
   getPlatformAnalytics: async () => {
     return fetchAPI<{
-      metrics: { name: string; android: number; web: number; unit: string; desc?: string }[];
+      metrics: {
+        name: string;
+        android: number;
+        web: number;
+        unit: string;
+        desc?: string;
+      }[];
       platformGrowth: { month: string; android: number; web: number }[];
       geographicStats: { country: string; android: number; web: number }[];
     }>("/analytics/android-vs-web");
@@ -318,7 +388,13 @@ export const api = {
 
   getCareerForecasting: async () => {
     return fetchAPI<{
-      roles: { name: string; risk: number; growth: number; emerging: boolean; notes?: string }[];
+      roles: {
+        name: string;
+        risk: number;
+        growth: number;
+        emerging: boolean;
+        notes?: string;
+      }[];
       automationDrivers: string[];
     }>("/ai/career-forecasting");
   },
@@ -353,7 +429,7 @@ export const api = {
   generateCompanyReadiness: async (companyName: string, targetRole: string) => {
     return fetchAPI<any>("/ai/company-readiness", {
       method: "POST",
-      body: JSON.stringify({ companyName, targetRole })
+      body: JSON.stringify({ companyName, targetRole }),
     });
   },
 
@@ -363,7 +439,7 @@ export const api = {
 
   generateCareerTwin: async () => {
     return fetchAPI<any>("/ai/career-twin", {
-      method: "POST"
+      method: "POST",
     });
   },
 
@@ -373,22 +449,21 @@ export const api = {
 
   restoreResumeVersion: async (id: string) => {
     return fetchAPI<any>(`/ai/resumes/restore/${id}`, {
-      method: "POST"
+      method: "POST",
     });
   },
 
   generateInterview: async (data: { company: string; role: string }) => {
     return fetchAPI<any>("/ai/interview/generate", {
       method: "POST",
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
   },
 
   evaluateInterview: async (data: { sessionId: string; answers: any[] }) => {
     return fetchAPI<any>("/ai/interview/evaluate", {
       method: "POST",
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
-  }
+  },
 };
-

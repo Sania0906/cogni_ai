@@ -22,8 +22,8 @@ function Signup() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    console.log("[Auth Signup] Continue button clicked / Form submit triggered.");
-    console.log("[Auth Signup] Input state values:", { name, email, passwordLength: password.length, confirmPasswordLength: confirmPassword.length });
+    
+    
 
     // Client-side validations
     if (!name.trim() || !email.trim() || !password || !confirmPassword) {
@@ -39,16 +39,18 @@ function Signup() {
     }
 
     if (password !== confirmPassword) {
-      console.warn("[Auth Signup] Validation failed: Password and confirmPassword do not match.");
+      console.warn(
+        "[Auth Signup] Validation failed: Password and confirmPassword do not match.",
+      );
       setError("Passwords do not match");
       return;
     }
 
-    console.log("[Auth Signup] Client-side validations passed. Calling signup API...");
+    
     setLoading(true);
     try {
       const res = await api.signup(name, email, password, confirmPassword);
-      console.log("[Auth Signup] API signup success! Response:", res);
+      
 
       // Auto login
       const loginRes = await api.login(email, password);
@@ -59,10 +61,12 @@ function Signup() {
       navigate({ to: "/dashboard" });
     } catch (err: any) {
       console.error("[Auth Signup] API signup failed:", err);
-      setError(err.message || "Failed to sign up. Email may already be registered.");
+      setError(
+        err.message || "Failed to sign up. Email may already be registered.",
+      );
     } finally {
       setLoading(false);
-      console.log("[Auth Signup] Signup process finished.");
+      
     }
   };
 
@@ -78,7 +82,9 @@ function Signup() {
             <Brain className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold">Create Account</h1>
-          <p className="text-white/80 mt-1 text-sm">Start your AI-powered journey</p>
+          <p className="text-white/80 mt-1 text-sm">
+            Start your AI-powered journey
+          </p>
         </div>
 
         <form
@@ -86,7 +92,10 @@ function Signup() {
           className="rounded-3xl bg-white/15 backdrop-blur-xl border border-white/25 p-6 space-y-4"
         >
           {error && (
-            <Alert variant="destructive" className="bg-destructive/10 text-white border-destructive/20">
+            <Alert
+              variant="destructive"
+              className="bg-destructive/10 text-white border-destructive/20"
+            >
               <AlertDescription className="text-xs font-semibold leading-relaxed">
                 {error}
               </AlertDescription>
@@ -149,7 +158,13 @@ function Signup() {
             disabled={loading}
             className="w-full h-14 rounded-2xl bg-white text-primary font-bold flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
           >
-            {loading ? "Signing up..." : <>Continue <ArrowRight className="h-5 w-5" /></>}
+            {loading ? (
+              "Signing up..."
+            ) : (
+              <>
+                Continue <ArrowRight className="h-5 w-5" />
+              </>
+            )}
           </button>
         </form>
 

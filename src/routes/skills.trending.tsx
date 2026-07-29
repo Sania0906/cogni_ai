@@ -41,7 +41,9 @@ function Trending() {
             </div>
             <div className="flex-1">
               <p className="font-bold">{t.name}</p>
-              <p className="text-xs text-muted-foreground">Demand: {t.demand}</p>
+              <p className="text-xs text-muted-foreground">
+                Demand: {t.demand}
+              </p>
             </div>
             <div className="flex items-center gap-1 text-success font-semibold text-sm">
               <TrendingUp className="h-4 w-4" />

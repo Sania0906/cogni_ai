@@ -34,14 +34,21 @@ function AIAssistant() {
     async function loadUserGreeting() {
       try {
         const profile = await api.getProfile();
-        const name = profile?.name || localStorage.getItem("userName") || "User";
+        const name =
+          profile?.name || localStorage.getItem("userName") || "User";
         setUserName(name);
         setMsgs([
-          { role: "ai", text: `Hi ${name}! I'm your AI career assistant. How can I help you grow today?` }
+          {
+            role: "ai",
+            text: `Hi ${name}! I'm your AI career assistant. How can I help you grow today?`,
+          },
         ]);
       } catch (_) {
         setMsgs([
-          { role: "ai", text: "Hi! I'm your AI career assistant. How can I help you grow today?" }
+          {
+            role: "ai",
+            text: "Hi! I'm your AI career assistant. How can I help you grow today?",
+          },
         ]);
       }
     }
@@ -63,7 +70,10 @@ function AIAssistant() {
       console.error(err);
       setMsgs((m) => [
         ...m,
-        { role: "ai", text: "I ran into a problem communicating with the AI. Please verify your connection and try again." }
+        {
+          role: "ai",
+          text: "I ran into a problem communicating with the AI. Please verify your connection and try again.",
+        },
       ]);
     } finally {
       setLoading(false);
@@ -76,7 +86,10 @@ function AIAssistant() {
 
       <div className="space-y-4 mb-24 pb-4">
         {msgs.map((m, i) => (
-          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+          <div
+            key={i}
+            className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+          >
             <div
               className={`max-w-[85%] px-4 py-3 rounded-2xl ${
                 m.role === "user"
@@ -89,7 +102,9 @@ function AIAssistant() {
                   <Sparkles className="h-3.5 w-3.5" /> CognifyAI
                 </div>
               )}
-              <p className="text-sm leading-relaxed whitespace-pre-line">{m.text}</p>
+              <p className="text-sm leading-relaxed whitespace-pre-line">
+                {m.text}
+              </p>
             </div>
           </div>
         ))}
@@ -97,7 +112,9 @@ function AIAssistant() {
           <div className="flex justify-start">
             <div className="max-w-[85%] px-4 py-3 rounded-2xl bg-card shadow-card rounded-bl-sm border border-border/10 flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-xs text-muted-foreground font-semibold">Thinking...</span>
+              <span className="text-xs text-muted-foreground font-semibold">
+                Thinking...
+              </span>
             </div>
           </div>
         )}
@@ -105,7 +122,9 @@ function AIAssistant() {
 
       {msgs.length <= 1 && (
         <div className="mb-4 pr-2">
-          <p className="text-[10px] font-bold tracking-wider text-muted-foreground mb-2.5 uppercase">Suggested Topics</p>
+          <p className="text-[10px] font-bold tracking-wider text-muted-foreground mb-2.5 uppercase">
+            Suggested Topics
+          </p>
           <div className="flex flex-wrap gap-2">
             {starters.map((s) => (
               <button
@@ -135,7 +154,7 @@ function AIAssistant() {
           placeholder="Ask anything about your resume, skills, or career goals..."
           className="flex-1 h-14 rounded-2xl bg-card shadow-card px-4 border border-border/30 focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm font-semibold disabled:opacity-50"
         />
-        <button 
+        <button
           type="submit"
           disabled={loading}
           className="h-14 w-14 rounded-2xl bg-gradient-primary text-white flex items-center justify-center shadow-glow border-0 cursor-pointer disabled:opacity-50"

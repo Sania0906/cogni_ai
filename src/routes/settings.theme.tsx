@@ -27,16 +27,21 @@ function Theme() {
               key={o.id}
               onClick={() => {
                 setSel(o.id);
-                if (o.id === "dark") document.documentElement.classList.add("dark");
+                if (o.id === "dark")
+                  document.documentElement.classList.add("dark");
                 else document.documentElement.classList.remove("dark");
               }}
               className={`w-full flex items-center gap-4 p-5 rounded-2xl shadow-card transition-all ${
-                active ? "bg-gradient-primary text-white shadow-glow" : "bg-card"
+                active
+                  ? "bg-gradient-primary text-white shadow-glow"
+                  : "bg-card"
               }`}
             >
-              <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${
-                active ? "bg-white/20" : "bg-gradient-primary text-white"
-              }`}>
+              <div
+                className={`h-11 w-11 rounded-xl flex items-center justify-center ${
+                  active ? "bg-white/20" : "bg-gradient-primary text-white"
+                }`}
+              >
                 <o.icon className="h-5 w-5" />
               </div>
               <span className="font-bold">{o.label}</span>

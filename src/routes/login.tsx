@@ -44,7 +44,9 @@ function Login() {
             <Brain className="h-10 w-10 text-white" />
           </div>
           <h1 className="text-3xl font-bold">CognifyAI</h1>
-          <p className="text-white/80 mt-1 text-sm">Smart Skill Intelligence System</p>
+          <p className="text-white/80 mt-1 text-sm">
+            Smart Skill Intelligence System
+          </p>
         </div>
 
         <form
@@ -68,14 +70,19 @@ function Login() {
                       label: "Confirm Now",
                       onClick: () => {
                         window.open(mockLink, "_blank");
-                      }
-                    }
+                      },
+                    },
                   });
                 } else {
-                  toast.error(err.message || "Email is not verified. Please check your email for the confirmation link.");
+                  toast.error(
+                    err.message ||
+                      "Email is not verified. Please check your email for the confirmation link.",
+                  );
                 }
               } else {
-                toast.error(err.message || "Invalid credentials or server offline");
+                toast.error(
+                  err.message || "Invalid credentials or server offline",
+                );
               }
             } finally {
               setLoading(false);
@@ -114,11 +121,20 @@ function Login() {
             disabled={loading}
             className="w-full h-14 rounded-2xl bg-white text-primary font-bold flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            {loading ? "Signing In..." : <>Sign In <ArrowRight className="h-5 w-5" /></>}
+            {loading ? (
+              "Signing In..."
+            ) : (
+              <>
+                Sign In <ArrowRight className="h-5 w-5" />
+              </>
+            )}
           </button>
 
           <div className="text-center">
-            <Link to="/forgot-password" className="text-white text-sm font-semibold">
+            <Link
+              to="/forgot-password"
+              className="text-white text-sm font-semibold"
+            >
               Forgot password?
             </Link>
           </div>

@@ -1,5 +1,22 @@
-import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
-import { Award, BookOpen, Target, Settings, Shield, Bell, Moon, LogOut, ChevronRight, User as UserIcon, Upload } from "lucide-react";
+import {
+  createFileRoute,
+  Link,
+  useNavigate,
+  redirect,
+} from "@tanstack/react-router";
+import {
+  Award,
+  BookOpen,
+  Target,
+  Settings,
+  Shield,
+  Bell,
+  Moon,
+  LogOut,
+  ChevronRight,
+  User as UserIcon,
+  Upload,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api/client";
@@ -29,7 +46,9 @@ function Profile() {
     { n: 0, label: "Skills", color: "bg-gradient-pink", icon: Target },
   ]);
 
-  const handleReplaceResume = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReplaceResume = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setReplacing(true);
@@ -41,7 +60,7 @@ function Profile() {
 
         await api.optimizeResume(formData);
         toast.success("Resume updated successfully!", { id: toastId });
-        
+
         // Refetch profile details
         const data = await api.getProfile();
         setProfile(data);
@@ -51,7 +70,9 @@ function Profile() {
         setComparison(compData);
       } catch (err: any) {
         console.error(err);
-        toast.error(err.message || "Failed to replace resume.", { id: toastId });
+        toast.error(err.message || "Failed to replace resume.", {
+          id: toastId,
+        });
       } finally {
         setReplacing(false);
       }
@@ -63,7 +84,7 @@ function Profile() {
     try {
       await api.restoreResumeVersion(id);
       toast.success("Resume restored successfully!", { id: toastId });
-      
+
       const data = await api.getProfile();
       setProfile(data);
       const historyData = await api.getResumeHistory().catch(() => []);
@@ -94,9 +115,24 @@ function Profile() {
         setComparison(compData);
 
         setStats([
-          { n: certs.length, label: "Certificates", color: "bg-gradient-blue", icon: Award },
-          { n: courses.length, label: "Courses", color: "bg-gradient-primary", icon: BookOpen },
-          { n: skills.length, label: "Skills", color: "bg-gradient-pink", icon: Target },
+          {
+            n: certs.length,
+            label: "Certificates",
+            color: "bg-gradient-blue",
+            icon: Award,
+          },
+          {
+            n: courses.length,
+            label: "Courses",
+            color: "bg-gradient-primary",
+            icon: BookOpen,
+          },
+          {
+            n: skills.length,
+            label: "Skills",
+            color: "bg-gradient-pink",
+            icon: Target,
+          },
         ]);
       } catch (err) {
         console.error("Failed to load profile details", err);
@@ -114,19 +150,26 @@ function Profile() {
     navigate({ to: "/login" });
   };
 
-  const displayName = profile?.name || localStorage.getItem("userName") || "User";
+  const displayName =
+    profile?.name || localStorage.getItem("userName") || "User";
   const displayEmail = profile?.email || "";
 
   return (
     <AppShell>
       <h1 className="text-3xl font-bold">Profile</h1>
-      <p className="text-sm text-muted-foreground mt-1 mb-5">Manage your account and preferences</p>
+      <p className="text-sm text-muted-foreground mt-1 mb-5">
+        Manage your account and preferences
+      </p>
 
       <div className="rounded-3xl p-5 bg-gradient-primary text-white shadow-glow">
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 rounded-2xl bg-white/20 flex items-center justify-center overflow-hidden">
             {profile?.avatar ? (
-              <img src={profile.avatar} alt="avatar" className="h-full w-full object-cover" />
+              <img
+                src={profile.avatar}
+                alt="avatar"
+                className="h-full w-full object-cover"
+              />
             ) : (
               <UserIcon className="h-8 w-8" />
             )}
@@ -136,8 +179,8 @@ function Profile() {
             <p className="text-sm text-white/80">{displayEmail}</p>
           </div>
         </div>
-        <Link 
-          to="/settings/account" 
+        <Link
+          to="/settings/account"
           className="block w-full text-center py-3.5 mt-4 rounded-xl bg-white/20 backdrop-blur border border-white/30 font-bold text-sm text-white"
         >
           Edit Profile
@@ -146,8 +189,13 @@ function Profile() {
 
       <div className="grid grid-cols-3 gap-3 mt-5">
         {stats.map((s) => (
-          <div key={s.label} className="p-4 rounded-2xl bg-card shadow-card text-center">
-            <div className={`h-12 w-12 mx-auto rounded-2xl ${s.color} flex items-center justify-center text-white mb-2`}>
+          <div
+            key={s.label}
+            className="p-4 rounded-2xl bg-card shadow-card text-center"
+          >
+            <div
+              className={`h-12 w-12 mx-auto rounded-2xl ${s.color} flex items-center justify-center text-white mb-2`}
+            >
               <s.icon className="h-6 w-6" />
             </div>
             <p className="text-2xl font-bold">{s.n}</p>
@@ -164,22 +212,33 @@ function Profile() {
           </h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-muted-foreground">Status</span>
+              <span className="text-xs font-bold text-muted-foreground">
+                Status
+              </span>
               <span className="px-2.5 py-0.5 rounded-full bg-success/15 text-success text-[10px] font-bold">
                 Resume Uploaded Successfully
               </span>
             </div>
             <div className="flex justify-between items-center text-sm border-b border-border/40 pb-2">
-              <span className="text-xs font-bold text-muted-foreground">Filename</span>
-              <span className="font-extrabold text-card-foreground text-xs truncate max-w-[200px]" title={profile.resumeDetails.file_name}>
+              <span className="text-xs font-bold text-muted-foreground">
+                Filename
+              </span>
+              <span
+                className="font-extrabold text-card-foreground text-xs truncate max-w-[200px]"
+                title={profile.resumeDetails.file_name}
+              >
                 {profile.resumeDetails.file_name || "resume.pdf"}
               </span>
             </div>
             <div className="flex justify-between items-center text-sm border-b border-border/40 pb-2">
-              <span className="text-xs font-bold text-muted-foreground">Upload Date</span>
+              <span className="text-xs font-bold text-muted-foreground">
+                Upload Date
+              </span>
               <span className="font-extrabold text-card-foreground text-xs">
                 {profile.resumeDetails.upload_date
-                  ? new Date(profile.resumeDetails.upload_date).toLocaleDateString(undefined, {
+                  ? new Date(
+                      profile.resumeDetails.upload_date,
+                    ).toLocaleDateString(undefined, {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -188,17 +247,23 @@ function Profile() {
               </span>
             </div>
             <div className="flex justify-between items-center text-sm border-b border-border/40 pb-2">
-              <span className="text-xs font-bold text-muted-foreground">ATS Score</span>
+              <span className="text-xs font-bold text-muted-foreground">
+                ATS Score
+              </span>
               <span className="font-extrabold text-card-foreground text-xs">
                 {profile.resumeDetails.ats_score}%
               </span>
             </div>
             <div className="flex justify-between items-center text-sm pb-2">
-              <span className="text-xs font-bold text-muted-foreground">Version</span>
-              <span className="font-extrabold text-card-foreground text-xs">v1.0</span>
+              <span className="text-xs font-bold text-muted-foreground">
+                Version
+              </span>
+              <span className="font-extrabold text-card-foreground text-xs">
+                v1.0
+              </span>
             </div>
           </div>
-          
+
           <div className="flex gap-3 pt-2">
             <Link
               to="/resume-analysis"
@@ -206,9 +271,7 @@ function Profile() {
             >
               View Resume Analysis
             </Link>
-            <label
-              className="flex-1 text-center py-2.5 rounded-xl bg-muted/60 text-xs font-bold text-card-foreground hover:bg-muted/80 transition cursor-pointer border-0 flex items-center justify-center"
-            >
+            <label className="flex-1 text-center py-2.5 rounded-xl bg-muted/60 text-xs font-bold text-card-foreground hover:bg-muted/80 transition cursor-pointer border-0 flex items-center justify-center">
               Replace Resume
               <input
                 type="file"
@@ -222,7 +285,9 @@ function Profile() {
         </div>
       ) : (
         <div className="rounded-3xl p-5 bg-card shadow-card mt-5 text-center border border-dashed border-border/40 space-y-4">
-          <p className="text-sm font-semibold text-muted-foreground">No resume has been uploaded yet.</p>
+          <p className="text-sm font-semibold text-muted-foreground">
+            No resume has been uploaded yet.
+          </p>
           <label className="inline-block px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold shadow-glow cursor-pointer">
             Upload Resume
             <input
@@ -244,29 +309,49 @@ function Profile() {
           </h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-xs text-muted-foreground font-semibold">Degree</p>
-              <p className="font-bold text-card-foreground mt-0.5">{profile.degree || "N/A"}</p>
+              <p className="text-xs text-muted-foreground font-semibold">
+                Degree
+              </p>
+              <p className="font-bold text-card-foreground mt-0.5">
+                {profile.degree || "N/A"}
+              </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-semibold">Department</p>
-              <p className="font-bold text-card-foreground mt-0.5">{profile.department || "N/A"}</p>
+              <p className="text-xs text-muted-foreground font-semibold">
+                Department
+              </p>
+              <p className="font-bold text-card-foreground mt-0.5">
+                {profile.department || "N/A"}
+              </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-semibold">College / University</p>
-              <p className="font-bold text-card-foreground mt-0.5">{profile.college || "N/A"}</p>
+              <p className="text-xs text-muted-foreground font-semibold">
+                College / University
+              </p>
+              <p className="font-bold text-card-foreground mt-0.5">
+                {profile.college || "N/A"}
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <p className="text-xs text-muted-foreground font-semibold">CGPA</p>
-                <p className="font-bold text-card-foreground mt-0.5">{profile.cgpa || "N/A"}</p>
+                <p className="text-xs text-muted-foreground font-semibold">
+                  CGPA
+                </p>
+                <p className="font-bold text-card-foreground mt-0.5">
+                  {profile.cgpa || "N/A"}
+                </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground font-semibold">Grad Year</p>
-                <p className="font-bold text-card-foreground mt-0.5">{profile.grad_year || "N/A"}</p>
+                <p className="text-xs text-muted-foreground font-semibold">
+                  Grad Year
+                </p>
+                <p className="font-bold text-card-foreground mt-0.5">
+                  {profile.grad_year || "N/A"}
+                </p>
               </div>
             </div>
           </div>
-          
+
           {(profile.linkedin_url || profile.github_url) && (
             <div className="pt-3 border-t border-border/40 flex gap-3">
               {profile.linkedin_url && (
@@ -302,27 +387,42 @@ function Profile() {
           </h3>
           <div className="space-y-4 pl-4 border-l-2 border-border/40 relative ml-2">
             {history.map((ver, idx) => (
-              <div key={ver.id} className="flex justify-between items-center text-sm relative border-b border-border/40 pb-3 last:border-0 last:pb-0">
+              <div
+                key={ver.id}
+                className="flex justify-between items-center text-sm relative border-b border-border/40 pb-3 last:border-0 last:pb-0"
+              >
                 <div className="absolute -left-[21px] top-2 w-3 h-3 rounded-full bg-primary ring-4 ring-card" />
                 <div className="pl-2">
                   <span className="font-extrabold text-card-foreground text-sm flex items-center gap-2">
                     Version {history.length - idx}
-                    {idx === 0 && <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] uppercase font-bold">Latest</span>}
-                    {ver.metadata?.restored_from && <span className="px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-500 text-[9px] uppercase font-bold">Restored</span>}
+                    {idx === 0 && (
+                      <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] uppercase font-bold">
+                        Latest
+                      </span>
+                    )}
+                    {ver.metadata?.restored_from && (
+                      <span className="px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-500 text-[9px] uppercase font-bold">
+                        Restored
+                      </span>
+                    )}
                   </span>
                   <span className="text-[11px] font-bold text-muted-foreground block mt-0.5">
                     {new Date(ver.created_at).toLocaleString()}
                   </span>
                 </div>
                 <div className="text-right flex flex-col items-end gap-1">
-                  <span className="text-xs font-bold text-muted-foreground">ATS Score</span>
+                  <span className="text-xs font-bold text-muted-foreground">
+                    ATS Score
+                  </span>
                   <div className="flex items-center gap-2">
-                    <span className={`font-extrabold text-sm ${ver.metadata?.ats_score >= 80 ? 'text-success' : 'text-primary'}`}>
+                    <span
+                      className={`font-extrabold text-sm ${ver.metadata?.ats_score >= 80 ? "text-success" : "text-primary"}`}
+                    >
                       {ver.metadata?.ats_score || "N/A"}%
                     </span>
                     {idx > 0 && (
-                      <button 
-                        onClick={() => handleRestoreVersion(ver.id)} 
+                      <button
+                        onClick={() => handleRestoreVersion(ver.id)}
                         className="text-[10px] bg-primary/10 text-primary hover:bg-primary/20 px-2.5 py-1 rounded-md font-bold transition border-0 cursor-pointer"
                       >
                         Restore
@@ -336,18 +436,25 @@ function Profile() {
 
           {comparison?.canCompare && (
             <div className="mt-4 pt-4 border-t border-border/40">
-              <h4 className="text-sm font-bold text-card-foreground mb-3">Latest Upload Improvements</h4>
-              
+              <h4 className="text-sm font-bold text-card-foreground mb-3">
+                Latest Upload Improvements
+              </h4>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-xl bg-success/10 border border-success/20">
-                  <span className="text-[10px] font-bold text-success uppercase block mb-1">ATS Score</span>
+                  <span className="text-[10px] font-bold text-success uppercase block mb-1">
+                    ATS Score
+                  </span>
                   <span className="text-sm font-extrabold text-success">
-                    {comparison.atsImprovement > 0 ? "+" : ""}{comparison.atsImprovement}%
+                    {comparison.atsImprovement > 0 ? "+" : ""}
+                    {comparison.atsImprovement}%
                   </span>
                 </div>
-                
+
                 <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
-                  <span className="text-[10px] font-bold text-primary uppercase block mb-1">Added Skills</span>
+                  <span className="text-[10px] font-bold text-primary uppercase block mb-1">
+                    Added Skills
+                  </span>
                   <span className="text-xs font-extrabold text-primary">
                     {comparison.addedSkills?.length || 0} New
                   </span>
@@ -356,32 +463,52 @@ function Profile() {
 
               {comparison.addedSkills?.length > 0 && (
                 <div className="mt-3 text-xs">
-                  <span className="font-bold text-muted-foreground">New Skills: </span>
-                  <span className="font-bold text-card-foreground">{comparison.addedSkills.join(", ")}</span>
+                  <span className="font-bold text-muted-foreground">
+                    New Skills:{" "}
+                  </span>
+                  <span className="font-bold text-card-foreground">
+                    {comparison.addedSkills.join(", ")}
+                  </span>
                 </div>
               )}
               {comparison.removedSkills?.length > 0 && (
                 <div className="mt-2 text-xs">
-                  <span className="font-bold text-muted-foreground">Removed Skills: </span>
-                  <span className="font-bold text-destructive">{comparison.removedSkills.join(", ")}</span>
+                  <span className="font-bold text-muted-foreground">
+                    Removed Skills:{" "}
+                  </span>
+                  <span className="font-bold text-destructive">
+                    {comparison.removedSkills.join(", ")}
+                  </span>
                 </div>
               )}
               {comparison.newProjects?.length > 0 && (
                 <div className="mt-2 text-xs">
-                  <span className="font-bold text-muted-foreground">New Projects: </span>
-                  <span className="font-bold text-card-foreground">{comparison.newProjects.length} Added</span>
+                  <span className="font-bold text-muted-foreground">
+                    New Projects:{" "}
+                  </span>
+                  <span className="font-bold text-card-foreground">
+                    {comparison.newProjects.length} Added
+                  </span>
                 </div>
               )}
               {comparison.newCertifications?.length > 0 && (
                 <div className="mt-2 text-xs">
-                  <span className="font-bold text-muted-foreground">New Certifications: </span>
-                  <span className="font-bold text-card-foreground">{comparison.newCertifications.length} Added</span>
+                  <span className="font-bold text-muted-foreground">
+                    New Certifications:{" "}
+                  </span>
+                  <span className="font-bold text-card-foreground">
+                    {comparison.newCertifications.length} Added
+                  </span>
                 </div>
               )}
               {comparison.missingSections?.length > 0 && (
                 <div className="mt-2 text-xs p-2 bg-destructive/10 border border-destructive/20 rounded-lg">
-                  <span className="font-bold text-destructive flex items-center gap-1 mb-1">⚠️ Missing Sections</span>
-                  <span className="font-semibold text-card-foreground">{comparison.missingSections.join(", ")}</span>
+                  <span className="font-bold text-destructive flex items-center gap-1 mb-1">
+                    ⚠️ Missing Sections
+                  </span>
+                  <span className="font-semibold text-card-foreground">
+                    {comparison.missingSections.join(", ")}
+                  </span>
                 </div>
               )}
             </div>
@@ -397,7 +524,9 @@ function Profile() {
           <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center text-white">
             <Settings className="h-5 w-5" />
           </div>
-          <span className="text-sm font-bold text-card-foreground">Preferences & Settings</span>
+          <span className="text-sm font-bold text-card-foreground">
+            Preferences & Settings
+          </span>
         </div>
         <ChevronRight className="h-5 w-5 text-muted-foreground" />
       </Link>

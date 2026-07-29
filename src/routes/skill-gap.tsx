@@ -27,7 +27,8 @@ function SkillGap() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.getSkillGap()
+    api
+      .getSkillGap()
       .then(setData)
       .catch((err) => {
         setError(err.message || "Failed to load skill gap analysis.");
@@ -44,7 +45,8 @@ function SkillGap() {
           </div>
           <h3 className="font-bold text-foreground">Locked / Unresolved</h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Please complete onboarding first (Academic details, Resume scan, and Skill test) to unlock your Skill Gap Heatmap!
+            Please complete onboarding first (Academic details, Resume scan, and
+            Skill test) to unlock your Skill Gap Heatmap!
           </p>
         </div>
       </AppShell>
@@ -75,39 +77,54 @@ function SkillGap() {
       {/* Overview Card */}
       <div className="rounded-3xl p-5 bg-gradient-pink text-white shadow-glow mb-6 flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-wider font-semibold text-white/80">Target Role Analysis</p>
+          <p className="text-xs uppercase tracking-wider font-semibold text-white/80">
+            Target Role Analysis
+          </p>
           <h2 className="text-xl font-bold mt-1">{data.targetRole}</h2>
-          <p className="text-sm text-white/90 mt-1">{data.matchPercentage}% Overall compatibility score</p>
+          <p className="text-sm text-white/90 mt-1">
+            {data.matchPercentage}% Overall compatibility score
+          </p>
         </div>
         <Flame className="h-8 w-8 text-white animate-bounce" />
       </div>
 
       {/* Heatmap Grid */}
-      <h3 className="text-base font-bold mb-3 flex items-center gap-1.5"><Target className="h-5 w-5 text-primary" /> Skill Match Details</h3>
+      <h3 className="text-base font-bold mb-3 flex items-center gap-1.5">
+        <Target className="h-5 w-5 text-primary" /> Skill Match Details
+      </h3>
       <div className="space-y-3 mb-6">
         {data.skills.map((item) => (
-          <div key={item.name} className="p-4 rounded-2xl bg-card shadow-card border border-border/40">
+          <div
+            key={item.name}
+            className="p-4 rounded-2xl bg-card shadow-card border border-border/40"
+          >
             <div className="flex justify-between items-center mb-2">
               <span className="font-bold text-sm">{item.name}</span>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getHeatStyles(item.gap)}`}>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getHeatStyles(item.gap)}`}
+              >
                 {item.status}
               </span>
             </div>
-            
+
             {/* Bars for comparison */}
             <div className="space-y-1.5">
               <div className="flex items-center text-xs justify-between">
-                <span className="text-muted-foreground">Current: {item.current}%</span>
-                <span className="text-muted-foreground">Target: {item.required}%</span>
+                <span className="text-muted-foreground">
+                  Current: {item.current}%
+                </span>
+                <span className="text-muted-foreground">
+                  Target: {item.required}%
+                </span>
               </div>
               <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden relative">
                 {/* Required bar */}
-                <div 
-                  className="absolute top-0 bottom-0 bg-primary/20 border-r-2 border-primary/50" 
+                <div
+                  className="absolute top-0 bottom-0 bg-primary/20 border-r-2 border-primary/50"
                   style={{ width: `${item.required}%` }}
                 />
                 {/* Current bar */}
-                <div 
+                <div
                   className={`h-full rounded-full ${item.gap >= 0 ? "bg-success" : item.gap > -20 ? "bg-warning" : "bg-destructive"}`}
                   style={{ width: `${item.current}%` }}
                 />
@@ -128,10 +145,12 @@ function SkillGap() {
           <Compass className="h-5 w-5 text-primary" /> Bridge the Gap
         </h3>
         <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-          To reach 90%+ matching for <span className="font-bold text-foreground">{data.targetRole}</span>, prioritize studying courses in your missing components.
+          To reach 90%+ matching for{" "}
+          <span className="font-bold text-foreground">{data.targetRole}</span>,
+          prioritize studying courses in your missing components.
         </p>
-        <Link 
-          to="/courses" 
+        <Link
+          to="/courses"
           className="w-full h-12 rounded-xl bg-gradient-primary text-white font-bold flex items-center justify-center gap-1.5 shadow-glow"
         >
           Explore Bridge Courses

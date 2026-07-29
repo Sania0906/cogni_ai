@@ -32,12 +32,19 @@ function Courses() {
     loadCourses();
   }, []);
 
-  const filteredCourses = coursesList.filter(c => {
-    const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase()) || 
-                          c.author.toLowerCase().includes(search.toLowerCase());
-    
+  const filteredCourses = coursesList.filter((c) => {
+    const matchesSearch =
+      c.title.toLowerCase().includes(search.toLowerCase()) ||
+      c.author.toLowerCase().includes(search.toLowerCase());
+
     if (activeCat === "All Courses") return matchesSearch;
-    return matchesSearch && c.tags && c.tags.some((t: string) => t.toLowerCase().includes(activeCat.toLowerCase().split("/")[0]));
+    return (
+      matchesSearch &&
+      c.tags &&
+      c.tags.some((t: string) =>
+        t.toLowerCase().includes(activeCat.toLowerCase().split("/")[0]),
+      )
+    );
   });
 
   return (
@@ -61,7 +68,9 @@ function Courses() {
 
       <div className="mt-6 rounded-3xl p-5 bg-gradient-primary text-white shadow-glow flex justify-between items-center">
         <div>
-          <p className="text-3xl font-bold">{loading ? "..." : coursesList.length}</p>
+          <p className="text-3xl font-bold">
+            {loading ? "..." : coursesList.length}
+          </p>
           <p className="text-sm text-white/80">courses available</p>
         </div>
         <BookOpen className="h-7 w-7" />
@@ -74,7 +83,9 @@ function Courses() {
             key={c}
             onClick={() => setActiveCat(c)}
             className={`shrink-0 px-5 h-11 rounded-2xl font-semibold text-sm transition-all border-0 cursor-pointer ${
-              c === activeCat ? "bg-gradient-primary text-white shadow-glow" : "bg-card shadow-card"
+              c === activeCat
+                ? "bg-gradient-primary text-white shadow-glow"
+                : "bg-card shadow-card"
             }`}
           >
             {c}
@@ -83,7 +94,7 @@ function Courses() {
       </div>
 
       <h2 className="text-lg font-bold mt-7 mb-3">Featured Courses</h2>
-      
+
       {loading ? (
         <div className="flex justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -92,13 +103,19 @@ function Courses() {
         <div className="space-y-3">
           {filteredCourses.length > 0 ? (
             filteredCourses.map((c) => (
-              <Link to="/courses" key={c.title || c._id} className="block p-4 rounded-2xl bg-card shadow-card border border-border/10">
+              <Link
+                to="/courses"
+                key={c.title || c._id}
+                className="block p-4 rounded-2xl bg-card shadow-card border border-border/10"
+              >
                 <div className="flex gap-4">
                   <div className="h-14 w-14 rounded-2xl bg-gradient-primary flex items-center justify-center text-white shrink-0">
                     <BookOpen className="h-7 w-7" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold truncate text-foreground">{c.title}</p>
+                    <p className="font-bold truncate text-foreground">
+                      {c.title}
+                    </p>
                     <p className="text-sm text-muted-foreground">{c.author}</p>
                     <div className="flex gap-2 mt-2 flex-wrap">
                       {(c.tags || []).map((t: string, i: number) => (
@@ -106,8 +123,14 @@ function Courses() {
                           key={t}
                           className="text-xs font-bold px-2.5 py-1 rounded-lg"
                           style={{
-                            backgroundColor: i === 0 ? "oklch(0.62 0.21 260 / 0.12)" : "oklch(0.55 0.24 280 / 0.12)",
-                            color: i === 0 ? "oklch(0.5 0.21 260)" : "oklch(0.45 0.24 280)",
+                            backgroundColor:
+                              i === 0
+                                ? "oklch(0.62 0.21 260 / 0.12)"
+                                : "oklch(0.55 0.24 280 / 0.12)",
+                            color:
+                              i === 0
+                                ? "oklch(0.5 0.21 260)"
+                                : "oklch(0.45 0.24 280)",
                           }}
                         >
                           {t}
@@ -115,15 +138,23 @@ function Courses() {
                       ))}
                     </div>
                     <div className="flex gap-4 text-xs text-muted-foreground mt-2">
-                      <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{c.weeks} weeks</span>
-                      <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5" />{c.rating} ({c.students})</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {c.weeks} weeks
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Star className="h-3.5 w-3.5" />
+                        {c.rating} ({c.students})
+                      </span>
                     </div>
                   </div>
                 </div>
               </Link>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-6">No courses found matching criteria.</p>
+            <p className="text-sm text-muted-foreground text-center py-6">
+              No courses found matching criteria.
+            </p>
           )}
         </div>
       )}

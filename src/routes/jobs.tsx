@@ -53,14 +53,16 @@ function Jobs() {
 
       <div className="mt-6 rounded-3xl p-5 bg-gradient-primary text-white shadow-glow flex items-center justify-between">
         <div>
-          <p className="text-3xl font-bold">{loading ? "..." : jobsList.length}</p>
+          <p className="text-3xl font-bold">
+            {loading ? "..." : jobsList.length}
+          </p>
           <p className="text-sm text-white/80">matching jobs found</p>
         </div>
         <TrendingUp className="h-7 w-7" />
       </div>
 
       <h2 className="text-lg font-bold mt-6 mb-3">Recommended for You</h2>
-      
+
       {loading ? (
         <div className="flex justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -69,28 +71,45 @@ function Jobs() {
         <div className="space-y-3">
           {jobsList.length > 0 ? (
             jobsList.map((j) => (
-              <div key={j._id || j.title} className="p-5 rounded-2xl bg-card shadow-card border border-border/10">
+              <div
+                key={j._id || j.title}
+                className="p-5 rounded-2xl bg-card shadow-card border border-border/10"
+              >
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="font-bold text-sm text-foreground">{j.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{j.company}</p>
+                    <p className="font-bold text-sm text-foreground">
+                      {j.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {j.company}
+                    </p>
                   </div>
                   <div className="h-10 w-10 rounded-xl bg-gradient-primary text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-sm">
                     {j.match || 75}%
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
-                  <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{j.loc}</span>
-                  <span className="flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{j.type}</span>
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {j.loc}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Briefcase className="h-3.5 w-3.5" />
+                    {j.type}
+                  </span>
                 </div>
-                <p className="text-success text-sm font-bold mt-2">{j.salary}</p>
+                <p className="text-success text-sm font-bold mt-2">
+                  {j.salary}
+                </p>
                 <button className="w-full h-11 mt-3.5 rounded-xl bg-gradient-primary text-white font-bold text-xs border-0 cursor-pointer shadow-glow">
                   View Details
                 </button>
               </div>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-6">No matching jobs found.</p>
+            <p className="text-sm text-muted-foreground text-center py-6">
+              No matching jobs found.
+            </p>
           )}
         </div>
       )}

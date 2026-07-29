@@ -29,7 +29,7 @@ async function checkSchema() {
     "academic_details",
     "career_dna",
     "employability_scores",
-    "user_courses"
+    "user_courses",
   ];
 
   for (const table of tables) {
@@ -40,7 +40,9 @@ async function checkSchema() {
       .limit(1);
 
     if (error) {
-      console.log(`❌ Table [${table}]: ERROR - ${error.message} (code: ${error.code})`);
+      console.log(
+        `❌ Table [${table}]: ERROR - ${error.message} (code: ${error.code})`,
+      );
     } else {
       console.log(`✅ Table [${table}]: OK (Found ${data?.length} row(s))`);
       if (data && data.length > 0) {

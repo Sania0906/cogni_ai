@@ -25,7 +25,10 @@ function Progress() {
           { icon: Clock, label: "Hours", val: "62" },
           { icon: Award, label: "Earned", val: "8" },
         ].map((s) => (
-          <div key={s.label} className="rounded-2xl bg-card p-4 shadow-card text-center">
+          <div
+            key={s.label}
+            className="rounded-2xl bg-card p-4 shadow-card text-center"
+          >
             <s.icon className="h-5 w-5 mx-auto text-primary mb-1.5" />
             <p className="text-2xl font-bold">{s.val}</p>
             <p className="text-xs text-muted-foreground">{s.label}</p>
@@ -47,7 +50,10 @@ function Progress() {
               <span className="text-xs font-bold">{c.pct}%</span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
-              <div className="h-full bg-gradient-primary rounded-full" style={{ width: `${c.pct}%` }} />
+              <div
+                className="h-full bg-gradient-primary rounded-full"
+                style={{ width: `${c.pct}%` }}
+              />
             </div>
           </div>
         ))}

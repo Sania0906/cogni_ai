@@ -21,7 +21,9 @@ function ForgotPassword() {
       const res = await api.forgotPassword(email);
       localStorage.setItem("pendingEmail", email);
       if (res.otp) {
-        toast.success(`Verification code sent! Code: ${res.otp}`, { duration: 10000 });
+        toast.success(`Verification code sent! Code: ${res.otp}`, {
+          duration: 10000,
+        });
       } else {
         toast.success("Verification code sent to your email!");
       }
@@ -38,7 +40,10 @@ function ForgotPassword() {
     <div className="relative min-h-screen overflow-hidden flex items-center justify-center px-5">
       <div className="absolute inset-0 bg-gradient-primary" />
       <div className="relative w-full max-w-sm">
-        <Link to="/login" className="inline-flex items-center text-white/90 text-sm mb-6">
+        <Link
+          to="/login"
+          className="inline-flex items-center text-white/90 text-sm mb-6"
+        >
           <ArrowLeft className="h-4 w-4 mr-1" /> Back
         </Link>
         <div className="text-white mb-6">
@@ -67,7 +72,13 @@ function ForgotPassword() {
             disabled={loading}
             className="w-full h-14 rounded-2xl bg-white text-primary font-bold flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            {loading ? "Sending..." : <>Send Code <ArrowRight className="h-5 w-5" /></>}
+            {loading ? (
+              "Sending..."
+            ) : (
+              <>
+                Send Code <ArrowRight className="h-5 w-5" />
+              </>
+            )}
           </button>
         </form>
       </div>

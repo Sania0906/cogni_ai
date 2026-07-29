@@ -1,8 +1,27 @@
-import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  useNavigate,
+  redirect,
+} from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { 
-  Bell, Search, Award, BookOpen, Brain, GitFork, 
-  Flame, CheckCircle, LineChart, FileText, Monitor, ShieldAlert, Sparkles, Upload, Building, User
+import {
+  Bell,
+  Search,
+  Award,
+  BookOpen,
+  Brain,
+  GitFork,
+  Flame,
+  CheckCircle,
+  LineChart,
+  FileText,
+  Monitor,
+  ShieldAlert,
+  Sparkles,
+  Upload,
+  Building,
+  User,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { api } from "@/lib/api/client";
@@ -19,17 +38,83 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 const aiModules = [
-  { to: "/career", label: "Career DNA", icon: Brain, color: "text-primary", bg: "bg-primary/10" },
-  { to: "/skill-gap", label: "Skill Gap", icon: Flame, color: "text-warning", bg: "bg-warning/10" },
-  { to: "/career-success", label: "Success Rate", icon: CheckCircle, color: "text-success", bg: "bg-success/10" },
-  { to: "/industry-demand", label: "Market Intel", icon: LineChart, color: "text-pink", bg: "bg-pink/10" },
-  { to: "/roadmap-generator", label: "AI Roadmap", icon: GitFork, color: "text-primary", bg: "bg-primary/10" },
-  { to: "/employability", label: "Employability", icon: Award, color: "text-warning", bg: "bg-warning/10" },
-  { to: "/skill-growth", label: "Growth Engine", icon: Sparkles, color: "text-success", bg: "bg-success/10" },
-  { to: "/platform-analytics", label: "Platform Metrics", icon: Monitor, color: "text-primary", bg: "bg-primary/10" },
-  { to: "/career-forecasting", label: "Career Forecast", icon: ShieldAlert, color: "text-warning", bg: "bg-warning/10" },
-  { to: "/company-readiness", label: "Company Readiness", icon: Building, color: "text-primary", bg: "bg-primary/10" },
-  { to: "/career-twin", label: "Career Twin", icon: User, color: "text-success", bg: "bg-success/10" },
+  {
+    to: "/career",
+    label: "Career DNA",
+    icon: Brain,
+    color: "text-primary",
+    bg: "bg-primary/10",
+  },
+  {
+    to: "/skill-gap",
+    label: "Skill Gap",
+    icon: Flame,
+    color: "text-warning",
+    bg: "bg-warning/10",
+  },
+  {
+    to: "/career-success",
+    label: "Success Rate",
+    icon: CheckCircle,
+    color: "text-success",
+    bg: "bg-success/10",
+  },
+  {
+    to: "/industry-demand",
+    label: "Market Intel",
+    icon: LineChart,
+    color: "text-pink",
+    bg: "bg-pink/10",
+  },
+  {
+    to: "/roadmap-generator",
+    label: "AI Roadmap",
+    icon: GitFork,
+    color: "text-primary",
+    bg: "bg-primary/10",
+  },
+  {
+    to: "/employability",
+    label: "Employability",
+    icon: Award,
+    color: "text-warning",
+    bg: "bg-warning/10",
+  },
+  {
+    to: "/skill-growth",
+    label: "Growth Engine",
+    icon: Sparkles,
+    color: "text-success",
+    bg: "bg-success/10",
+  },
+  {
+    to: "/platform-analytics",
+    label: "Platform Metrics",
+    icon: Monitor,
+    color: "text-primary",
+    bg: "bg-primary/10",
+  },
+  {
+    to: "/career-forecasting",
+    label: "Career Forecast",
+    icon: ShieldAlert,
+    color: "text-warning",
+    bg: "bg-warning/10",
+  },
+  {
+    to: "/company-readiness",
+    label: "Company Readiness",
+    icon: Building,
+    color: "text-primary",
+    bg: "bg-primary/10",
+  },
+  {
+    to: "/career-twin",
+    label: "Career Twin",
+    icon: User,
+    color: "text-success",
+    bg: "bg-success/10",
+  },
 ];
 
 function Dashboard() {
@@ -46,17 +131,27 @@ function Dashboard() {
   // Dynamic Dashboard Career Index metrics
   const [atsScore, setAtsScore] = useState<number | null>(null);
   const [assessmentScore, setAssessmentScore] = useState<number | null>(null);
-  const [employabilityScore, setEmployabilityScore] = useState<number | null>(null);
+  const [employabilityScore, setEmployabilityScore] = useState<number | null>(
+    null,
+  );
   const [learningProgress, setLearningProgress] = useState<number | null>(null);
-  const [careerDnaArchetype, setCareerDnaArchetype] = useState<string | null>(null);
+  const [careerDnaArchetype, setCareerDnaArchetype] = useState<string | null>(
+    null,
+  );
   const [companyReadiness, setCompanyReadiness] = useState<any>(null);
   const [careerTwin, setCareerTwin] = useState<any>(null);
-  
+
   // Skill Gap Analysis State
   const [skillGap, setSkillGap] = useState<{
     targetRole: string;
     matchPercentage: number;
-    skills: { name: string; current: number; required: number; gap: number; status: string }[];
+    skills: {
+      name: string;
+      current: number;
+      required: number;
+      gap: number;
+      status: string;
+    }[];
   } | null>(null);
 
   // Recommended Courses State
@@ -108,7 +203,9 @@ function Dashboard() {
       }
 
       // 5. Fetch Company Readiness
-      const compReadiness = await api.getLatestCompanyReadiness().catch(() => null);
+      const compReadiness = await api
+        .getLatestCompanyReadiness()
+        .catch(() => null);
       setCompanyReadiness(compReadiness);
 
       // 6. Fetch Career Twin
@@ -118,9 +215,12 @@ function Dashboard() {
       // 5. Fetch Enrolled/Active Courses
       const courses = await api.getMyCourses().catch(() => []);
       if (courses && courses.length > 0) {
-        const totalProgress = courses.reduce((sum: number, c: any) => sum + (c.progress || 0), 0);
+        const totalProgress = courses.reduce(
+          (sum: number, c: any) => sum + (c.progress || 0),
+          0,
+        );
         setLearningProgress(Math.round(totalProgress / courses.length));
-        
+
         const active = courses.find((c: any) => c.progress < 100) || courses[0];
         setActiveCourse(active);
       }
@@ -134,13 +234,19 @@ function Dashboard() {
       // 7. Fetch Career Paths dynamically
       const paths = await api.getCareerPaths().catch(() => []);
       if (paths && paths.length > 0) {
-        const gradients = ["bg-gradient-primary", "bg-gradient-pink", "bg-gradient-blue"];
-        setRecommendedPaths(paths.slice(0, 3).map((p: any, idx: number) => ({
-          title: p.role,
-          pct: p.matchPercentage,
-          tags: p.requiredSkills.slice(0, 2),
-          gradient: gradients[idx % gradients.length]
-        })));
+        const gradients = [
+          "bg-gradient-primary",
+          "bg-gradient-pink",
+          "bg-gradient-blue",
+        ];
+        setRecommendedPaths(
+          paths.slice(0, 3).map((p: any, idx: number) => ({
+            title: p.role,
+            pct: p.matchPercentage,
+            tags: p.requiredSkills.slice(0, 2),
+            gradient: gradients[idx % gradients.length],
+          })),
+        );
       } else {
         setRecommendedPaths([]);
       }
@@ -182,16 +288,20 @@ function Dashboard() {
       formData.append("file", file);
       formData.append("targetJob", "Senior Data Scientist");
 
-      await new Promise(r => setTimeout(r, 600));
-      setScanProgress("Parsing document structure and extracting key sections...");
-      await new Promise(r => setTimeout(r, 600));
-      setScanProgress("Analyzing skill matches and optimizing profile details...");
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 600));
+      setScanProgress(
+        "Parsing document structure and extracting key sections...",
+      );
+      await new Promise((r) => setTimeout(r, 600));
+      setScanProgress(
+        "Analyzing skill matches and optimizing profile details...",
+      );
+      await new Promise((r) => setTimeout(r, 600));
       setScanProgress("Finalizing ATS scorecard matching...");
 
       await api.optimizeResume(formData);
       toast.success("Resume analyzed successfully!");
-      
+
       setHasResume(true);
       await loadDashboardData();
     } catch (err: any) {
@@ -231,9 +341,13 @@ function Dashboard() {
             <Upload className="h-8 w-8 text-primary" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-bold text-foreground">Upload Your Resume</h2>
+            <h2 className="text-xl font-bold text-foreground">
+              Upload Your Resume
+            </h2>
             <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
-              Upload your professional resume (PDF, DOCX, or TXT) to instantly generate your ATS Score, Career DNA, Skill Gaps, and custom AI insights.
+              Upload your professional resume (PDF, DOCX, or TXT) to instantly
+              generate your ATS Score, Career DNA, Skill Gaps, and custom AI
+              insights.
             </p>
           </div>
 
@@ -242,7 +356,9 @@ function Dashboard() {
               <div className="flex justify-center">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
               </div>
-              <p className="text-xs font-bold text-primary animate-pulse">{scanProgress}</p>
+              <p className="text-xs font-bold text-primary animate-pulse">
+                {scanProgress}
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -252,7 +368,9 @@ function Dashboard() {
               >
                 <div className="flex flex-col items-center gap-1.5 text-xs text-muted-foreground">
                   <Upload className="h-6 w-6 text-primary" />
-                  <span className="font-bold text-primary">Click to select file</span>
+                  <span className="font-bold text-primary">
+                    Click to select file
+                  </span>
                   <span>or drag & drop here</span>
                 </div>
                 <input
@@ -280,10 +398,14 @@ function Dashboard() {
           {/* Ask AI Assistant */}
           <Link to="/ai-assistant" className="block mb-6">
             <div className="rounded-3xl p-5 bg-gradient-primary text-white shadow-glow flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl">✨</div>
+              <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl">
+                ✨
+              </div>
               <div className="flex-1">
                 <p className="font-bold">Ask AI Assistant</p>
-                <p className="text-sm text-white/80">Get personalized career guidance</p>
+                <p className="text-sm text-white/80">
+                  Get personalized career guidance
+                </p>
               </div>
             </div>
           </Link>
@@ -294,55 +416,80 @@ function Dashboard() {
             {/* ATS Score */}
             <div className="p-4.5 rounded-2xl bg-card shadow-card border border-border/10">
               <div className="flex justify-between items-start">
-                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">ATS Score</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">
+                  ATS Score
+                </span>
                 <span className="h-2 w-2 rounded-full bg-primary" />
               </div>
               <p className="text-2xl font-black mt-2 text-card-foreground">
                 {atsScore !== null ? `${atsScore}/100` : "Loading..."}
               </p>
-              <p className="text-[9px] text-muted-foreground mt-1">Resume screening match</p>
+              <p className="text-[9px] text-muted-foreground mt-1">
+                Resume screening match
+              </p>
             </div>
 
             {/* Assessment Score */}
             <div className="p-4.5 rounded-2xl bg-card shadow-card border border-border/10">
               <div className="flex justify-between items-start">
-                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">Assessment</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">
+                  Assessment
+                </span>
                 <span className="h-2 w-2 rounded-full bg-success" />
               </div>
               <p className="text-2xl font-black mt-2 text-card-foreground">
-                {assessmentScore !== null ? `${assessmentScore}/100` : "Loading..."}
+                {assessmentScore !== null
+                  ? `${assessmentScore}/100`
+                  : "Loading..."}
               </p>
-              <p className="text-[9px] text-muted-foreground mt-1">Skill test benchmark</p>
+              <p className="text-[9px] text-muted-foreground mt-1">
+                Skill test benchmark
+              </p>
             </div>
 
             {/* Employability Score */}
             <div className="p-4.5 rounded-2xl bg-card shadow-card border border-border/10">
               <div className="flex justify-between items-start">
-                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">Employability</span>
-                <span className="h-2 w-2 rounded-full bg-pink" style={{ backgroundColor: "oklch(0.65 0.24 350)" }} />
+                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">
+                  Employability
+                </span>
+                <span
+                  className="h-2 w-2 rounded-full bg-pink"
+                  style={{ backgroundColor: "oklch(0.65 0.24 350)" }}
+                />
               </div>
               <p className="text-2xl font-black mt-2 text-card-foreground">
-                {employabilityScore !== null ? `${employabilityScore}/100` : "Loading..."}
+                {employabilityScore !== null
+                  ? `${employabilityScore}/100`
+                  : "Loading..."}
               </p>
-              <p className="text-[9px] text-muted-foreground mt-1">Composite hiring rating</p>
+              <p className="text-[9px] text-muted-foreground mt-1">
+                Composite hiring rating
+              </p>
             </div>
 
             {/* Learning Progress */}
             <div className="p-4.5 rounded-2xl bg-card shadow-card border border-border/10">
               <div className="flex justify-between items-start">
-                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">Learning</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">
+                  Learning
+                </span>
                 <span className="h-2 w-2 rounded-full bg-warning" />
               </div>
               <p className="text-2xl font-black mt-2 text-card-foreground">
                 {learningProgress !== null ? `${learningProgress}%` : "0%"}
               </p>
-              <p className="text-[9px] text-muted-foreground mt-1">Course progress</p>
+              <p className="text-[9px] text-muted-foreground mt-1">
+                Course progress
+              </p>
             </div>
 
             {/* Career DNA Archetype */}
             <div className="col-span-1 p-4.5 rounded-2xl bg-card shadow-card border border-border/10 flex justify-between items-center">
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">DNA Archetype</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">
+                  DNA Archetype
+                </span>
                 <p className="text-sm font-extrabold text-card-foreground mt-1">
                   {careerDnaArchetype || "Generating..."}
                 </p>
@@ -353,9 +500,14 @@ function Dashboard() {
             </div>
 
             {/* Career Twin Identity */}
-            <Link to="/career-twin" className="col-span-1 p-4.5 rounded-2xl bg-card shadow-card border border-border/10 flex justify-between items-center hover:scale-[1.02] transition-transform">
+            <Link
+              to="/career-twin"
+              className="col-span-1 p-4.5 rounded-2xl bg-card shadow-card border border-border/10 flex justify-between items-center hover:scale-[1.02] transition-transform"
+            >
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">Career Twin</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">
+                  Career Twin
+                </span>
                 <p className="text-sm font-extrabold text-card-foreground mt-1 truncate">
                   {careerTwin?.personality || "Generate Twin..."}
                 </p>
@@ -371,20 +523,31 @@ function Dashboard() {
             <div className="rounded-3xl p-5 bg-card shadow-card border border-border/10 mb-6">
               <div className="flex justify-between items-start mb-4">
                 <h2 className="text-lg font-bold flex items-center gap-2 text-foreground">
-                  <Building className="h-5 w-5 text-primary" /> Company Readiness: {companyReadiness.company_name}
+                  <Building className="h-5 w-5 text-primary" /> Company
+                  Readiness: {companyReadiness.company_name}
                 </h2>
-                <Link to="/company-readiness" className="text-xs font-bold text-primary hover:underline">
+                <Link
+                  to="/company-readiness"
+                  className="text-xs font-bold text-primary hover:underline"
+                >
                   View Full Report
                 </Link>
               </div>
               <div className="mb-4">
-                <p className="text-sm font-extrabold text-foreground">Target Role: {companyReadiness.target_role}</p>
+                <p className="text-sm font-extrabold text-foreground">
+                  Target Role: {companyReadiness.target_role}
+                </p>
                 <div className="flex justify-between items-center text-xs font-bold text-muted-foreground mt-1">
                   <span>Alignment Score</span>
-                  <span className="text-primary">{companyReadiness.readiness_score}% Match</span>
+                  <span className="text-primary">
+                    {companyReadiness.readiness_score}% Match
+                  </span>
                 </div>
                 <div className="h-2 w-full bg-muted rounded-full overflow-hidden mt-1.5">
-                  <div className="h-full bg-gradient-primary rounded-full transition-all" style={{ width: `${companyReadiness.readiness_score}%` }} />
+                  <div
+                    className="h-full bg-gradient-primary rounded-full transition-all"
+                    style={{ width: `${companyReadiness.readiness_score}%` }}
+                  />
                 </div>
               </div>
             </div>
@@ -392,11 +555,17 @@ function Dashboard() {
             <div className="rounded-3xl p-5 bg-card shadow-card border border-dashed border-border/40 mb-6 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold flex items-center gap-2 text-foreground">
-                  <Building className="h-5 w-5 text-muted-foreground" /> Company Readiness
+                  <Building className="h-5 w-5 text-muted-foreground" /> Company
+                  Readiness
                 </h2>
-                <p className="text-xs text-muted-foreground mt-1">See how you stack up against top tech companies.</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  See how you stack up against top tech companies.
+                </p>
               </div>
-              <Link to="/company-readiness" className="bg-primary/10 text-primary px-4 py-2 rounded-xl text-sm font-bold hover:bg-primary/20 transition">
+              <Link
+                to="/company-readiness"
+                className="bg-primary/10 text-primary px-4 py-2 rounded-xl text-sm font-bold hover:bg-primary/20 transition"
+              >
                 Analyze
               </Link>
             </div>
@@ -409,27 +578,41 @@ function Dashboard() {
                 <Flame className="h-5 w-5 text-warning" /> Skill Gap Analysis
               </h2>
               <div className="mb-4">
-                <p className="text-sm font-extrabold text-foreground">Target Role: {skillGap.targetRole}</p>
+                <p className="text-sm font-extrabold text-foreground">
+                  Target Role: {skillGap.targetRole}
+                </p>
                 <div className="flex justify-between items-center text-xs font-bold text-muted-foreground mt-1">
                   <span>Overall Alignment</span>
-                  <span className="text-primary">{skillGap.matchPercentage}% Match</span>
+                  <span className="text-primary">
+                    {skillGap.matchPercentage}% Match
+                  </span>
                 </div>
                 <div className="h-2 w-full bg-muted rounded-full overflow-hidden mt-1.5">
-                  <div className="h-full bg-gradient-primary rounded-full" style={{ width: `${skillGap.matchPercentage}%` }} />
+                  <div
+                    className="h-full bg-gradient-primary rounded-full"
+                    style={{ width: `${skillGap.matchPercentage}%` }}
+                  />
                 </div>
               </div>
               <div className="space-y-3 mt-4">
                 {skillGap.skills.map((s, idx) => (
-                  <div key={idx} className="flex justify-between items-center text-xs border-b border-border/40 pb-2 last:border-0 last:pb-0">
+                  <div
+                    key={idx}
+                    className="flex justify-between items-center text-xs border-b border-border/40 pb-2 last:border-0 last:pb-0"
+                  >
                     <div>
                       <p className="font-bold text-foreground">{s.name}</p>
-                      <p className="text-[10px] text-muted-foreground">Current: {s.current}% | Required: {s.required}%</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        Current: {s.current}% | Required: {s.required}%
+                      </p>
                     </div>
-                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-md ${
-                      s.status === "Match" 
-                        ? "bg-success/10 text-success" 
-                        : "bg-warning/10 text-warning"
-                    }`}>
+                    <span
+                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-md ${
+                        s.status === "Match"
+                          ? "bg-success/10 text-success"
+                          : "bg-warning/10 text-warning"
+                      }`}
+                    >
                       {s.status}
                     </span>
                   </div>
@@ -447,10 +630,14 @@ function Dashboard() {
                 to={m.to}
                 className="flex items-center gap-3 p-3.5 rounded-2xl bg-card shadow-card border border-border/20 transition-all hover:scale-[1.02] relative"
               >
-                <div className={`h-10 w-10 rounded-xl ${m.bg} flex items-center justify-center shrink-0`}>
+                <div
+                  className={`h-10 w-10 rounded-xl ${m.bg} flex items-center justify-center shrink-0`}
+                >
                   <m.icon className={`h-5 w-5 ${m.color}`} />
                 </div>
-                <span className="text-xs font-bold leading-tight">{m.label}</span>
+                <span className="text-xs font-bold leading-tight">
+                  {m.label}
+                </span>
               </Link>
             ))}
           </div>
@@ -465,20 +652,34 @@ function Dashboard() {
                   key={m.title}
                   className="flex items-center gap-4 p-4 rounded-2xl bg-card shadow-card"
                 >
-                  <div className={`h-14 w-14 rounded-2xl ${m.gradient} flex items-center justify-center text-white`}>
+                  <div
+                    className={`h-14 w-14 rounded-2xl ${m.gradient} flex items-center justify-center text-white`}
+                  >
                     <Award className="h-7 w-7" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold truncate">{m.title}</p>
-                    <p className="text-xs text-muted-foreground mb-2">{m.pct}% match based on your skills</p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {m.pct}% match based on your skills
+                    </p>
                     <div className="flex gap-2 flex-wrap">
                       {m.tags.map((t: string, i: number) => (
                         <span
                           key={t}
                           className={`text-xs font-medium px-2.5 py-1 rounded-lg ${
-                            i === 0 ? "bg-accent text-accent-foreground" : "bg-pink/10 text-pink"
+                            i === 0
+                              ? "bg-accent text-accent-foreground"
+                              : "bg-pink/10 text-pink"
                           }`}
-                          style={i === 1 ? { color: "oklch(0.55 0.24 350)", backgroundColor: "oklch(0.65 0.24 350 / 0.12)" } : undefined}
+                          style={
+                            i === 1
+                              ? {
+                                  color: "oklch(0.55 0.24 350)",
+                                  backgroundColor:
+                                    "oklch(0.65 0.24 350 / 0.12)",
+                                }
+                              : undefined
+                          }
                         >
                           {t}
                         </span>
@@ -489,7 +690,8 @@ function Dashboard() {
               ))
             ) : (
               <div className="p-6 rounded-2xl bg-card border border-border/10 text-center text-xs text-muted-foreground">
-                No recommended paths found. Please upload your resume to generate matches!
+                No recommended paths found. Please upload your resume to
+                generate matches!
               </div>
             )}
           </div>
@@ -498,15 +700,23 @@ function Dashboard() {
           {recommendedCourses.length > 0 && (
             <div className="mb-8">
               <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
-                <BookOpen className="h-5.5 w-5.5 text-primary" /> Recommended Courses
+                <BookOpen className="h-5.5 w-5.5 text-primary" /> Recommended
+                Courses
               </h2>
               <div className="space-y-3">
                 {recommendedCourses.map((course, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl bg-card shadow-card border border-border/10 flex flex-col gap-2.5">
+                  <div
+                    key={idx}
+                    className="p-4 rounded-2xl bg-card shadow-card border border-border/10 flex flex-col gap-2.5"
+                  >
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <h4 className="font-bold text-sm text-foreground">{course.title}</h4>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">Duration: {course.duration} | {course.difficulty}</p>
+                        <h4 className="font-bold text-sm text-foreground">
+                          {course.title}
+                        </h4>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Duration: {course.duration} | {course.difficulty}
+                        </p>
                       </div>
                       <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-lg shrink-0">
                         {course.provider || "CognifyAI Academy"}
@@ -526,18 +736,26 @@ function Dashboard() {
           {activeCourse && (
             <>
               <h2 className="text-xl font-bold mb-3">Continue Learning</h2>
-              <Link to="/courses" className="block p-4 rounded-2xl bg-card shadow-card">
+              <Link
+                to="/courses"
+                className="block p-4 rounded-2xl bg-card shadow-card"
+              >
                 <div className="flex items-center gap-4 mb-3">
                   <div className="h-14 w-14 rounded-2xl bg-gradient-primary flex items-center justify-center">
                     <BookOpen className="h-7 w-7 text-white" />
                   </div>
                   <div className="flex-1">
                     <p className="font-bold">{activeCourse.title}</p>
-                    <p className="text-xs text-muted-foreground">{activeCourse.progress}% completed</p>
+                    <p className="text-xs text-muted-foreground">
+                      {activeCourse.progress}% completed
+                    </p>
                   </div>
                 </div>
                 <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full bg-gradient-primary rounded-full" style={{ width: `${activeCourse.progress}%` }} />
+                  <div
+                    className="h-full bg-gradient-primary rounded-full"
+                    style={{ width: `${activeCourse.progress}%` }}
+                  />
                 </div>
               </Link>
             </>

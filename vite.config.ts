@@ -19,18 +19,20 @@ const copyShellToIndexPlugin = () => ({
     const clientDir = path.resolve(__dirname, "dist/client");
     const shellPath = path.resolve(clientDir, "_shell.html");
     const indexPath = path.resolve(clientDir, "index.html");
-    
+
     if (fs.existsSync(shellPath)) {
       try {
         fs.copyFileSync(shellPath, indexPath);
-        console.log("Successfully copied _shell.html to index.html inside dist/client");
+        console.log(
+          "Successfully copied _shell.html to index.html inside dist/client",
+        );
       } catch (err) {
         console.error("Error copying _shell.html to index.html:", err);
       }
     } else {
       console.warn("Warning: _shell.html not found in dist/client");
     }
-  }
+  },
 });
 
 export default defineConfig({
@@ -43,9 +45,7 @@ export default defineConfig({
     },
   },
   vite: {
-    plugins: [
-      copyShellToIndexPlugin()
-    ],
+    plugins: [copyShellToIndexPlugin()],
     server: {
       proxy: {
         "/api": {
@@ -60,21 +60,25 @@ export default defineConfig({
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('@tanstack')) {
-                return 'vendor';
+            if (id.includes("node_modules")) {
+              if (
+                id.includes("react") ||
+                id.includes("react-dom") ||
+                id.includes("@tanstack")
+              ) {
+                return "vendor";
               }
-              if (id.includes('lucide-react')) {
-                return 'icons';
+              if (id.includes("lucide-react")) {
+                return "icons";
               }
-              if (id.includes('recharts')) {
-                return 'charts';
+              if (id.includes("recharts")) {
+                return "charts";
               }
-              return 'lib';
+              return "lib";
             }
-          }
-        }
-      }
-    }
+          },
+        },
+      },
+    },
   },
 });

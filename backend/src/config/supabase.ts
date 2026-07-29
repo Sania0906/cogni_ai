@@ -21,15 +21,23 @@ console.log("=================================");
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 const supabaseServiceRoleKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SERVICE_KEY;
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes("your-project-id") || supabaseAnonKey.includes("your-supabase-anon-key")) {
-  throw new Error("CRITICAL CONFIGURATION ERROR: Supabase URL and Anon Key are required for this production application. Fallback mock modes have been disabled.");
+if (
+  !supabaseUrl ||
+  !supabaseAnonKey ||
+  supabaseUrl.includes("your-project-id") ||
+  supabaseAnonKey.includes("your-supabase-anon-key")
+) {
+  throw new Error(
+    "CRITICAL CONFIGURATION ERROR: Supabase URL and Anon Key are required for this production application. Fallback mock modes have been disabled.",
+  );
 }
 
 if (!supabaseServiceRoleKey || supabaseServiceRoleKey === supabaseAnonKey) {
-  console.warn("WARNING: SUPABASE_SERVICE_ROLE_KEY is missing or set to the public anon key. Backend operations requiring RLS bypass (such as profile complete sync and system updates) will fail or be blocked by RLS policies!");
+  console.warn(
+    "WARNING: SUPABASE_SERVICE_ROLE_KEY is missing or set to the public anon key. Backend operations requiring RLS bypass (such as profile complete sync and system updates) will fail or be blocked by RLS policies!",
+  );
 }
 
 // Public client obeying Row Level Security (RLS)
@@ -44,7 +52,7 @@ export const supabaseAdmin = createClient(
       autoRefreshToken: false,
       persistSession: false,
     },
-  }
+  },
 );
 
 /**

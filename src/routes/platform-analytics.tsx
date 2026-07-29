@@ -31,7 +31,8 @@ function PlatformAnalytics() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.getPlatformAnalytics()
+    api
+      .getPlatformAnalytics()
       .then(setData)
       .catch((err) => {
         setError(err.message || "Failed to load platform analytics.");
@@ -47,7 +48,8 @@ function PlatformAnalytics() {
           </div>
           <h3 className="font-bold text-foreground">Access Denied</h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            {error}. You do not have permissions or there was an error retrieving platform statistics.
+            {error}. You do not have permissions or there was an error
+            retrieving platform statistics.
           </p>
         </div>
       </AdminShell>
@@ -81,7 +83,9 @@ function PlatformAnalytics() {
       </div>
 
       {/* Comparisons */}
-      <h3 className="text-base font-bold mb-3 flex items-center gap-1.5"><Users className="h-5 w-5 text-primary" /> Web vs Android Engagement</h3>
+      <h3 className="text-base font-bold mb-3 flex items-center gap-1.5">
+        <Users className="h-5 w-5 text-primary" /> Web vs Android Engagement
+      </h3>
       <div className="space-y-3 mb-6">
         {data.metrics.map((m) => {
           const maxVal = Math.max(m.android, m.web);
@@ -89,10 +93,15 @@ function PlatformAnalytics() {
           const androidPct = (m.android / maxVal) * 100;
 
           return (
-            <div key={m.name} className="p-4 rounded-2xl bg-card shadow-card border border-border/30">
+            <div
+              key={m.name}
+              className="p-4 rounded-2xl bg-card shadow-card border border-border/30"
+            >
               <div className="flex justify-between items-center mb-1">
                 <span className="font-bold text-xs">{m.name}</span>
-                <span className="text-[10px] text-muted-foreground">{m.desc}</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {m.desc}
+                </span>
               </div>
 
               {/* Bar displays */}
@@ -100,22 +109,36 @@ function PlatformAnalytics() {
                 {/* Web Bar */}
                 <div>
                   <div className="flex justify-between text-[10px] mb-1 font-semibold">
-                    <span className="flex items-center gap-1 text-primary"><Monitor className="h-3 w-3" /> Web client</span>
-                    <span>{m.web} {m.unit}</span>
+                    <span className="flex items-center gap-1 text-primary">
+                      <Monitor className="h-3 w-3" /> Web client
+                    </span>
+                    <span>
+                      {m.web} {m.unit}
+                    </span>
                   </div>
                   <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-primary rounded-full" style={{ width: `${webPct}%` }} />
+                    <div
+                      className="h-full bg-gradient-primary rounded-full"
+                      style={{ width: `${webPct}%` }}
+                    />
                   </div>
                 </div>
 
                 {/* Android Bar */}
                 <div>
                   <div className="flex justify-between text-[10px] mb-1 font-semibold">
-                    <span className="flex items-center gap-1 text-pink"><Tablet className="h-3 w-3" /> Android app</span>
-                    <span>{m.android} {m.unit}</span>
+                    <span className="flex items-center gap-1 text-pink">
+                      <Tablet className="h-3 w-3" /> Android app
+                    </span>
+                    <span>
+                      {m.android} {m.unit}
+                    </span>
                   </div>
                   <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-pink rounded-full" style={{ width: `${androidPct}%` }} />
+                    <div
+                      className="h-full bg-gradient-pink rounded-full"
+                      style={{ width: `${androidPct}%` }}
+                    />
                   </div>
                 </div>
               </div>
@@ -134,27 +157,38 @@ function PlatformAnalytics() {
             const androidHeight = (g.android / maxVal) * 90;
 
             return (
-              <div key={g.month} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+              <div
+                key={g.month}
+                className="flex-1 flex flex-col items-center gap-1 h-full justify-end"
+              >
                 <div className="flex w-full items-end gap-1 justify-center h-full">
                   {/* Web */}
-                  <div 
-                    className="w-2.5 rounded-t-sm bg-gradient-primary" 
+                  <div
+                    className="w-2.5 rounded-t-sm bg-gradient-primary"
                     style={{ height: `${webHeight}%` }}
                   />
                   {/* Android */}
-                  <div 
-                    className="w-2.5 rounded-t-sm bg-gradient-pink" 
+                  <div
+                    className="w-2.5 rounded-t-sm bg-gradient-pink"
                     style={{ height: `${androidHeight}%` }}
                   />
                 </div>
-                <span className="text-[10px] text-muted-foreground mt-1">{g.month}</span>
+                <span className="text-[10px] text-muted-foreground mt-1">
+                  {g.month}
+                </span>
               </div>
             );
           })}
         </div>
         <div className="flex gap-4 mt-3 justify-center text-[10px] text-muted-foreground font-semibold">
-          <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-gradient-primary inline-block" /> Web traffic</span>
-          <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-gradient-pink inline-block" /> Android traffic</span>
+          <span className="flex items-center gap-1">
+            <span className="h-2.5 w-2.5 rounded-sm bg-gradient-primary inline-block" />{" "}
+            Web traffic
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-2.5 w-2.5 rounded-sm bg-gradient-pink inline-block" />{" "}
+            Android traffic
+          </span>
         </div>
       </div>
     </AdminShell>

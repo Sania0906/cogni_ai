@@ -9,10 +9,30 @@ export const Route = createFileRoute("/learning/my-courses")({
 });
 
 const courses = [
-  { id: "ml-foundations", title: "Machine Learning Foundations", progress: 72, instructor: "Dr. Amara Chen" },
-  { id: "python-pro", title: "Python Pro Patterns", progress: 45, instructor: "Marco Reyes" },
-  { id: "data-viz", title: "Data Visualization Mastery", progress: 90, instructor: "Priya Shah" },
-  { id: "sql-deep", title: "SQL Deep Dive", progress: 22, instructor: "Lin Park" },
+  {
+    id: "ml-foundations",
+    title: "Machine Learning Foundations",
+    progress: 72,
+    instructor: "Dr. Amara Chen",
+  },
+  {
+    id: "python-pro",
+    title: "Python Pro Patterns",
+    progress: 45,
+    instructor: "Marco Reyes",
+  },
+  {
+    id: "data-viz",
+    title: "Data Visualization Mastery",
+    progress: 90,
+    instructor: "Priya Shah",
+  },
+  {
+    id: "sql-deep",
+    title: "SQL Deep Dive",
+    progress: 22,
+    instructor: "Lin Park",
+  },
 ];
 
 function MyCourses() {
@@ -24,7 +44,9 @@ function MyCourses() {
           <button
             key={t}
             className={`flex-1 py-2 rounded-xl text-sm font-medium ${
-              i === 0 ? "bg-gradient-primary text-white shadow-glow" : "bg-card text-muted-foreground"
+              i === 0
+                ? "bg-gradient-primary text-white shadow-glow"
+                : "bg-card text-muted-foreground"
             }`}
           >
             {t}
@@ -53,7 +75,10 @@ function MyCourses() {
               <span className="font-semibold">{c.progress}%</span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
-              <div className="h-full bg-gradient-primary rounded-full" style={{ width: `${c.progress}%` }} />
+              <div
+                className="h-full bg-gradient-primary rounded-full"
+                style={{ width: `${c.progress}%` }}
+              />
             </div>
           </Link>
         ))}

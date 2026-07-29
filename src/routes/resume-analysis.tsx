@@ -24,7 +24,10 @@ function ResumeAnalysis() {
         const data = await api.getProfile();
         setProfile(data);
       } catch (err) {
-        console.error("Failed to load profile details for resume analysis", err);
+        console.error(
+          "Failed to load profile details for resume analysis",
+          err,
+        );
       } finally {
         setLoading(false);
       }
@@ -51,39 +54,56 @@ function ResumeAnalysis() {
                 {profile.resumeDetails.ats_score}%
               </div>
               <div>
-                <p className="text-sm font-bold text-card-foreground">ATS Optimization Score</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Parsed details and improvements detected below</p>
+                <p className="text-sm font-bold text-card-foreground">
+                  ATS Optimization Score
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Parsed details and improvements detected below
+                </p>
               </div>
             </div>
 
-            {profile.resumeDetails.skills && profile.resumeDetails.skills.length > 0 && (
-              <div className="space-y-2 pt-2">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Extracted Skills</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {profile.resumeDetails.skills.map((s: string) => (
-                    <span key={s} className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-bold">
-                      {s}
-                    </span>
-                  ))}
+            {profile.resumeDetails.skills &&
+              profile.resumeDetails.skills.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    Extracted Skills
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile.resumeDetails.skills.map((s: string) => (
+                      <span
+                        key={s}
+                        className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-bold"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {profile.resumeDetails.improvements && profile.resumeDetails.improvements.length > 0 && (
-              <div className="space-y-2 pt-2 border-t border-border/40">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Key Improvements Recommended</p>
-                <ul className="list-disc list-inside text-xs text-muted-foreground space-y-2 pl-1 leading-relaxed">
-                  {profile.resumeDetails.improvements.map((imp: string, index: number) => (
-                    <li key={index}>{imp}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {profile.resumeDetails.improvements &&
+              profile.resumeDetails.improvements.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-border/40">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    Key Improvements Recommended
+                  </p>
+                  <ul className="list-disc list-inside text-xs text-muted-foreground space-y-2 pl-1 leading-relaxed">
+                    {profile.resumeDetails.improvements.map(
+                      (imp: string, index: number) => (
+                        <li key={index}>{imp}</li>
+                      ),
+                    )}
+                  </ul>
+                </div>
+              )}
           </div>
         </div>
       ) : (
         <div className="rounded-3xl p-6 bg-card shadow-card text-center border border-dashed border-border/40 py-12 space-y-4">
-          <p className="text-sm font-semibold text-muted-foreground">No resume analysis available.</p>
+          <p className="text-sm font-semibold text-muted-foreground">
+            No resume analysis available.
+          </p>
           <Link
             to="/dashboard"
             className="inline-block px-6 py-2.5 rounded-xl bg-primary text-white text-xs font-bold shadow-glow"

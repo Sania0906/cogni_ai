@@ -9,10 +9,30 @@ export const Route = createFileRoute("/assignments")({
 });
 
 const items = [
-  { title: "Build a Linear Regression Model", course: "ML Foundations", due: "in 2 days", status: "pending" },
-  { title: "Data Cleaning Exercise", course: "Python Pro", due: "in 5 days", status: "pending" },
-  { title: "Dashboard Project", course: "Data Viz", due: "Submitted", status: "done" },
-  { title: "SQL Query Challenge", course: "SQL Deep Dive", due: "Overdue", status: "late" },
+  {
+    title: "Build a Linear Regression Model",
+    course: "ML Foundations",
+    due: "in 2 days",
+    status: "pending",
+  },
+  {
+    title: "Data Cleaning Exercise",
+    course: "Python Pro",
+    due: "in 5 days",
+    status: "pending",
+  },
+  {
+    title: "Dashboard Project",
+    course: "Data Viz",
+    due: "Submitted",
+    status: "done",
+  },
+  {
+    title: "SQL Query Challenge",
+    course: "SQL Deep Dive",
+    due: "Overdue",
+    status: "late",
+  },
 ];
 
 const map = {
@@ -29,8 +49,13 @@ function Assignments() {
         {items.map((a) => {
           const { Icon, bg } = map[a.status as keyof typeof map];
           return (
-            <div key={a.title} className="flex gap-3 p-4 rounded-2xl bg-card shadow-card">
-              <div className={`h-12 w-12 rounded-2xl ${bg} text-white flex items-center justify-center shrink-0`}>
+            <div
+              key={a.title}
+              className="flex gap-3 p-4 rounded-2xl bg-card shadow-card"
+            >
+              <div
+                className={`h-12 w-12 rounded-2xl ${bg} text-white flex items-center justify-center shrink-0`}
+              >
                 <Icon className="h-6 w-6" />
               </div>
               <div className="flex-1">
