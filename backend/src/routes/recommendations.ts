@@ -8,19 +8,21 @@ const router = Router();
 // HELPER: USER STATE RETRIEVAL
 // =========================================================================
 async function getUserState(userId: string) {
-  let profile: any = null;
-  let skills: any[] = [];
-  let assessments: any[] = [];
+  let profile = null;
+  let skills = [];
+  let assessments = [];
   
   try {
     const { data: p } = await supabaseAdmin.from("profiles").select("*").eq("id", userId).maybeSingle();
     profile = p;
+    
     const { data: s } = await supabaseAdmin.from("skills").select("*").eq("user_id", userId);
-    skills = s || [];
+    if (s) skills = s;
+    
     const { data: a } = await supabaseAdmin.from("assessments").select("*").eq("user_id", userId);
-    assessments = a || [];
+    if (a) assessments = a;
   } catch (err) {
-    console.error("Error retrieving user state for recommendations:", err);
+    console.error("Failed to load user state for recommendations", err);
   }
   
   return { profile, skills, assessments };
@@ -30,260 +32,188 @@ async function getUserState(userId: string) {
 // 1. COURSE RECOMMENDATIONS
 // =========================================================================
 router.get("/courses", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const userId = req.user?.id || "mock_user";
-  const { profile, skills, assessments } = await getUserState(userId);
-  
-  // 1. Fetch latest ATS report weaknesses
-  let missingKeywords: string[] = [];
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
   try {
-    const { data: latestAts } = await supabaseAdmin
-      .from("ats_reports")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-      
-    if (latestAts && latestAts.weaknesses) {
-      missingKeywords = latestAts.weaknesses.map((w: string) => w.toLowerCase());
+    const { data: courses, error } = await supabaseAdmin.from("courses").select("*");
+    if (error || !courses || courses.length === 0) {
+      return res.json([]);
     }
-  } catch (err) {
-    console.error("Failed to query latest ATS report for course recommendations:", err);
-  }
 
-  // 2. Fetch assessment weaknesses (score < 75)
-  const weakAssessments = assessments.filter(a => a.score < 75).map(a => a.category.toLowerCase());
+    const { data: ats } = await supabaseAdmin.from("ats_reports").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    
+    let missingKeywords = [];
+    if (ats && ats.keywordMatch) {
+      missingKeywords = (ats.keywordMatch as any[]).filter(kw => kw.status === "missing").map(kw => kw.word.toLowerCase());
+    }
 
-  // 3. Fetch skill gaps
-  const interests = profile?.interests || [];
-  let requiredSkills = ["Python", "Machine Learning", "Deep Learning", "SQL", "TensorFlow", "MLOps", "Data Visualization"];
+    const recommendations = [];
+    for (const course of courses) {
+      const keywords = (course.keywords || []).map((k: string) => k.toLowerCase());
+      const isMissingKeyword = keywords.some((kw: string) => missingKeywords.some((mk: string) => mk.includes(kw)));
 
-  if (interests.some((i: string) => i.toLowerCase().includes("ai") || i.toLowerCase().includes("ml") || i.toLowerCase().includes("machine"))) {
-    requiredSkills = ["Python", "Deep Learning", "PyTorch", "MLOps", "Cloud APIs"];
-  } else if (interests.some((i: string) => i.toLowerCase().includes("web") || i.toLowerCase().includes("stack") || i.toLowerCase().includes("javascript") || i.toLowerCase().includes("react"))) {
-    requiredSkills = ["JavaScript", "TypeScript", "React", "Node.js", "SQL", "NoSQL"];
-  } else if (interests.some((i: string) => i.toLowerCase().includes("cloud") || i.toLowerCase().includes("devops"))) {
-    requiredSkills = ["Cloud Platforms", "Docker", "Kubernetes", "Linux", "Python", "Bash"];
-  } else if (interests.some((i: string) => i.toLowerCase().includes("security") || i.toLowerCase().includes("cyber"))) {
-    requiredSkills = ["Network Security", "Penetration Testing", "Linux", "Cryptography"];
-  }
-
-  const missingSkills = requiredSkills.filter(reqSkill => {
-    const userSkill = skills.find(s => s.name.toLowerCase().includes(reqSkill.toLowerCase()) || reqSkill.toLowerCase().includes(s.name.toLowerCase()));
-    if (!userSkill) return true;
-    return (userSkill.progress || 50) < 60;
-  });
-
-  const recommendations = [];
-
-  const courseCatalog = [
-    { id: "course_3", title: "Python for Data Science Foundations", keywords: ["python", "programming", "code"], duration: "4 weeks", difficulty: "Beginner", reason: "Identified gap in core Python programming skills" },
-    { id: "course_web_2", title: "SQL & Databases Course", keywords: ["sql", "database", "postgres", "nosql"], duration: "5 weeks", difficulty: "Intermediate", reason: "Crucial database operations competency missing" },
-    { id: "course_2", title: "Deep Learning Foundations", keywords: ["deep learning", "pytorch", "tensorflow", "neural", "ai", "ml"], duration: "6 weeks", difficulty: "Intermediate", reason: "Essential for modern AI/ML model deployment roles" },
-    { id: "course_4", title: "MLOps: Deploying Models to Production", keywords: ["mlops", "docker", "kubernetes", "containers", "deployment"], duration: "8 weeks", difficulty: "Advanced", reason: "Highly relevant advanced deployment pipeline instruction" },
-    { id: "course_web_1", title: "React Web Development", keywords: ["react", "web", "javascript", "typescript", "frontend"], duration: "8 weeks", difficulty: "Intermediate", reason: "Identified weakness in web development or frontend scripting" },
-    { id: "course_cloud_1", title: "Cloud Architecture Foundations", keywords: ["cloud", "aws", "gcp", "azure", "platforms"], duration: "7 weeks", difficulty: "Intermediate", reason: "Recommended cloud computing foundations for infrastructure deployment" },
-    { id: "course_sec_1", title: "Security & Penetration Testing", keywords: ["security", "penetration", "cryptography", "network security"], duration: "9 weeks", difficulty: "Advanced", reason: "Addresses critical gaps in networks and system security auditing" },
-    { id: "course_1", title: "Advanced Machine Learning", keywords: ["machine learning", "scikit-learn", "regression", "ml"], duration: "8 weeks", difficulty: "Advanced", reason: "Builds core statistical modeling and ML implementation skills" }
-  ];
-
-  for (const course of courseCatalog) {
-    const isMissingSkill = course.keywords.some(kw => missingSkills.some(ms => ms.toLowerCase().includes(kw) || kw.includes(ms.toLowerCase())));
-    const isMissingKeyword = course.keywords.some(kw => missingKeywords.some(mk => mk.includes(kw)));
-    const isWeakAssessment = course.keywords.some(kw => weakAssessments.some(wa => wa.includes(kw)));
-
-    if (isMissingSkill || isMissingKeyword || isWeakAssessment) {
-      let specificReason = course.reason;
-      if (isWeakAssessment) {
-        specificReason = `Recommended to address your assessment score weakness.`;
-      } else if (isMissingKeyword) {
-        specificReason = `Identified as a missing competency in your latest resume ATS scan.`;
+      if (isMissingKeyword) {
+        recommendations.push({
+          title: course.title,
+          provider: "CognifyAI Academy",
+          duration: course.duration || "4 weeks",
+          difficulty: course.difficulty || "Intermediate",
+          reason: "Identified as a missing competency in your latest resume ATS scan."
+        });
       }
-      
-      recommendations.push({
-        title: course.title,
-        provider: "CognifyAI Academy",
-        duration: course.duration,
-        difficulty: course.difficulty,
-        reason: specificReason
-      });
     }
-  }
 
-  if (recommendations.length === 0) {
-    recommendations.push({
-      title: "Python for Data Science Foundations",
-      provider: "CognifyAI Academy",
-      duration: "4 weeks",
-      difficulty: "Beginner",
-      reason: "Excellent general course to build a quantitative foundation."
-    });
-    recommendations.push({
-      title: "Advanced Machine Learning",
-      provider: "CognifyAI Academy",
-      duration: "8 weeks",
-      difficulty: "Advanced",
-      reason: "Highly requested capability for general data science and analytics."
-    });
+    return res.json(recommendations.slice(0, 3));
+  } catch (err: any) {
+    console.error("Courses Recommendation Error:", err);
+    return res.status(500).json({ message: "Failed to fetch courses" });
   }
-
-  return res.json(recommendations.slice(0, 3));
 });
 
 // =========================================================================
-// 2. CERTIFICATION RECOMMENDATIONS
+// 2. SIMILAR USERS (Peers with matching interests)
+// =========================================================================
+router.get("/similar-profiles", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    const { profile } = await getUserState(userId);
+    const interests = profile?.interests || [];
+    
+    const { data: allProfiles, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id, name, avatar, degree, interests")
+      .neq("id", userId);
+      
+    if (error) throw error;
+    
+    if (!allProfiles || allProfiles.length === 0) {
+      return res.json([]);
+    }
+
+    const recommendations = allProfiles.map(p => {
+      const pInterests = p.interests || [];
+      const common = pInterests.filter((i: string) => interests.includes(i));
+      let match = 50;
+      if (common.length > 0) match += 20 * common.length;
+      if (p.degree === profile?.degree) match += 15;
+      
+      return {
+        id: p.id,
+        name: p.name || "Anonymous User",
+        role: p.degree || "Professional",
+        avatar: p.avatar,
+        matchPercentage: Math.min(99, match),
+        commonInterests: common.slice(0, 2)
+      };
+    });
+
+    recommendations.sort((a, b) => b.matchPercentage - a.matchPercentage);
+    return res.json(recommendations.slice(0, 3));
+  } catch (err: any) {
+    console.error("Similar Profiles Error:", err);
+    return res.status(500).json({ message: "Failed to fetch similar profiles" });
+  }
+});
+
+// =========================================================================
+// 3. CERTIFICATION RECOMMENDATIONS
 // =========================================================================
 router.get("/certifications", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const { profile } = await getUserState(req.user?.id || "mock_user");
-  
-  const certs = [];
-  const interests = profile?.interests || [];
-  const isCloud = interests.some((i: string) => i.toLowerCase().includes("cloud"));
-  const isAi = interests.some((i: string) => i.toLowerCase().includes("ai") || i.toLowerCase().includes("ml") || i.toLowerCase().includes("machine"));
-  
-  if (isCloud) {
-    certs.push({
-      name: "AWS Certified Cloud Practitioner",
-      issuer: "Amazon Web Services",
-      cost: "$100",
-      reason: "Highly requested for Cloud Architect and MLOps roles"
-    });
-  }
-  if (isAi) {
-    certs.push({
-      name: "Google Professional ML Engineer",
-      issuer: "Google Cloud",
-      cost: "$200",
-      reason: "Demonstrates production AI/ML deployment competencies"
-    });
-  }
-  
-  certs.push({
-    name: "TensorFlow Developer Certificate",
-    issuer: "Google / TensorFlow",
-    cost: "$150",
-    reason: "Validates deep learning model construction skills"
-  });
-  
-  certs.push({
-    name: "Microsoft Certified: Azure Data Scientist Associate",
-    issuer: "Microsoft",
-    cost: "$165",
-    reason: "Strong fit for enterprise data pipeline deployment"
-  });
-  
-  return res.json(certs);
+  return res.json([]);
 });
 
 // =========================================================================
-// 3. CAREER RECOMMENDATIONS
+// 4. CAREER RECOMMENDATIONS
 // =========================================================================
 router.get("/careers", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const { profile } = await getUserState(req.user?.id || "mock_user");
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
   
-  const pathsDef = [
-    { role: "Data Scientist", baseMatch: 80, reason: "Matches quantitative degree and skills" },
-    { role: "AI Engineer", baseMatch: 75, reason: "Excellent alignment with machine learning goals" },
-    { role: "Full Stack Developer", baseMatch: 60, reason: "Good choice if seeking user interface engineering roles" },
-    { role: "Cloud Engineer", baseMatch: 55, reason: "Requires AWS or containerization competencies" },
-    { role: "Cybersecurity Analyst", baseMatch: 50, reason: "Requires security-specific certifications" }
-  ];
-  
-  const mapped = pathsDef.map(p => {
-    let matchBonus = 0;
-    const interests = profile?.interests || [];
-    if (p.role === "Data Scientist" && (profile?.degree?.toLowerCase().includes("data") || interests.some((i: string) => i.toLowerCase().includes("data")))) {
-      matchBonus += 15;
-    }
-    if (p.role === "AI Engineer" && interests.some((i: string) => i.toLowerCase().includes("ai") || i.toLowerCase().includes("ml") || i.toLowerCase().includes("machine"))) {
-      matchBonus += 18;
-    }
-    if (p.role === "Full Stack Developer" && interests.some((i: string) => i.toLowerCase().includes("web") || i.toLowerCase().includes("stack") || i.toLowerCase().includes("javascript"))) {
-      matchBonus += 25;
-    }
-    if (p.role === "Cloud Engineer" && interests.some((i: string) => i.toLowerCase().includes("cloud"))) {
-      matchBonus += 25;
-    }
-    if (p.role === "Cybersecurity Analyst" && interests.some((i: string) => i.toLowerCase().includes("security") || i.toLowerCase().includes("cyber"))) {
-      matchBonus += 30;
+  try {
+    const { data: ats } = await supabaseAdmin.from("ats_reports").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    
+    if (!ats || !ats.targetJob) {
+      return res.json([]);
     }
     
-    return {
-      role: p.role,
-      matchPercentage: Math.min(99, p.baseMatch + matchBonus),
-      reason: p.reason
-    };
-  });
-  
-  mapped.sort((a, b) => b.matchPercentage - a.matchPercentage);
-  
-  return res.json(mapped);
+    return res.json([
+      {
+        role: ats.targetJob,
+        matchPercentage: ats.score || 0,
+        reason: "Based on your latest ATS resume parsing"
+      }
+    ]);
+  } catch (err: any) {
+    console.error("Careers Recommendation Error:", err);
+    return res.status(500).json({ message: "Failed to fetch careers" });
+  }
 });
 
 // =========================================================================
-// 4. SKILL RECOMMENDATIONS
+// 5. SKILL RECOMMENDATIONS
 // =========================================================================
 router.get("/skills", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const { skills } = await getUserState(req.user?.id || "mock_user");
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
   
-  const recommendedSkills = [
-    { name: "Python", category: "Programming", importance: "High", reason: "Foundation of all modern data & backend platforms" },
-    { name: "Machine Learning", category: "AI/ML", importance: "High", reason: "Standard requirement for intelligent systems engineering" },
-    { name: "SQL & Databases", category: "Data Science", importance: "Medium", reason: "Needed for data extraction and dashboard feeds" },
-    { name: "Docker & Containerization", category: "MLOps", importance: "Medium", reason: "Key tool for cloud deployment and reproducibility" }
-  ];
-  
-  const userSkillNames = skills.map((s: any) => s.name.toLowerCase());
-  const filtered = recommendedSkills.filter(s => !userSkillNames.some(us => us.includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(us)));
-  
-  return res.json(filtered.length > 0 ? filtered : recommendedSkills.slice(2));
+  try {
+    const { data: ats } = await supabaseAdmin.from("ats_reports").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    
+    if (!ats || !ats.keywordMatch) {
+      return res.json([]);
+    }
+    
+    const missing = (ats.keywordMatch as any[]).filter(kw => kw.status === "missing").map(kw => ({
+      name: kw.word,
+      category: "Suggested",
+      importance: "High",
+      reason: "Missing from your current resume for target role"
+    }));
+    
+    return res.json(missing);
+  } catch (err: any) {
+    console.error("Skills Recommendation Error:", err);
+    return res.status(500).json({ message: "Failed to fetch skills" });
+  }
 });
 
 // =========================================================================
-// 5. JOB RECOMMENDATIONS
+// 6. JOB RECOMMENDATIONS
 // =========================================================================
 router.get("/jobs", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const { skills, assessments } = await getUserState(req.user?.id || "mock_user");
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
   
-  const rawJobs = [
-    { title: "Senior Data Scientist", company: "TechCorp", loc: "San Francisco, CA", type: "Full-time", salary: "$140k - $180k", match: 92, requirements: ["Python", "Machine Learning", "SQL"] },
-    { title: "ML Engineer", company: "AIVision", loc: "Remote", type: "Full-time", salary: "$130k - $170k", match: 88, requirements: ["Python", "PyTorch", "TensorFlow"] },
-    { title: "AI Research Scientist", company: "NeuralLabs", loc: "New York, NY", type: "Full-time", salary: "$160k - $220k", match: 84, requirements: ["Deep Learning", "Transformers", "Math"] },
-    { title: "MLOps Engineer", company: "SystemsInc", loc: "Remote", type: "Full-time", salary: "$120k - $155k", match: 70, requirements: ["Docker", "MLflow", "FastAPI"] },
-    { title: "Software Engineer (Backend)", company: "CloudWeb", loc: "Austin, TX", type: "Full-time", salary: "$110k - $145k", match: 75, requirements: ["Node.js", "SQL", "Git"] }
-  ];
-  
-  const userSkillNames = skills.map((s: any) => s.name.toLowerCase());
-  const userAssessCategories = assessments.map((a: any) => a.category.toLowerCase());
-  
-  const mappedJobs = rawJobs.map(job => {
-    let matchedCount = 0;
-    job.requirements.forEach(req => {
-      const reqLower = req.toLowerCase();
-      const hasS = userSkillNames.some(us => us.includes(reqLower) || reqLower.includes(us));
-      const hasA = userAssessCategories.some(ac => {
-        if (reqLower.includes("python") || reqLower.includes("code")) return ac.includes("prog");
-        if (reqLower.includes("machine") || reqLower.includes("learning") || reqLower.includes("torch") || reqLower.includes("flow")) return ac.includes("ai") || ac.includes("ml");
-        if (reqLower.includes("sql") || reqLower.includes("database")) return ac.includes("db") || ac.includes("data");
-        return false;
-      });
-      
-      if (hasS || hasA) {
-        matchedCount++;
+  try {
+    const { data: jobs, error } = await supabaseAdmin.from("jobs").select("*");
+    if (error) throw error;
+    
+    if (!jobs || jobs.length === 0) {
+      return res.json([]);
+    }
+    
+    const { data: ats } = await supabaseAdmin.from("ats_reports").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const targetJob = ats?.targetJob?.toLowerCase() || "";
+    
+    const recommended = jobs.map(job => {
+      let match = job.match || 50;
+      if (targetJob && job.title.toLowerCase().includes(targetJob)) {
+        match += 30;
       }
-    });
+      return {
+        ...job,
+        match: Math.min(99, match)
+      };
+    }).sort((a, b) => b.match - a.match);
     
-    const matchPct = Math.round((matchedCount / job.requirements.length) * 50) + 45;
-    
-    return {
-      ...job,
-      match: matchPct
-    };
-  });
-  
-  mappedJobs.sort((a, b) => b.match - a.match);
-  
-  return res.json(mappedJobs);
+    return res.json(recommended.slice(0, 5));
+  } catch (err: any) {
+    console.error("Jobs Recommendation Error:", err);
+    return res.status(500).json({ message: "Failed to fetch jobs" });
+  }
 });
 
 export default router;

@@ -4,17 +4,7 @@ import { supabaseAdmin } from "../config/supabase";
 
 const router = Router();
 
-const DEFAULT_COURSES = [
-  { id: "course_1", title: "Advanced Machine Learning", author: "Dr. Sarah Johnson", tags: ["Advanced", "Data Science"], weeks: 8, rating: 4.8, students: "12.5k" },
-  { id: "course_2", title: "Deep Learning Foundations", author: "Prof. Mike Chen", tags: ["Intermediate", "AI/ML"], weeks: 6, rating: 4.7, students: "9.2k" },
-  { id: "course_3", title: "Python for Data Science", author: "Anna Lee", tags: ["Beginner", "Programming"], weeks: 4, rating: 4.9, students: "20.1k" },
-  { id: "course_4", title: "MLOps: Deploying Models to Production", author: "Jane Dev", tags: ["Intermediate", "Systems"], weeks: 5, rating: 4.6, students: "5.4k" },
-  { id: "course_5", title: "Data Visualization & Analysis", author: "David Gray", tags: ["Beginner", "Design"], weeks: 4, rating: 4.5, students: "8.1k" },
-  { id: "course_web_1", title: "React Web Development", author: "Sarah Croft", tags: ["Intermediate", "Web"], weeks: 8, rating: 4.8, students: "11.2k" },
-  { id: "course_web_2", title: "SQL & Databases Course", author: "Marcus Aurelius", tags: ["Beginner", "Databases"], weeks: 6, rating: 4.7, students: "14.5k" },
-  { id: "course_cloud_1", title: "Cloud Architecture Foundations", author: "Gale S.", tags: ["Intermediate", "Cloud"], weeks: 7, rating: 4.6, students: "7.9k" },
-  { id: "course_sec_1", title: "Security & Penetration Testing", author: "Bruce Wayne", tags: ["Advanced", "Security"], weeks: 9, rating: 4.9, students: "6.3k" }
-];
+
 
 // =========================================================================
 // GET COURSES CATALOG
@@ -27,15 +17,8 @@ router.get("/", async (req, res) => {
 
     if (error) throw error;
 
-    // Seed default courses if database is empty
     if (!data || data.length === 0) {
-      console.log("[Supabase Courses] Catalog is empty. Seeding default courses...");
-      await supabaseAdmin.from("courses").insert(DEFAULT_COURSES);
-      const { data: refetched, error: refetchError } = await supabaseAdmin
-        .from("courses")
-        .select("*");
-      if (refetchError) throw refetchError;
-      data = refetched;
+      return res.json([]);
     }
 
     if (data) {

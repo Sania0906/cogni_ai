@@ -102,7 +102,8 @@ router.get("/applied", authMiddleware, async (req: AuthRequest, res: Response) =
 // SALARY INSIGHTS
 // =========================================================================
 router.get("/salary-insights", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const userId = req.user?.id || "mock_user";
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
   const profile = await getUserProfile(userId);
   const interests = profile?.interests || [];
   

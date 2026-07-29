@@ -74,7 +74,8 @@ async function checkOnboarding(userId: string) {
 // 1. AI CAREER DNA REPORT
 // =========================================================================
 router.get("/career-dna", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const userId = req.user?.id || "mock_user";
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
   try {
     const { data: existingDna } = await supabaseAdmin
@@ -187,7 +188,8 @@ router.get("/career-dna", authMiddleware, async (req: AuthRequest, res: Response
 // 2. CAREER SUCCESS PROBABILITY
 // =========================================================================
 router.get("/career-success", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const userId = req.user?.id || "mock_user";
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
   try {
     const { data: existingInsight } = await supabaseAdmin
@@ -294,17 +296,7 @@ router.get("/industry-demand", async (req, res) => {
       .select("*");
 
     if (!categories || categories.length === 0) {
-      console.log("[Supabase Market Insights] Seeding default market categories...");
-      const DEFAULT_MARKET_INSIGHTS = [
-        { category: "AI/ML Engineering", growth_rate: 38.4, openings_count: 12400, average_salary: 168000, market_drivers: ["Accelerated integration of Generative AI in enterprise operations."] },
-        { category: "Data Science & Analytics", growth_rate: 22.8, openings_count: 18500, average_salary: 145000, market_drivers: ["Surge in cloud native data processing pipelines and vector database scaling."] },
-        { category: "Cloud MLOps & Systems", growth_rate: 42.1, openings_count: 8900, average_salary: 172000, market_drivers: ["Increasing focus on local inference, edge computing, and model quantization."] },
-        { category: "Web / Full Stack (React)", growth_rate: 12.5, openings_count: 45000, average_salary: 120000, market_drivers: ["Adoption of modern frontend frameworks and SSR architectures."] },
-        { category: "Mobile Development", growth_rate: 8.2, openings_count: 14000, average_salary: 115000, market_drivers: ["Cross-platform app developments with React Native or Flutter."] }
-      ];
-      await supabaseAdmin.from("market_insights").insert(DEFAULT_MARKET_INSIGHTS);
-      const { data: refetched } = await supabaseAdmin.from("market_insights").select("*");
-      categories = refetched || [];
+      return res.json({ categories: [], marketDrivers: [] });
     }
 
     const mapped = (categories || []).map(item => ({
@@ -315,13 +307,7 @@ router.get("/industry-demand", async (req, res) => {
       trend: Number(item.growth_rate) >= 20 ? "up" : "stable"
     }));
 
-    const marketDrivers = categories && categories.length > 0 
-      ? Array.from(new Set(categories.flatMap(item => item.market_drivers || [])))
-      : [
-          "Accelerated integration of Generative AI in enterprise operations.",
-          "Surge in cloud native data processing pipelines and vector database scaling.",
-          "Increasing focus on local inference, edge computing, and model quantization."
-        ];
+    const marketDrivers = Array.from(new Set(categories.flatMap(item => item.market_drivers || [])));
 
     return res.json({
       categories: mapped,
@@ -337,7 +323,8 @@ router.get("/industry-demand", async (req, res) => {
 // 4. AI LEARNING ROADMAP GENERATOR
 // =========================================================================
 router.get("/roadmap", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const userId = req.user?.id || "mock_user";
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
   const check = await checkOnboarding(userId);
   if (check.locked) {
     return res.status(403).json(check);
@@ -550,7 +537,8 @@ router.get("/roadmap", authMiddleware, async (req: AuthRequest, res: Response) =
 // 5. EMPLOYABILITY SCORE
 // =========================================================================
 router.get("/employability", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const userId = req.user?.id || "mock_user";
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
   try {
     const { data: existingScore } = await supabaseAdmin
@@ -852,7 +840,8 @@ function parseResumeText(text: string, interests: string[] = []): {
 router.post("/resume-optimize", authMiddleware, upload.single("file"), async (req: AuthRequest, res: Response) => {
   let resumeText = req.body.resumeText;
   const targetJob = req.body.targetJob || "Senior Data Scientist";
-  const userId = req.user?.id || "mock_user";
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
   // If a file was uploaded, parse it
   if (req.file) {
@@ -1212,7 +1201,8 @@ router.post("/resume-optimize", authMiddleware, upload.single("file"), async (re
 // GET LATEST ATS REPORT
 // =========================================================================
 router.get("/ats-reports/latest", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const userId = req.user?.id || "mock_user";
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
   try {
     const { data, error } = await supabaseAdmin
       .from("ats_reports")
@@ -1237,7 +1227,8 @@ router.get("/ats-reports/latest", authMiddleware, async (req: AuthRequest, res: 
 // 7. FUTURE CAREER FORECASTING
 // =========================================================================
 router.get("/career-forecasting", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const userId = req.user?.id || "mock_user";
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
   const { data: profile } = await supabaseAdmin.from("profiles").select("interests").eq("id", userId).maybeSingle();
   const interests = (profile?.interests || []).map((i: string) => i.toLowerCase().trim());
 
@@ -1279,7 +1270,8 @@ router.get("/career-forecasting", authMiddleware, async (req: AuthRequest, res: 
 // 8. AI CAREER PATHS GENERATOR
 // =========================================================================
 router.get("/career-paths", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const userId = req.user?.id || "mock_user";
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
   
   let userProfile: any = null;
   let userSkills: any[] = [];
@@ -1417,7 +1409,8 @@ router.post("/chat", authMiddleware, async (req: AuthRequest, res: Response) => 
     return res.status(400).json({ message: "Message is required" });
   }
 
-  const userId = req.user?.id || "mock_user";
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
   
   let profile: any = null;
   let skills: any[] = [];

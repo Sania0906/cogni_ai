@@ -131,7 +131,8 @@ router.delete("/:id", authMiddleware, async (req: AuthRequest, res: Response) =>
 // SKILL GAP ANALYSIS
 // =========================================================================
 router.get("/gap", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const userId = req.user?.id || "mock_user";
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
   try {
     const { data: ats } = await supabaseAdmin.from("ats_reports").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
 
@@ -175,7 +176,8 @@ router.get("/gap", authMiddleware, async (req: AuthRequest, res: Response) => {
 // SKILL GROWTH PREDICTION
 // =========================================================================
 router.get("/growth", authMiddleware, async (req: AuthRequest, res: Response) => {
-  const userId = req.user?.id || "mock_user";
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
   const { assessments } = await getUserState(userId);
 
   const avgAssessment = assessments && assessments.length > 0
