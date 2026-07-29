@@ -26,17 +26,6 @@ router.get("/", authMiddleware, async (req: AuthRequest, res: Response) => {
 
     if (error) throw error;
 
-    // Seed default jobs if database is empty
-    if (!data || data.length === 0) {
-      console.log("[Supabase Jobs] Table is empty. Seeding default jobs...");
-      await supabaseAdmin.from("jobs").insert(DEFAULT_JOBS);
-      const { data: refetched, error: refetchError } = await supabaseAdmin
-        .from("jobs")
-        .select("*");
-      if (refetchError) throw refetchError;
-      data = refetched;
-    }
-
     if (data) {
       const mapped = data.map(job => ({
         _id: job.id,
@@ -55,6 +44,7 @@ router.get("/", authMiddleware, async (req: AuthRequest, res: Response) => {
     console.error("Supabase Jobs Fetch Error:", err.message);
     return res.status(500).json({ message: err.message || "Failed to retrieve jobs catalog" });
   }
+  return res.json([]);
 });
 
 // =========================================================================
@@ -94,47 +84,6 @@ router.get("/applied", authMiddleware, async (req: AuthRequest, res: Response) =
       .eq("user_id", userId);
 
     if (error) throw error;
-
-    // Seed default applications if empty
-    if (!data || data.length === 0) {
-      console.log(`[Supabase Applied Jobs] No application records found for ${userId}. Dynamic seeding...`);
-      const profile = await getUserProfile(userId);
-      const interests = profile?.interests || [];
-      
-      let initialJobIds = ["job_1", "job_2"];
-      if (interests.some((i: string) => i.toLowerCase().includes("web") || i.toLowerCase().includes("stack") || i.toLowerCase().includes("javascript") || i.toLowerCase().includes("react"))) {
-        initialJobIds = ["job_web_1", "job_web_2"];
-      } else if (interests.some((i: string) => i.toLowerCase().includes("cloud") || i.toLowerCase().includes("devops"))) {
-        initialJobIds = ["job_cloud_1", "job_4"];
-      } else if (interests.some((i: string) => i.toLowerCase().includes("security") || i.toLowerCase().includes("cyber"))) {
-        initialJobIds = ["job_sec_1", "job_4"];
-      }
-
-      const rowsToInsert = [
-        { user_id: userId, job_id: initialJobIds[0], status: "Interview" },
-        { user_id: userId, job_id: initialJobIds[1], status: "Applied" }
-      ];
-
-      await supabaseAdmin.from("applied_jobs").upsert(rowsToInsert, { onConflict: "user_id,job_id" });
-
-      // Fetch again to return populated fields
-      const { data: seeded, error: refetchError } = await supabaseAdmin
-        .from("applied_jobs")
-        .select(`
-          id,
-          status,
-          job_id,
-          jobs (
-            id,
-            title,
-            company
-          )
-        `)
-        .eq("user_id", userId);
-
-      if (refetchError) throw refetchError;
-      data = seeded || [];
-    }
 
     return res.json((data || []).map(app => ({
       id: app.job_id,

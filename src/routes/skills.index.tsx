@@ -19,7 +19,7 @@ function Skills() {
   const [skillsList, setSkillsList] = useState<any[]>([]);
   const [assessments, setAssessments] = useState<any[]>([]);
   const [gapData, setGapData] = useState<any>(null);
-  const [overallScore, setOverallScore] = useState(85);
+  const [overallScore, setOverallScore] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -62,7 +62,7 @@ function Skills() {
 
           setSkillsList(mapped);
           
-          let avg = 85;
+          let avg = 0;
           const skillSum = mapped.reduce((sum, item) => sum + item.level, 0);
           const assessSum = assessmentsData.reduce((sum, item) => sum + item.score, 0);
           const totalCount = mapped.length + assessmentsData.length;

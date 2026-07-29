@@ -87,7 +87,7 @@ function Profile() {
   };
 
   const displayName = profile?.name || localStorage.getItem("userName") || "User";
-  const displayEmail = profile?.email || "user@cognify.ai";
+  const displayEmail = profile?.email || "";
 
   return (
     <AppShell>

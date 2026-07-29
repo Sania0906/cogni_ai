@@ -88,7 +88,7 @@ function Dashboard() {
       if (assessments && assessments.length > 0) {
         setAssessmentScore(assessments[0].score);
       } else {
-        setAssessmentScore(80); // Nice resume-based baseline
+        setAssessmentScore(null);
       }
 
       // 3. Fetch Employability Score
@@ -129,12 +129,8 @@ function Dashboard() {
           tags: p.requiredSkills.slice(0, 2),
           gradient: gradients[idx % gradients.length]
         })));
-      } else if (gap) {
-        setRecommendedPaths([
-          { title: gap.targetRole || "Senior Data Scientist", pct: gap.matchPercentage, tags: ["Python", "ML"], gradient: "bg-gradient-primary" },
-          { title: "AI Engineer", pct: Math.max(40, gap.matchPercentage - 4), tags: ["TensorFlow", "AI"], gradient: "bg-gradient-pink" },
-          { title: "ML Researcher", pct: Math.max(40, gap.matchPercentage - 8), tags: ["PyTorch", "Math"], gradient: "bg-gradient-blue" },
-        ]);
+      } else {
+        setRecommendedPaths([]);
       }
 
       // 7. Fetch Recommended Courses

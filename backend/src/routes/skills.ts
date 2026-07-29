@@ -132,122 +132,43 @@ router.delete("/:id", authMiddleware, async (req: AuthRequest, res: Response) =>
 // =========================================================================
 router.get("/gap", authMiddleware, async (req: AuthRequest, res: Response) => {
   const userId = req.user?.id || "mock_user";
-  const { profile, skills, assessments } = await getUserState(userId);
+  try {
+    const { data: ats } = await supabaseAdmin.from("ats_reports").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
 
-  const interests = profile?.interests || [];
-  let targetRole = "Senior Data Scientist";
-  let requiredSkills = [
-    { name: "Python", required: 90 },
-    { name: "Machine Learning", required: 90 },
-    { name: "Deep Learning", required: 85 },
-    { name: "SQL", required: 80 },
-    { name: "TensorFlow", required: 75 },
-    { name: "MLOps / Docker", required: 70 },
-    { name: "Data Visualization", required: 60 }
-  ];
+    if (!ats) {
+      return res.status(404).json({ message: "No resume found. Upload your resume to generate a skill gap analysis." });
+    }
 
-  if (interests.some((i: string) => i.toLowerCase().includes("ai") || i.toLowerCase().includes("ml") || i.toLowerCase().includes("machine"))) {
-    targetRole = "AI Engineer";
-    requiredSkills = [
-      { name: "Python", required: 95 },
-      { name: "Deep Learning", required: 90 },
-      { name: "PyTorch", required: 85 },
-      { name: "MLOps", required: 80 },
-      { name: "Cloud APIs", required: 75 }
-    ];
-  } else if (interests.some((i: string) => i.toLowerCase().includes("web") || i.toLowerCase().includes("stack") || i.toLowerCase().includes("javascript") || i.toLowerCase().includes("react"))) {
-    targetRole = "Full Stack Developer";
-    requiredSkills = [
-      { name: "JavaScript/TypeScript", required: 90 },
-      { name: "React", required: 90 },
-      { name: "Node.js", required: 85 },
-      { name: "SQL/NoSQL Databases", required: 80 },
-      { name: "Git/GitHub", required: 75 }
-    ];
-  } else if (interests.some((i: string) => i.toLowerCase().includes("cloud") || i.toLowerCase().includes("devops"))) {
-    targetRole = "Cloud Engineer";
-    requiredSkills = [
-      { name: "Cloud Platforms (AWS/GCP)", required: 90 },
-      { name: "Docker & Kubernetes", required: 85 },
-      { name: "Linux Administration", required: 80 },
-      { name: "Python/Bash scripting", required: 75 }
-    ];
-  } else if (interests.some((i: string) => i.toLowerCase().includes("security") || i.toLowerCase().includes("cyber"))) {
-    targetRole = "Cybersecurity Analyst";
-    requiredSkills = [
-      { name: "Network Security", required: 90 },
-      { name: "Penetration Testing", required: 85 },
-      { name: "Linux Administration", required: 80 },
-      { name: "Cryptography", required: 75 }
-    ];
+    const targetRole = ats.targetJob || "Professional";
+    const matchPercentage = ats.score || 0;
+    const keywordMatch = ats.keywordMatch || [];
+
+    const gapSkills = keywordMatch.map((kw: any) => {
+      const isFound = kw.status === "found";
+      const current = isFound ? 85 : 15;
+      const required = 80;
+      const gap = current - required;
+      const status = gap >= 0 ? "Met" : gap > -20 ? "Needs Improvement" : "Critical Gap";
+      
+      return {
+        name: kw.word,
+        current,
+        required,
+        gap,
+        status
+      };
+    });
+
+    return res.json({
+      targetRole,
+      matchPercentage,
+      skills: gapSkills
+    });
+  } catch (err: any) {
+    console.error("Skill Gap Fetch Error:", err.message);
+    return res.status(500).json({ message: err.message || "Failed to calculate skill gap" });
   }
 
-  const findUserProficiency = (skillName: string) => {
-    const nameLower = skillName.toLowerCase();
-    
-    // 1. Look in user's skills first
-    const matchSkill = skills.find(s => s.name.toLowerCase().includes(nameLower) || nameLower.includes(s.name.toLowerCase()));
-    let skillVal = 0;
-    if (matchSkill) {
-      skillVal = matchSkill.progress || (matchSkill.level === "Advanced" ? 85 : matchSkill.level === "Intermediate" ? 65 : 45);
-    }
-    
-    // 2. Look in assessments
-    let assessVal = 0;
-    const matchAssess = assessments.find(a => {
-      const cat = a.category.toLowerCase();
-      if (nameLower.includes("python") || nameLower.includes("scripting") || nameLower.includes("javascript") || nameLower.includes("node") || nameLower.includes("bash") || nameLower.includes("git")) {
-        return cat.includes("prog") || cat.includes("web");
-      }
-      if (nameLower.includes("machine") || nameLower.includes("deep") || nameLower.includes("pytorch") || nameLower.includes("tensorflow") || nameLower.includes("ai")) {
-        return cat.includes("ai") || cat.includes("ml");
-      }
-      if (nameLower.includes("sql") || nameLower.includes("database") || nameLower.includes("nosql")) {
-        return cat.includes("db") || cat.includes("data");
-      }
-      if (nameLower.includes("cloud") || nameLower.includes("docker") || nameLower.includes("kubernetes") || nameLower.includes("devops") || nameLower.includes("platforms")) {
-        return cat.includes("cloud") || cat.includes("sys");
-      }
-      if (nameLower.includes("security") || nameLower.includes("cryptography") || nameLower.includes("penetration")) {
-        return cat.includes("security") || cat.includes("aptitude");
-      }
-      return false;
-    });
-    if (matchAssess) {
-      assessVal = matchAssess.score;
-    }
-    
-    if (skillVal > 0 && assessVal > 0) {
-      return Math.round((skillVal + assessVal) / 2);
-    }
-    if (skillVal > 0) return skillVal;
-    if (assessVal > 0) return assessVal;
-    
-    return profile?.onboarding_completed ? 25 : 15;
-  };
-
-  const gapSkills = requiredSkills.map(req => {
-    const current = findUserProficiency(req.name);
-    const gap = current - req.required;
-    const status = gap >= 0 ? "Met" : gap > -20 ? "Needs Improvement" : "Critical Gap";
-    return {
-      name: req.name,
-      current,
-      required: req.required,
-      gap,
-      status
-    };
-  });
-
-  const totalRequired = requiredSkills.reduce((sum, s) => sum + s.required, 0);
-  const totalCurrent = requiredSkills.reduce((sum, s) => sum + findUserProficiency(s.name), 0);
-  const matchPercentage = Math.min(99, Math.max(35, Math.round((totalCurrent / totalRequired) * 100)));
-
-  return res.json({
-    targetRole,
-    matchPercentage,
-    skills: gapSkills
-  });
 });
 
 // =========================================================================
