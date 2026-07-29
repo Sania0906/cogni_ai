@@ -233,6 +233,26 @@ export const api = {
     });
   },
 
+  // Recruiter
+  getRecruiterCandidates: async (skills: string = "", min_experience: number = 0) => {
+    let query = "";
+    if (skills) query += `?skills=${encodeURIComponent(skills)}`;
+    if (min_experience > 0) query += `${query ? "&" : "?"}min_experience=${min_experience}`;
+    return fetchAPI<any[]>(`/recruiter/candidates${query}`);
+  },
+
+  getShortlistedCandidates: async () => {
+    return fetchAPI<any[]>("/recruiter/shortlist");
+  },
+
+  toggleShortlist: async (candidateId: string) => {
+    return fetchAPI<{ shortlisted: boolean }>("/recruiter/shortlist", {
+      method: "POST",
+      body: JSON.stringify({ candidateId })
+    });
+  },
+
+
   getEmployability: async () => {
     return fetchAPI<{
       overallScore: number;

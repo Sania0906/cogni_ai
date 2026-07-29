@@ -18,6 +18,7 @@ import analyticsRoutes from "./routes/analytics";
 import certificateRoutes from "./routes/certificates";
 import assessmentRoutes from "./routes/assessments";
 import recommendationRoutes from "./routes/recommendations";
+import recruiterRoutes from "./routes/recruiter";
 
 // Load environment variables
 const __filename = fileURLToPath(import.meta.url);
@@ -79,6 +80,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/certificates", certificateRoutes);
 app.use("/api/assessments", assessmentRoutes);
 app.use("/api/recommendations", recommendationRoutes);
+app.use("/api/recruiter", recruiterRoutes);
 
 // Health Check Endpoint
 app.get("/health", (req, res) => {

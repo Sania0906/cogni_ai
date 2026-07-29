@@ -56,6 +56,7 @@ import { Route as SettingsPrivacyRouteImport } from './routes/settings.privacy'
 import { Route as SettingsLanguageRouteImport } from './routes/settings.language'
 import { Route as SettingsAccountsRouteImport } from './routes/settings.accounts'
 import { Route as SettingsAccountRouteImport } from './routes/settings.account'
+import { Route as RecruiterDashboardRouteImport } from './routes/recruiter.dashboard'
 import { Route as LessonLessonIdRouteImport } from './routes/lesson.$lessonId'
 import { Route as LearningMyCoursesRouteImport } from './routes/learning.my-courses'
 import { Route as JobJobIdRouteImport } from './routes/job.$jobId'
@@ -300,6 +301,11 @@ const SettingsAccountRoute = SettingsAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => SettingsRoute,
 } as any)
+const RecruiterDashboardRoute = RecruiterDashboardRouteImport.update({
+  id: '/recruiter/dashboard',
+  path: '/recruiter/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LessonLessonIdRoute = LessonLessonIdRouteImport.update({
   id: '/lesson/$lessonId',
   path: '/lesson/$lessonId',
@@ -382,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/job/$jobId': typeof JobJobIdRoute
   '/learning/my-courses': typeof LearningMyCoursesRoute
   '/lesson/$lessonId': typeof LessonLessonIdRoute
+  '/recruiter/dashboard': typeof RecruiterDashboardRoute
   '/settings/account': typeof SettingsAccountRoute
   '/settings/accounts': typeof SettingsAccountsRoute
   '/settings/language': typeof SettingsLanguageRoute
@@ -439,6 +446,7 @@ export interface FileRoutesByTo {
   '/job/$jobId': typeof JobJobIdRoute
   '/learning/my-courses': typeof LearningMyCoursesRoute
   '/lesson/$lessonId': typeof LessonLessonIdRoute
+  '/recruiter/dashboard': typeof RecruiterDashboardRoute
   '/settings/account': typeof SettingsAccountRoute
   '/settings/accounts': typeof SettingsAccountsRoute
   '/settings/language': typeof SettingsLanguageRoute
@@ -497,6 +505,7 @@ export interface FileRoutesById {
   '/job/$jobId': typeof JobJobIdRoute
   '/learning/my-courses': typeof LearningMyCoursesRoute
   '/lesson/$lessonId': typeof LessonLessonIdRoute
+  '/recruiter/dashboard': typeof RecruiterDashboardRoute
   '/settings/account': typeof SettingsAccountRoute
   '/settings/accounts': typeof SettingsAccountsRoute
   '/settings/language': typeof SettingsLanguageRoute
@@ -556,6 +565,7 @@ export interface FileRouteTypes {
     | '/job/$jobId'
     | '/learning/my-courses'
     | '/lesson/$lessonId'
+    | '/recruiter/dashboard'
     | '/settings/account'
     | '/settings/accounts'
     | '/settings/language'
@@ -613,6 +623,7 @@ export interface FileRouteTypes {
     | '/job/$jobId'
     | '/learning/my-courses'
     | '/lesson/$lessonId'
+    | '/recruiter/dashboard'
     | '/settings/account'
     | '/settings/accounts'
     | '/settings/language'
@@ -670,6 +681,7 @@ export interface FileRouteTypes {
     | '/job/$jobId'
     | '/learning/my-courses'
     | '/lesson/$lessonId'
+    | '/recruiter/dashboard'
     | '/settings/account'
     | '/settings/accounts'
     | '/settings/language'
@@ -728,6 +740,7 @@ export interface RootRouteChildren {
   JobJobIdRoute: typeof JobJobIdRoute
   LearningMyCoursesRoute: typeof LearningMyCoursesRoute
   LessonLessonIdRoute: typeof LessonLessonIdRoute
+  RecruiterDashboardRoute: typeof RecruiterDashboardRoute
   SkillsSkillIdRoute: typeof SkillsSkillIdRoute
   SkillsAddRoute: typeof SkillsAddRoute
   SkillsAssessmentRoute: typeof SkillsAssessmentRoute
@@ -1069,6 +1082,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsAccountRouteImport
       parentRoute: typeof SettingsRoute
     }
+    '/recruiter/dashboard': {
+      id: '/recruiter/dashboard'
+      path: '/recruiter/dashboard'
+      fullPath: '/recruiter/dashboard'
+      preLoaderRoute: typeof RecruiterDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lesson/$lessonId': {
       id: '/lesson/$lessonId'
       path: '/lesson/$lessonId'
@@ -1193,6 +1213,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobJobIdRoute: JobJobIdRoute,
   LearningMyCoursesRoute: LearningMyCoursesRoute,
   LessonLessonIdRoute: LessonLessonIdRoute,
+  RecruiterDashboardRoute: RecruiterDashboardRoute,
   SkillsSkillIdRoute: SkillsSkillIdRoute,
   SkillsAddRoute: SkillsAddRoute,
   SkillsAssessmentRoute: SkillsAssessmentRoute,
