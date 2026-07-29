@@ -1699,4 +1699,161 @@ router.get("/company-readiness/latest", authMiddleware, async (req: AuthRequest,
   }
 });
 
+// =========================================================================
+// 13. CAREER TWIN ANALYSIS
+// =========================================================================
+router.post("/career-twin", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    const { data: resumes } = await supabaseAdmin
+      .from("resumes")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (!resumes || resumes.length === 0) {
+      return res.status(404).json({ message: "No resume found. Please upload a resume first." });
+    }
+
+    const latestResume = resumes[0];
+    const userSkills = latestResume.skills || [];
+    const parsed = latestResume.parsed_text || {};
+    const userExperience = parsed.experience || [];
+    const userProjects = parsed.projects || [];
+    const rawText = (parsed.raw || "").toLowerCase();
+
+    // 1. Dynamic Scoring Heuristics
+    const techCount = userSkills.length;
+    const technical_score = Math.min(100, 40 + (techCount * 3));
+    
+    const softSkillsKeywords = ["communication", "team", "collaborate", "lead", "manage", "resolve", "present"];
+    const softMatches = softSkillsKeywords.filter(k => rawText.includes(k)).length;
+    const soft_skills_score = Math.min(100, 50 + (softMatches * 10));
+
+    const leadershipKeywords = ["lead", "led", "manage", "mentor", "director", "head", "founder", "vp"];
+    const leadMatches = leadershipKeywords.filter(k => rawText.includes(k)).length;
+    const leadership_potential = Math.min(100, 30 + (leadMatches * 15));
+
+    const commKeywords = ["presented", "wrote", "negotiated", "collaborated", "published", "speaker"];
+    const commMatches = commKeywords.filter(k => rawText.includes(k)).length;
+    const communication_score = Math.min(100, 40 + (commMatches * 12));
+
+    const problemKeywords = ["resolved", "optimized", "troubleshot", "designed", "architected", "analyzed"];
+    const probMatches = problemKeywords.filter(k => rawText.includes(k)).length;
+    const problem_solving_score = Math.min(100, 45 + (probMatches * 10));
+
+    const learning_ability = Math.min(100, 50 + ((latestResume.certifications?.length || 0) * 15));
+
+    // 2. Career Maturity Level
+    const totalExpItems = userExperience.length;
+    let maturity_level = "Entry Level";
+    if (totalExpItems >= 2 && leadMatches > 0) maturity_level = "Mid-Level Professional";
+    if (totalExpItems > 3 && leadMatches >= 2) maturity_level = "Senior Professional";
+    if (leadMatches >= 4) maturity_level = "Executive / Staff Level";
+
+    // 3. Career Personality
+    let personality = "The Balanced Professional";
+    if (technical_score > 85 && leadership_potential < 60) personality = "The Deep Technologist";
+    if (leadership_potential > 80 && soft_skills_score > 80) personality = "The Visionary Leader";
+    if (problem_solving_score > 85 && communication_score > 75) personality = "The Strategic Problem Solver";
+    if (learning_ability > 85) personality = "The Perpetual Learner";
+
+    // 4. Strengths & Improvement Areas
+    const dimensions = [
+      { name: "Technical Prowess", score: technical_score },
+      { name: "Soft Skills", score: soft_skills_score },
+      { name: "Leadership", score: leadership_potential },
+      { name: "Communication", score: communication_score },
+      { name: "Problem Solving", score: problem_solving_score },
+      { name: "Learning Agility", score: learning_ability }
+    ].sort((a, b) => b.score - a.score);
+
+    const top_strengths = dimensions.slice(0, 3).map(d => d.name);
+    // Add specific skills
+    if (userSkills.length > 0) top_strengths.push(`Core competency in ${userSkills[0]}`);
+    if (userExperience.length > 0) top_strengths.push("Proven track record in professional environments");
+    
+    const improvement_areas = dimensions.slice(-3).map(d => `Enhance ${d.name} capabilities`);
+    if (latestResume.certifications?.length === 0) improvement_areas.push("Lack of formal certifications");
+
+    // 5. Predicted Paths
+    let predicted_paths = [];
+    if (technical_score > 80 && rawText.includes("data")) predicted_paths = ["Senior Data Scientist", "Machine Learning Engineer", "AI Researcher"];
+    else if (technical_score > 80 && rawText.includes("react")) predicted_paths = ["Frontend Architect", "Full Stack Lead", "UI/UX Engineer"];
+    else if (leadership_potential > 80) predicted_paths = ["Engineering Manager", "Product Manager", "Tech Lead"];
+    else predicted_paths = ["Software Engineer", "Systems Analyst", "Technical Consultant"];
+
+    // 6. Growth Suggestions
+    const growth_suggestions = [];
+    if (leadership_potential < 60) growth_suggestions.push("Take ownership of a small project or mentor junior peers to build leadership skills.");
+    if (communication_score < 70) growth_suggestions.push("Consider writing technical blogs or presenting at meetups to boost visibility.");
+    if (technical_score < 70) growth_suggestions.push("Deepen your expertise by contributing to open source or building complex side projects.");
+    growth_suggestions.push(`Leverage your strong ${top_strengths[0].toLowerCase()} to pivot towards ${predicted_paths[0]} roles.`);
+
+    const reportData = {
+      user_id: userId,
+      personality,
+      technical_score,
+      soft_skills_score,
+      leadership_potential,
+      communication_score,
+      problem_solving_score,
+      learning_ability,
+      maturity_level,
+      top_strengths,
+      improvement_areas,
+      predicted_paths,
+      growth_suggestions
+    };
+
+    const { data: savedReport, error: insertError } = await supabaseAdmin
+      .from("career_twin_reports")
+      .insert(reportData)
+      .select("*")
+      .single();
+
+    if (insertError) {
+      console.error("[Database Error] Failed to save career twin report:", insertError);
+      return res.status(500).json({ message: "Analysis complete, but failed to save report." });
+    }
+
+    return res.json(savedReport);
+  } catch (err) {
+    console.error("Career Twin Error:", err);
+    return res.status(500).json({ message: "Failed to generate career twin." });
+  }
+});
+
+router.get("/career-twin/latest", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    const { data: report, error } = await supabaseAdmin
+      .from("career_twin_reports")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error("[Database Error] fetching latest career twin:", error);
+      return res.status(500).json({ message: "Failed to fetch career twin report." });
+    }
+
+    if (!report) {
+      return res.status(404).json({ message: "No career twin report found." });
+    }
+
+    return res.json(report);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error fetching career twin report." });
+  }
+});
+
 export default router;

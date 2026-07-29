@@ -32,6 +32,7 @@ import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as CourseProgressRouteImport } from './routes/course-progress'
 import { Route as CompanyReadinessRouteImport } from './routes/company-readiness'
 import { Route as CertificatesRouteImport } from './routes/certificates'
+import { Route as CareerTwinRouteImport } from './routes/career-twin'
 import { Route as CareerSuccessRouteImport } from './routes/career-success'
 import { Route as CareerForecastingRouteImport } from './routes/career-forecasting'
 import { Route as CareerDnaRouteImport } from './routes/career-dna'
@@ -177,6 +178,11 @@ const CompanyReadinessRoute = CompanyReadinessRouteImport.update({
 const CertificatesRoute = CertificatesRouteImport.update({
   id: '/certificates',
   path: '/certificates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CareerTwinRoute = CareerTwinRouteImport.update({
+  id: '/career-twin',
+  path: '/career-twin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CareerSuccessRoute = CareerSuccessRouteImport.update({
@@ -344,6 +350,7 @@ export interface FileRoutesByFullPath {
   '/career-dna': typeof CareerDnaRoute
   '/career-forecasting': typeof CareerForecastingRoute
   '/career-success': typeof CareerSuccessRoute
+  '/career-twin': typeof CareerTwinRoute
   '/certificates': typeof CertificatesRoute
   '/company-readiness': typeof CompanyReadinessRoute
   '/course-progress': typeof CourseProgressRoute
@@ -400,6 +407,7 @@ export interface FileRoutesByTo {
   '/career-dna': typeof CareerDnaRoute
   '/career-forecasting': typeof CareerForecastingRoute
   '/career-success': typeof CareerSuccessRoute
+  '/career-twin': typeof CareerTwinRoute
   '/certificates': typeof CertificatesRoute
   '/company-readiness': typeof CompanyReadinessRoute
   '/course-progress': typeof CourseProgressRoute
@@ -457,6 +465,7 @@ export interface FileRoutesById {
   '/career-dna': typeof CareerDnaRoute
   '/career-forecasting': typeof CareerForecastingRoute
   '/career-success': typeof CareerSuccessRoute
+  '/career-twin': typeof CareerTwinRoute
   '/certificates': typeof CertificatesRoute
   '/company-readiness': typeof CompanyReadinessRoute
   '/course-progress': typeof CourseProgressRoute
@@ -515,6 +524,7 @@ export interface FileRouteTypes {
     | '/career-dna'
     | '/career-forecasting'
     | '/career-success'
+    | '/career-twin'
     | '/certificates'
     | '/company-readiness'
     | '/course-progress'
@@ -571,6 +581,7 @@ export interface FileRouteTypes {
     | '/career-dna'
     | '/career-forecasting'
     | '/career-success'
+    | '/career-twin'
     | '/certificates'
     | '/company-readiness'
     | '/course-progress'
@@ -627,6 +638,7 @@ export interface FileRouteTypes {
     | '/career-dna'
     | '/career-forecasting'
     | '/career-success'
+    | '/career-twin'
     | '/certificates'
     | '/company-readiness'
     | '/course-progress'
@@ -684,6 +696,7 @@ export interface RootRouteChildren {
   CareerDnaRoute: typeof CareerDnaRoute
   CareerForecastingRoute: typeof CareerForecastingRoute
   CareerSuccessRoute: typeof CareerSuccessRoute
+  CareerTwinRoute: typeof CareerTwinRoute
   CertificatesRoute: typeof CertificatesRoute
   CompanyReadinessRoute: typeof CompanyReadinessRoute
   CourseProgressRoute: typeof CourseProgressRoute
@@ -886,6 +899,13 @@ declare module '@tanstack/react-router' {
       path: '/certificates'
       fullPath: '/certificates'
       preLoaderRoute: typeof CertificatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/career-twin': {
+      id: '/career-twin'
+      path: '/career-twin'
+      fullPath: '/career-twin'
+      preLoaderRoute: typeof CareerTwinRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/career-success': {
@@ -1141,6 +1161,7 @@ const rootRouteChildren: RootRouteChildren = {
   CareerDnaRoute: CareerDnaRoute,
   CareerForecastingRoute: CareerForecastingRoute,
   CareerSuccessRoute: CareerSuccessRoute,
+  CareerTwinRoute: CareerTwinRoute,
   CertificatesRoute: CertificatesRoute,
   CompanyReadinessRoute: CompanyReadinessRoute,
   CourseProgressRoute: CourseProgressRoute,

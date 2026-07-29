@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-ro
 import { useState, useEffect } from "react";
 import { 
   Bell, Search, Award, BookOpen, Brain, GitFork, 
-  Flame, CheckCircle, LineChart, FileText, Monitor, ShieldAlert, Sparkles, Upload, Building
+  Flame, CheckCircle, LineChart, FileText, Monitor, ShieldAlert, Sparkles, Upload, Building, User
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { api } from "@/lib/api/client";
@@ -29,6 +29,7 @@ const aiModules = [
   { to: "/platform-analytics", label: "Platform Metrics", icon: Monitor, color: "text-primary", bg: "bg-primary/10" },
   { to: "/career-forecasting", label: "Career Forecast", icon: ShieldAlert, color: "text-warning", bg: "bg-warning/10" },
   { to: "/company-readiness", label: "Company Readiness", icon: Building, color: "text-primary", bg: "bg-primary/10" },
+  { to: "/career-twin", label: "Career Twin", icon: User, color: "text-success", bg: "bg-success/10" },
 ];
 
 function Dashboard() {
@@ -49,6 +50,7 @@ function Dashboard() {
   const [learningProgress, setLearningProgress] = useState<number | null>(null);
   const [careerDnaArchetype, setCareerDnaArchetype] = useState<string | null>(null);
   const [companyReadiness, setCompanyReadiness] = useState<any>(null);
+  const [careerTwin, setCareerTwin] = useState<any>(null);
   
   // Skill Gap Analysis State
   const [skillGap, setSkillGap] = useState<{
@@ -108,6 +110,10 @@ function Dashboard() {
       // 5. Fetch Company Readiness
       const compReadiness = await api.getLatestCompanyReadiness().catch(() => null);
       setCompanyReadiness(compReadiness);
+
+      // 6. Fetch Career Twin
+      const twin = await api.getLatestCareerTwin().catch(() => null);
+      setCareerTwin(twin);
 
       // 5. Fetch Enrolled/Active Courses
       const courses = await api.getMyCourses().catch(() => []);
@@ -334,17 +340,30 @@ function Dashboard() {
             </div>
 
             {/* Career DNA Archetype */}
-            <div className="col-span-2 p-4.5 rounded-2xl bg-card shadow-card border border-border/10 flex justify-between items-center">
+            <div className="col-span-1 p-4.5 rounded-2xl bg-card shadow-card border border-border/10 flex justify-between items-center">
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">Career DNA Archetype</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">DNA Archetype</span>
                 <p className="text-sm font-extrabold text-card-foreground mt-1">
-                  {careerDnaArchetype || "Generating Archetype..."}
+                  {careerDnaArchetype || "Generating..."}
                 </p>
               </div>
-              <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0 ml-2">
                 🧬
               </div>
             </div>
+
+            {/* Career Twin Identity */}
+            <Link to="/career-twin" className="col-span-1 p-4.5 rounded-2xl bg-card shadow-card border border-border/10 flex justify-between items-center hover:scale-[1.02] transition-transform">
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-extrabold tracking-wider">Career Twin</span>
+                <p className="text-sm font-extrabold text-card-foreground mt-1 truncate">
+                  {careerTwin?.personality || "Generate Twin..."}
+                </p>
+              </div>
+              <div className="h-10 w-10 rounded-xl bg-success/10 text-success flex items-center justify-center font-bold text-lg shrink-0 ml-2">
+                <User className="h-5 w-5" />
+              </div>
+            </Link>
           </div>
 
           {/* Company Readiness Analysis Section */}

@@ -337,4 +337,15 @@ export const api = {
   getLatestCompanyReadiness: async () => {
     return fetchAPI<any>("/ai/company-readiness/latest");
   },
+
+  generateCareerTwin: async () => {
+    return fetchAPI<any>("/ai/career-twin", {
+      method: "POST"
+    });
+  },
+
+  getLatestCareerTwin: async () => {
+    return fetchAPI<any>("/ai/career-twin/latest");
+  },
 };
+
