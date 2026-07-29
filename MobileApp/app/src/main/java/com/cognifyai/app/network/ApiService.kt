@@ -7,7 +7,6 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 
 interface ApiService {
-
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
 
@@ -16,6 +15,4 @@ interface ApiService {
 
     @GET("profile")
     suspend fun getProfile(@Header("Authorization") token: String): Response<ProfileResponse>
-    
-    // Add ATS, Dashboard, Resume Uploading endpoints here for Phase 2
 }
