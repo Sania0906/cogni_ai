@@ -1,0 +1,74 @@
+[
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_learningroadmap.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_learningroadmap.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_careertwin.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_careertwin.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_profile.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_profile.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_resumeupload.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_resumeupload.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_resumecomparison.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_resumecomparison.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_signup.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_signup.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_notifications.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_notifications.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/activity_main.xml",
+        "source": "com.cognifyai.app-main-51:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_resumehistory.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_resumehistory.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_skillgapanalysis.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_skillgapanalysis.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_aiinterview.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_aiinterview.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_settings.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_settings.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_resumeparsing.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_resumeparsing.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_splash.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_splash.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_dashboard.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_dashboard.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_login.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_login.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_companyreadiness.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_companyreadiness.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-mergeDebugResources-48:/layout/fragment_atsscore.xml",
+        "source": "com.cognifyai.app-main-51:/layout/fragment_atsscore.xml"
+    }
+]

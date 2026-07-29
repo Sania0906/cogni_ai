@@ -1,0 +1,122 @@
+[
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_profile.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\mipmap-xxxhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_resumeupload.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_resumeupload.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_aiinterview.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_aiinterview.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\mipmap-hdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\mipmap-hdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_skillgapanalysis.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_skillgapanalysis.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_settings.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_settings.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\mipmap-xhdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_atsscore.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_atsscore.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\mipmap-xxhdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_splash.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_splash.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\mipmap-hdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_careertwin.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_careertwin.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_companyreadiness.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_companyreadiness.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\mipmap-xxxhdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_resumecomparison.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_resumecomparison.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\mipmap-xhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_resumehistory.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_resumehistory.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_notifications.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_notifications.xml"
+    },
+    {
+        "merged": "com.cognifyai.app-merged_res-49:/navigation_nav_graph.xml.flat",
+        "source": "com.cognifyai.app-main-51:/navigation/nav_graph.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_dashboard.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_dashboard.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_signup.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_signup.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\mipmap-mdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_login.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_login.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_learningroadmap.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_learningroadmap.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\navigation_nav_graph.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\navigation\\nav_graph.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\mipmap-xxhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\layout_fragment_resumeparsing.xml.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\layout\\fragment_resumeparsing.xml"
+    },
+    {
+        "merged": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-merged_res-49:\\mipmap-mdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\HP\\.gradle\\daemon\\8.0\\com.cognifyai.app-main-51:\\mipmap-mdpi\\ic_launcher.png"
+    }
+]
