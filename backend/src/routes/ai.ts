@@ -322,215 +322,189 @@ router.get("/industry-demand", async (req, res) => {
 // =========================================================================
 // 4. AI LEARNING ROADMAP GENERATOR
 // =========================================================================
-router.get("/roadmap", authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post("/roadmap/generate", authMiddleware, async (req: AuthRequest, res: Response) => {
   const userId = req.user?.id;
   if (!userId) return res.status(401).json({ message: "Unauthorized" });
-  const check = await checkOnboarding(userId);
-  if (check.locked) {
-    return res.status(403).json(check);
+
+  const { company, role } = req.body;
+  if (!company || !role) {
+    return res.status(400).json({ message: "Company and Role are required." });
   }
 
-  const { userProfile, userResume, userAssessments } = check;
-
-  const progScore = userAssessments?.find(a => a.category.toLowerCase().includes("prog"))?.score || 80;
-  const dbScore = userAssessments?.find(a => a.category.toLowerCase().includes("db") || a.category.toLowerCase().includes("data"))?.score || 75;
-  const aiScore = userAssessments?.find(a => a.category.toLowerCase().includes("ai") || a.category.toLowerCase().includes("ml"))?.score || 70;
-  const cloudScore = userAssessments?.find(a => a.category.toLowerCase().includes("cloud"))?.score || 70;
-  const webScore = userAssessments?.find(a => a.category.toLowerCase().includes("web"))?.score || 75;
-  const aptScore = userAssessments?.find(a => a.category.toLowerCase().includes("apt") || a.category.toLowerCase().includes("logic"))?.score || 80;
-
-  // Fetch actual skills for dynamic status override
-  let userSkills: any[] = [];
   try {
-    const { data: s } = await supabaseAdmin.from("skills").select("name").eq("user_id", userId);
-    userSkills = s || [];
+    // 1. Fetch Latest Resume
+    const { data: resumes } = await supabaseAdmin
+      .from("resumes")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const latestResume = resumes && resumes.length > 0 ? resumes[0] : null;
+    const skills = latestResume?.skills || [];
+    const atsScore = latestResume?.metadata?.ats_score || 0;
+
+    // 2. Determine "Missing Skills" based on target
+    const targetKeywords = role.toLowerCase().split(" ");
+    let missingSkills = [];
+    if (targetKeywords.includes("frontend") || targetKeywords.includes("react")) {
+      missingSkills = ["Next.js", "State Management", "Web Performance"].filter(s => !skills.some((us: string) => us.toLowerCase().includes(s.toLowerCase())));
+    } else if (targetKeywords.includes("data") || targetKeywords.includes("ml")) {
+      missingSkills = ["Deep Learning", "MLOps", "Model Deployment"].filter(s => !skills.some((us: string) => us.toLowerCase().includes(s.toLowerCase())));
+    } else {
+      missingSkills = ["System Design", "Cloud Infrastructure", "CI/CD"].filter(s => !skills.some((us: string) => us.toLowerCase().includes(s.toLowerCase())));
+    }
+
+    if (missingSkills.length === 0) {
+      missingSkills = ["Advanced " + role + " Concepts", "Leadership", "Architecture"];
+    }
+
+    // 3. Create Roadmap in DB
+    const { data: roadmap, error: roadmapErr } = await supabaseAdmin
+      .from("learning_roadmaps")
+      .insert({
+        user_id: userId,
+        target_company: company,
+        target_role: role,
+        resume_id: latestResume?.id || null,
+        overall_progress: 0
+      })
+      .select()
+      .single();
+
+    if (roadmapErr || !roadmap) throw roadmapErr;
+
+    // 4. Generate Milestones
+    const milestones = [
+      {
+        roadmap_id: roadmap.id,
+        week_number: 1,
+        title: "Foundational Upskilling",
+        description: `Focus on closing immediate gaps specifically for ${company}.`,
+        technologies: missingSkills.slice(0, 1),
+        certifications: [],
+        practice_projects: ["Mini CLI Tool", "Algorithm Practice set"]
+      },
+      {
+        roadmap_id: roadmap.id,
+        week_number: 2,
+        title: "Advanced Core Competency",
+        description: `Deep dive into advanced topics required for a ${role}.`,
+        technologies: missingSkills.slice(1, 2),
+        certifications: [`${company} Associate Certification prep`],
+        practice_projects: ["End-to-End System Integration"]
+      },
+      {
+        roadmap_id: roadmap.id,
+        week_number: 3,
+        title: "ATS Resume Optimization",
+        description: `Your current ATS score is ${atsScore}%. Target 90%+ by adding these missing skills to your resume experiences.`,
+        technologies: missingSkills,
+        certifications: [],
+        practice_projects: ["Resume Rewrite", "Mock Interview"]
+      },
+      {
+        roadmap_id: roadmap.id,
+        week_number: 4,
+        title: "Production Ready Portfolio",
+        description: `Build a highly scalable project showcasing ${missingSkills.join(", ")}.`,
+        technologies: missingSkills,
+        certifications: ["Industry Capstone"],
+        practice_projects: ["Capstone Deployment to Cloud"]
+      }
+    ];
+
+    const { data: savedMilestones, error: milErr } = await supabaseAdmin
+      .from("roadmap_milestones")
+      .insert(milestones)
+      .select();
+
+    if (milErr) throw milErr;
+
+    return res.json({ roadmap, milestones: savedMilestones });
   } catch (err) {
-    console.warn("Failed to fetch user skills for roadmap:", err);
+    console.error("Failed to generate roadmap:", err);
+    return res.status(500).json({ message: "Failed to generate roadmap." });
   }
-  const userSkillNames = userSkills.map(s => s.name.toLowerCase().trim());
+});
 
-  const determineStatus = (nodeSkills: string[], assessScore: number) => {
-    const hasAll = nodeSkills.every(ns => userSkillNames.some(us => us.includes(ns.toLowerCase()) || ns.toLowerCase().includes(us)));
-    if (hasAll || assessScore >= 85) return "completed";
-    const hasAny = nodeSkills.some(ns => userSkillNames.some(us => us.includes(ns.toLowerCase()) || ns.toLowerCase().includes(us)));
-    if (hasAny || assessScore >= 65) return "in-progress";
-    return "upcoming";
-  };
+router.get("/roadmap/latest", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-  const interests = (userProfile?.interests || []).map((i: string) => i.toLowerCase().trim());
-  const hasWeb = interests.some((t: string) => t.includes("web") || t.includes("stack") || t.includes("javascript") || t.includes("react") || t.includes("frontend") || t.includes("backend"));
-  const hasCloud = interests.some((t: string) => t.includes("cloud") || t.includes("aws") || t.includes("devops") || t.includes("docker") || t.includes("kubernetes"));
-  const hasSecurity = interests.some((t: string) => t.includes("security") || t.includes("cyber"));
+  try {
+    const { data: roadmap, error: rErr } = await supabaseAdmin
+      .from("learning_roadmaps")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
 
-  let goal = "Become a Senior Data Scientist";
-  let nodes = [];
+    if (rErr && rErr.code !== 'PGRST116') throw rErr;
+    if (!roadmap) return res.json(null); // Return null if no roadmap exists
 
-  if (hasWeb) {
-    goal = "Become a Full Stack Developer";
-    nodes = [
-      {
-        id: "step-1",
-        title: "Frontend Basics & JavaScript Foundations",
-        description: "Master HTML5, CSS3, and core ES6 JavaScript concepts.",
-        duration: "4 weeks",
-        status: determineStatus(["HTML", "CSS", "JavaScript"], webScore),
-        skills: ["HTML", "CSS", "JavaScript"],
-        courses: ["React Web Development"]
-      },
-      {
-        id: "step-2",
-        title: "React & Client-Side Architectures",
-        description: "Learn state management, hooks, routing, and responsive designs.",
-        duration: "6 weeks",
-        status: determineStatus(["React", "TypeScript", "Tailwind CSS"], webScore),
-        skills: ["React", "TypeScript", "Tailwind CSS"],
-        courses: ["React Web Development"]
-      },
-      {
-        id: "step-3",
-        title: "Node.js & Backend REST APIs",
-        description: "Build Express.js servers, configure middle-wares, and secure endpoints.",
-        duration: "5 weeks",
-        status: determineStatus(["Node.js", "Express"], progScore),
-        skills: ["Node.js", "Express", "JWT Auth"],
-        courses: ["SQL & Databases Course"]
-      },
-      {
-        id: "step-4",
-        title: "Database Scaling & Deployments",
-        description: "Master schema normalization, database scaling, indexes, and cloud hosting.",
-        duration: "5 weeks",
-        status: determineStatus(["PostgreSQL", "Supabase"], dbScore),
-        skills: ["PostgreSQL", "Supabase", "NoSQL"],
-        courses: ["SQL & Databases Course"]
-      }
-    ];
-  } else if (hasCloud) {
-    goal = "Become a Cloud & MLOps Engineer";
-    nodes = [
-      {
-        id: "step-1",
-        title: "Linux Systems & Scripting",
-        description: "Master command-line interfaces, filesystem management, and bash/python scripting.",
-        duration: "4 weeks",
-        status: determineStatus(["Linux", "Bash", "Python"], progScore),
-        skills: ["Linux", "Bash", "Python"],
-        courses: ["Python for Data Science"]
-      },
-      {
-        id: "step-2",
-        title: "Cloud Infrastructure Foundations",
-        description: "Learn VPCs, IAM policies, compute instances, and serverless compute functions.",
-        duration: "5 weeks",
-        status: determineStatus(["AWS", "VPC", "Serverless"], cloudScore),
-        skills: ["AWS", "VPC", "Serverless"],
-        courses: ["Cloud Architecture Foundations"]
-      },
-      {
-        id: "step-3",
-        title: "Containers & Orchestrations",
-        description: "Dockerize applications and deploy them on Kubernetes orchestrators.",
-        duration: "6 weeks",
-        status: determineStatus(["Docker", "Kubernetes", "CI/CD"], cloudScore),
-        skills: ["Docker", "Kubernetes", "CI/CD"],
-        courses: ["MLOps: Deploying Models to Production"]
-      },
-      {
-        id: "step-4",
-        title: "MLOps Platform Orchestrations",
-        description: "Build automated pipeline pipelines using MLflow, Kubeflow, and model registries.",
-        duration: "5 weeks",
-        status: determineStatus(["MLflow"], aiScore),
-        skills: ["MLflow", "Model Registries", "Pipeline Automations"],
-        courses: ["MLOps: Deploying Models to Production"]
-      }
-    ];
-  } else if (hasSecurity) {
-    goal = "Become a Cybersecurity Analyst";
-    nodes = [
-      {
-        id: "step-1",
-        title: "Network Security & Cryptography",
-        description: "Understand TCP/IP security, firewalls, hashing, and encryption algorithms.",
-        duration: "4 weeks",
-        status: determineStatus(["Networks", "Cryptography", "Firewalls"], aptScore),
-        skills: ["Networks", "Cryptography", "Firewalls"],
-        courses: ["Security & Penetration Testing"]
-      },
-      {
-        id: "step-2",
-        title: "Linux Administration & Auditing",
-        description: "Audit filesystems, manage user permissions, and analyze authentication logs.",
-        duration: "5 weeks",
-        status: determineStatus(["Linux", "Permissions"], aptScore),
-        skills: ["Linux", "Log Auditing", "Permissions"],
-        courses: ["Security & Penetration Testing"]
-      },
-      {
-        id: "step-3",
-        title: "Penetration Testing & Vulnerability Assessment",
-        description: "Utilize security scanners, conduct penetration tests, and analyze report logs.",
-        duration: "6 weeks",
-        status: determineStatus(["Nmap", "Metasploit", "Penetration Testing"], aptScore),
-        skills: ["Nmap", "Metasploit", "Penetration Testing"],
-        courses: ["Security & Penetration Testing"]
-      },
-      {
-        id: "step-4",
-        title: "Incident Response & Compliance Mappings",
-        description: "Learn ISO 27001 compliance standards, forensic logging, and threat mitigation.",
-        duration: "5 weeks",
-        status: determineStatus(["Incident Response", "Compliance Standards"], aptScore),
-        skills: ["Incident Response", "Compliance Standards", "Threat Mitigations"],
-        courses: ["Security & Penetration Testing"]
-      }
-    ];
-  } else {
-    // AI/ML / Data Science / Default
-    nodes = [
-      {
-        id: "step-1",
-        title: "Python & Quantitative Analysis Foundations",
-        description: "Strengthen stats and numpy capabilities. Review core coding elements.",
-        duration: "4 weeks",
-        status: determineStatus(["Python", "Numpy", "Linear Algebra"], progScore),
-        skills: ["Python", "Numpy", "Linear Algebra"],
-        courses: ["Python for Data Science Foundations"]
-      },
-      {
-        id: "step-2",
-        title: "Database Indexing & Query Tuning",
-        description: "Focus heavily on SQL indexing, query scaling and schema optimizations.",
-        duration: "6 weeks",
-        status: determineStatus(["SQL", "NoSQL", "Indexing"], dbScore),
-        skills: ["SQL", "NoSQL", "Indexing"],
-        courses: ["SQL & Databases Course"]
-      },
-      {
-        id: "step-3",
-        title: "Advanced Machine Learning Algorithms",
-        description: "Master regression, decision trees, and ensemble training models.",
-        duration: "8 weeks",
-        status: determineStatus(["Scikit-Learn", "Machine Learning"], aiScore),
-        skills: ["Scikit-Learn", "Machine Learning", "Model Evaluation"],
-        courses: ["Advanced Machine Learning"]
-      },
-      {
-        id: "step-4",
-        title: "MLOps & Deploying Systems",
-        description: "Deploy models as API endpoints using Docker, FastAPI, and Kubernetes.",
-        duration: "5 weeks",
-        status: determineStatus(["Docker", "FastAPI", "MLflow"], cloudScore),
-        skills: ["Docker", "FastAPI", "MLflow"],
-        courses: ["MLOps: Deploying Models to Production"]
-      }
-    ];
+    const { data: milestones, error: mErr } = await supabaseAdmin
+      .from("roadmap_milestones")
+      .select("*")
+      .eq("roadmap_id", roadmap.id)
+      .order("week_number", { ascending: true });
+
+    if (mErr) throw mErr;
+
+    return res.json({ roadmap, milestones });
+  } catch (err) {
+    console.error("Failed to fetch roadmap:", err);
+    return res.status(500).json({ message: "Failed to fetch roadmap." });
   }
+});
 
-  return res.json({
-    goal,
-    nodes
-  });
+router.post("/roadmap/milestone/:id/status", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  const { id } = req.params;
+  const { status, roadmapId } = req.body;
+
+  try {
+    // Verify ownership indirectly by fetching the roadmap first (RLS already handles this if configured, but let's be explicit)
+    const { data: rm } = await supabaseAdmin
+      .from("learning_roadmaps")
+      .select("id")
+      .eq("id", roadmapId)
+      .eq("user_id", userId)
+      .single();
+
+    if (!rm) return res.status(403).json({ message: "Forbidden" });
+
+    // Update milestone
+    await supabaseAdmin
+      .from("roadmap_milestones")
+      .update({ status })
+      .eq("id", id)
+      .eq("roadmap_id", roadmapId);
+
+    // Recalculate progress
+    const { data: allMilestones } = await supabaseAdmin
+      .from("roadmap_milestones")
+      .select("status")
+      .eq("roadmap_id", roadmapId);
+
+    if (allMilestones) {
+      const completed = allMilestones.filter(m => m.status === "completed").length;
+      const progress = Math.round((completed / allMilestones.length) * 100);
+
+      await supabaseAdmin
+        .from("learning_roadmaps")
+        .update({ overall_progress: progress })
+        .eq("id", roadmapId);
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Failed to update milestone:", err);
+    return res.status(500).json({ message: "Failed to update milestone." });
+  }
 });
 
 // =========================================================================

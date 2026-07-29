@@ -215,19 +215,22 @@ export const api = {
     }>("/ai/industry-demand");
   },
 
-  getRoadmap: async () => {
-    return fetchAPI<{
-      goal: string;
-      nodes: {
-        id: string;
-        title: string;
-        description: string;
-        duration: string;
-        status: string;
-        skills: string[];
-        courses: { name: string; path: string }[];
-      }[];
-    }>("/ai/roadmap");
+  generateRoadmap: async (data: { company: string; role: string }) => {
+    return fetchAPI<any>("/ai/roadmap/generate", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  },
+
+  getLatestRoadmap: async () => {
+    return fetchAPI<any>("/ai/roadmap/latest");
+  },
+
+  updateMilestoneStatus: async (milestoneId: string, status: string, roadmapId: string) => {
+    return fetchAPI<any>(`/ai/roadmap/milestone/${milestoneId}/status`, {
+      method: "POST",
+      body: JSON.stringify({ status, roadmapId })
+    });
   },
 
   getEmployability: async () => {
