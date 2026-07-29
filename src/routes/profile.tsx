@@ -21,6 +21,8 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   const [replacing, setReplacing] = useState(false);
   const [assessments, setAssessments] = useState<any[]>([]);
+  const [history, setHistory] = useState<any[]>([]);
+  const [comparison, setComparison] = useState<any>(null);
   const [stats, setStats] = useState([
     { n: 0, label: "Certificates", color: "bg-gradient-blue", icon: Award },
     { n: 0, label: "Courses", color: "bg-gradient-primary", icon: BookOpen },
@@ -43,6 +45,10 @@ function Profile() {
         // Refetch profile details
         const data = await api.getProfile();
         setProfile(data);
+        const historyData = await api.getResumeHistory().catch(() => []);
+        const compData = await api.getResumeComparison().catch(() => null);
+        setHistory(historyData);
+        setComparison(compData);
       } catch (err: any) {
         console.error(err);
         toast.error(err.message || "Failed to replace resume.", { id: toastId });
@@ -62,8 +68,12 @@ function Profile() {
         const courses = await api.getMyCourses().catch(() => []);
         const skills = await api.getSkills().catch(() => []);
         const assessmentsData = await api.getAssessments().catch(() => []);
+        const historyData = await api.getResumeHistory().catch(() => []);
+        const compData = await api.getResumeComparison().catch(() => null);
 
         setAssessments(assessmentsData);
+        setHistory(historyData);
+        setComparison(compData);
 
         setStats([
           { n: certs.length, label: "Certificates", color: "bg-gradient-blue", icon: Award },
@@ -260,6 +270,71 @@ function Profile() {
                 >
                   GitHub Profile
                 </a>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Resume Version History & Comparison */}
+      {history.length > 0 && (
+        <div className="rounded-3xl p-5 bg-card shadow-card mt-5 space-y-4 border border-border/10">
+          <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+            🕒 Resume Version History
+          </h3>
+          <div className="space-y-3">
+            {history.map((ver, idx) => (
+              <div key={ver.id} className="flex justify-between items-center text-sm border-b border-border/40 pb-3 last:border-0 last:pb-0">
+                <div>
+                  <span className="font-extrabold text-card-foreground text-sm flex items-center gap-2">
+                    Version {history.length - idx}
+                    {idx === 0 && <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] uppercase font-bold">Latest</span>}
+                  </span>
+                  <span className="text-[11px] font-bold text-muted-foreground">
+                    {new Date(ver.created_at).toLocaleString()}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-bold text-muted-foreground block">ATS Score</span>
+                  <span className={`font-extrabold text-sm ${ver.metadata?.ats_score >= 80 ? 'text-success' : 'text-primary'}`}>
+                    {ver.metadata?.ats_score || "N/A"}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {comparison?.canCompare && (
+            <div className="mt-4 pt-4 border-t border-border/40">
+              <h4 className="text-sm font-bold text-card-foreground mb-3">Latest Upload Improvements</h4>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-success/10 border border-success/20">
+                  <span className="text-[10px] font-bold text-success uppercase block mb-1">ATS Score</span>
+                  <span className="text-sm font-extrabold text-success">
+                    {comparison.atsImprovement > 0 ? "+" : ""}{comparison.atsImprovement}%
+                  </span>
+                </div>
+                
+                <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+                  <span className="text-[10px] font-bold text-primary uppercase block mb-1">Added Skills</span>
+                  <span className="text-xs font-extrabold text-primary">
+                    {comparison.addedSkills?.length || 0} New
+                  </span>
+                </div>
+              </div>
+
+              {comparison.addedSkills?.length > 0 && (
+                <div className="mt-3 text-xs">
+                  <span className="font-bold text-muted-foreground">New Skills: </span>
+                  <span className="font-bold text-card-foreground">{comparison.addedSkills.join(", ")}</span>
+                </div>
+              )}
+              {comparison.newProjects?.length > 0 && (
+                <div className="mt-2 text-xs">
+                  <span className="font-bold text-muted-foreground">New Projects: </span>
+                  <span className="font-bold text-card-foreground">{comparison.newProjects.length} Added</span>
+                </div>
               )}
             </div>
           )}

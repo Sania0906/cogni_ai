@@ -306,4 +306,24 @@ export const api = {
       body: JSON.stringify({ message }),
     });
   },
+
+  getResumeHistory: async () => {
+    return fetchAPI<any[]>("/ai/resumes/history");
+  },
+
+  getResumeComparison: async () => {
+    return fetchAPI<{
+      canCompare: boolean;
+      latestVersionDate?: string;
+      previousVersionDate?: string;
+      addedSkills?: string[];
+      removedSkills?: string[];
+      newProjects?: any[];
+      newCertifications?: any[];
+      atsImprovement?: number;
+      latestScore?: number;
+      previousScore?: number;
+      message?: string;
+    }>("/ai/resumes/compare");
+  },
 };

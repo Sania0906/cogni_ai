@@ -613,24 +613,46 @@ router.get("/employability", authMiddleware, async (req: AuthRequest, res: Respo
 // =========================================================================
 // HELPER: RESUME TEXT PARSER WITH INTEREST-BASED RECOMMENDATIONS
 // =========================================================================
-function parseResumeText(text: string, interests: string[] = []): {
+function parseResumeText(text: string): {
+  name: string;
+  email: string;
+  phone: string;
+  linkedin: string;
+  github: string;
+  portfolio: string;
   skills: string[];
   education: { degree: string; college: string; cgpa: string; gradYear: number };
   certifications: { name: string; issuer: string; date?: string }[];
   projects: { title: string; description: string; technologies: string[] }[];
   experience: { title: string; company: string; description: string; duration?: string }[];
+  languages: string[];
 } {
   const lowercaseText = text.toLowerCase();
-  const interestsMapped = interests.map(i => i.toLowerCase().trim());
+  
+  // 1. EXTRACT CONTACT INFO
+  const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  const email = emailMatch ? emailMatch[0] : "";
+  
+  const phoneMatch = text.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
+  const phone = phoneMatch ? phoneMatch[0] : "";
+  
+  const linkedinMatch = text.match(/linkedin\.com\/in\/[a-zA-Z0-9_-]+/i);
+  const linkedin = linkedinMatch ? `https://www.${linkedinMatch[0]}` : "";
+  
+  const githubMatch = text.match(/github\.com\/[a-zA-Z0-9_-]+/i);
+  const github = githubMatch ? `https://${githubMatch[0]}` : "";
+  
+  const portfolioMatch = text.match(/(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9-]+\.(?:dev|me|io|com)(?:\/[a-zA-Z0-9_-]+)*)/i);
+  const portfolio = portfolioMatch && !portfolioMatch[0].includes("linkedin") && !portfolioMatch[0].includes("github") ? portfolioMatch[0] : "";
 
-  // 1. SKILLS EXTRACTION
+  // 2. SKILLS EXTRACTION
   const commonSkills = [
     "Python", "JavaScript", "TypeScript", "Java", "C++", "C#", "Go", "Rust", "Ruby", "Swift", "Kotlin",
     "React", "Node.js", "Express", "Angular", "Vue", "Next.js", "Django", "Flask", "Spring Boot",
     "SQL", "NoSQL", "PostgreSQL", "MySQL", "MongoDB", "Redis", "Supabase", "Firebase",
     "AWS", "Azure", "GCP", "Docker", "Kubernetes", "CI/CD", "MLOps", "Git", "GitHub",
     "PyTorch", "TensorFlow", "Scikit-Learn", "Pandas", "NumPy", "Machine Learning", "Deep Learning", "NLP",
-    "HTML", "CSS", "Tailwind CSS", "Linux", "Bash", "Penetration Testing", "Cryptography", "Network Security"
+    "HTML", "CSS", "Tailwind CSS", "Linux", "Bash", "GraphQL", "REST API", "Microservices"
   ];
   
   const extractedSkills: string[] = [];
@@ -642,39 +664,19 @@ function parseResumeText(text: string, interests: string[] = []): {
     }
   }
 
-  // Recommendation for Skills if none extracted
-  if (extractedSkills.length === 0) {
-    const isWeb = interestsMapped.some(i => i.includes("web") || i.includes("stack") || i.includes("front") || i.includes("back") || i.includes("react"));
-    const isCloud = interestsMapped.some(i => i.includes("cloud") || i.includes("devops"));
-    const isSecurity = interestsMapped.some(i => i.includes("security") || i.includes("cyber"));
-    if (isWeb) {
-      extractedSkills.push("JavaScript", "TypeScript", "React", "Node.js", "HTML", "CSS", "SQL", "Git");
-    } else if (isCloud) {
-      extractedSkills.push("Python", "Bash", "AWS", "Docker", "Kubernetes", "CI/CD", "Linux", "Git");
-    } else if (isSecurity) {
-      extractedSkills.push("Linux", "Network Security", "Cryptography", "Penetration Testing", "Python", "Bash");
-    } else {
-      extractedSkills.push("Python", "SQL", "Machine Learning", "Scikit-Learn", "Pandas", "NumPy", "Git");
-    }
-  }
-
-  // 2. EDUCATION EXTRACTION
+  // 3. EDUCATION EXTRACTION
   let degree = "";
   let college = "";
   let cgpa = "";
-  let gradYear = 2026;
+  let gradYear = new Date().getFullYear();
 
   const degreeRegex = /(?:Bachelor|Master|B\.Tech|M\.Tech|B\.S\.|M\.S\.|B\.Sc|M\.Sc|Ph\.D|PhD|Associate|Degree)\s+(?:of|in)?\s*([A-Za-z\s&]{3,40})/i;
   const degreeMatch = text.match(degreeRegex);
-  if (degreeMatch) {
-    degree = degreeMatch[0].trim();
-  }
+  if (degreeMatch) degree = degreeMatch[0].trim();
 
   const collegeRegex = /(?:University|College|Institute|School|Academy|IIT|NIT)\s+of\s+[A-Za-z\s]+|[A-Za-z\s]+\s+(?:University|College|Institute|School|Academy|IIT|NIT)/i;
   const collegeMatch = text.match(collegeRegex);
-  if (collegeMatch) {
-    college = collegeMatch[0].trim();
-  }
+  if (collegeMatch) college = collegeMatch[0].trim();
 
   const cgpaRegex = /\b(cgpa|gpa|score|grade)\b\s*(?:of|is|:)?\s*([0-9]\.[0-9]{1,2}(?:\s*\/\s*(?:10|4))?)/i;
   const cgpaMatch = text.match(cgpaRegex);
@@ -682,155 +684,78 @@ function parseResumeText(text: string, interests: string[] = []): {
     cgpa = cgpaMatch[2].split('/')[0].trim();
   } else {
     const floatMatch = text.match(/\b([2-3]\.[0-9]{1,2}\s*\/\s*4|[6-9]\.[0-9]{1,2}\s*\/\s*10)\b/);
-    if (floatMatch) {
-      cgpa = floatMatch[1].split('/')[0].trim();
-    } else {
-      const generalFloat = text.match(/\b([2-3]\.[0-9]{1,2}|[6-9]\.[0-9]{1,2})\b/);
-      if (generalFloat) {
-        cgpa = generalFloat[1].trim();
+    if (floatMatch) cgpa = floatMatch[1].split('/')[0].trim();
+  }
+
+  const yearMatch = text.match(/\b(19|20)\d{2}\b/);
+  if (yearMatch) gradYear = parseInt(yearMatch[0]);
+
+  // 4. CERTIFICATIONS
+  const certificationsList = [
+    "AWS Certified", "Google Cloud", "CompTIA", "ScrumMaster", "PMP", "Cisco",
+    "Azure Fundamentals", "Data Analytics Professional", "TensorFlow Developer"
+  ];
+  const foundCerts: { name: string; issuer: string }[] = [];
+  certificationsList.forEach(cert => {
+    if (new RegExp(cert, 'i').test(text)) {
+      foundCerts.push({ name: cert, issuer: "Tech Certification Board" });
+    }
+  });
+
+  // 5. PROJECTS & EXPERIENCE (HEURISTIC)
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const foundProjects: { title: string; description: string; technologies: string[] }[] = [];
+  const foundExperience: { title: string; company: string; description: string; duration?: string }[] = [];
+  
+  let currentSection = "";
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].toLowerCase();
+    if (line.includes("experience") || line.includes("employment")) currentSection = "exp";
+    else if (line.includes("project")) currentSection = "proj";
+    else if (line.includes("education")) currentSection = "edu";
+    else if (line.includes("skill")) currentSection = "skills";
+    else {
+      // Heuristic extraction
+      if (currentSection === "exp" && (line.includes("intern") || line.includes("engineer") || line.includes("developer") || line.includes("manager"))) {
+        foundExperience.push({
+          title: lines[i],
+          company: lines[i+1] || "Company",
+          description: lines[i+2] || "Detailed work description.",
+          duration: lines[i].match(/\b(20\d{2})\b/) ? "Recent" : "Present"
+        });
+        i += 2; // skip parsed lines
+      } else if (currentSection === "proj" && lines[i].length > 10 && lines[i].length < 50) {
+        foundProjects.push({
+          title: lines[i],
+          description: lines[i+1] || "Project description.",
+          technologies: extractedSkills.slice(0, 3)
+        });
+        i++;
       }
     }
   }
 
-  const yearMatch = text.match(/\b(201[5-9]|202[0-9]|2030)\b/);
-  if (yearMatch) {
-    gradYear = parseInt(yearMatch[1]);
-  }
-
-  if (!degree) degree = "Bachelor of Science in Computer Science";
-  if (!college) college = "State Institute of Technology";
-  if (!cgpa) cgpa = "3.8";
-
-  // 3. CERTIFICATIONS EXTRACTION
-  const certificationsList = [
-    "AWS Certified Cloud Practitioner", "AWS Certified Solutions Architect", "Google Cloud Associate Cloud Engineer",
-    "CompTIA Security+", "Certified ScrumMaster (CSM)", "Project Management Professional (PMP)",
-    "Microsoft Certified: Azure Fundamentals", "Google Data Analytics Professional Certificate",
-    "TensorFlow Developer Certificate", "Oracle Certified Associate Java Programmer"
-  ];
-  const foundCerts: { name: string; issuer: string; date?: string }[] = [];
-  for (const cert of certificationsList) {
-    const escaped = cert.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
-    if (regex.test(text)) {
-      let issuer = "AWS";
-      if (cert.includes("Google")) issuer = "Google";
-      if (cert.includes("Microsoft") || cert.includes("Azure")) issuer = "Microsoft";
-      if (cert.includes("CompTIA")) issuer = "CompTIA";
-      if (cert.includes("Scrum")) issuer = "Scrum Alliance";
-      if (cert.includes("PMP") || cert.includes("Project")) issuer = "PMI";
-      if (cert.includes("TensorFlow")) issuer = "Google";
-      if (cert.includes("Oracle")) issuer = "Oracle";
-
-      foundCerts.push({ name: cert, issuer });
+  // Name extraction (heuristic: first non-empty line without contact info)
+  let name = "Professional User";
+  for (const line of lines) {
+    if (line.length > 2 && line.length < 30 && !line.includes("@") && !line.includes("http")) {
+      name = line;
+      break;
     }
   }
 
-  if (foundCerts.length === 0) {
-    const isWeb = interestsMapped.some(i => i.includes("web") || i.includes("stack") || i.includes("front") || i.includes("back") || i.includes("react"));
-    const isCloud = interestsMapped.some(i => i.includes("cloud") || i.includes("devops"));
-    const isSecurity = interestsMapped.some(i => i.includes("security") || i.includes("cyber"));
-    if (isWeb) {
-      foundCerts.push({ name: "Google UX Design Professional Certificate", issuer: "Google" });
-    } else if (isCloud) {
-      foundCerts.push({ name: "AWS Certified Solutions Architect - Associate", issuer: "Amazon Web Services" });
-    } else if (isSecurity) {
-      foundCerts.push({ name: "CompTIA Security+", issuer: "CompTIA" });
-    } else {
-      foundCerts.push({ name: "Google Data Analytics Professional Certificate", issuer: "Google" });
-    }
-  }
-
-  // 4. PROJECTS EXTRACTION
-  const foundProjects: { title: string; description: string; technologies: string[] }[] = [];
-  const isWeb = interestsMapped.some(i => i.includes("web") || i.includes("stack") || i.includes("front") || i.includes("back") || i.includes("react")) || extractedSkills.includes("React") || extractedSkills.includes("JavaScript");
-  const isCloud = interestsMapped.some(i => i.includes("cloud") || i.includes("devops")) || extractedSkills.includes("Docker") || extractedSkills.includes("AWS");
-  const isSecurity = interestsMapped.some(i => i.includes("security") || i.includes("cyber")) || extractedSkills.includes("Cryptography") || extractedSkills.includes("Network Security");
-
-  if (isWeb) {
-    foundProjects.push({
-      title: "E-Commerce Microservices Platform",
-      description: "Designed and implemented a high-performance full-stack e-commerce web application. Built custom REST APIs, authentication flows, and payment gateway integration.",
-      technologies: ["React", "Node.js", "Express", "PostgreSQL", "Tailwind CSS"]
-    });
-    foundProjects.push({
-      title: "Real-time Collaboration Dashboard",
-      description: "Developed a real-time collaborative whiteboarding and chat application. Optimized WebSocket connections for ultra-low latency updates.",
-      technologies: ["TypeScript", "React", "Socket.io", "MongoDB", "Redis"]
-    });
-  } else if (isCloud) {
-    foundProjects.push({
-      title: "Automated GitOps CI/CD Deployment Pipeline",
-      description: "Created a secure, automated GitOps deployment pipeline using ArgoCD and GitHub Actions. Automated configuration drifting reconciliation.",
-      technologies: ["Docker", "Kubernetes", "AWS", "Terraform", "ArgoCD", "Git"]
-    });
-    foundProjects.push({
-      title: "Distributed High-Availability Web Cluster",
-      description: "Provisioned and benchmarked a multi-region distributed cloud cluster. Configured auto-scaling groups, application load balancers, and DNS failovers.",
-      technologies: ["AWS", "Terraform", "Linux", "Nginx", "Python"]
-    });
-  } else if (isSecurity) {
-    foundProjects.push({
-      title: "Zero-Trust Encrypted Logging Protocol",
-      description: "Designed a secure agent-based log auditing system utilizing end-to-end asymmetric cryptography. Prevented unauthorized read access via public nodes.",
-      technologies: ["Python", "Cryptography", "Linux", "Docker", "GnuPG"]
-    });
-    foundProjects.push({
-      title: "Automated Network Vulnerability Scanner",
-      description: "Created a Python scanner utility to audit local IP ranges for open ports and identify outdated firmware vulnerabilities.",
-      technologies: ["Python", "Bash", "Linux", "Nmap", "Scapy"]
-    });
-  } else {
-    foundProjects.push({
-      title: "Predictive Customer Churn Engine",
-      description: "Developed a predictive model to classify customer churn behaviors with 92% classification accuracy. Optimized model using hyperparameter grids.",
-      technologies: ["Python", "Scikit-Learn", "Pandas", "NumPy", "SQL"]
-    });
-    foundProjects.push({
-      title: "Autonomous Agent RAG Q&A System",
-      description: "Built a Retrieval-Augmented Generation (RAG) agent pipeline for searching corporate documentation. Embedded documents in a vector index database.",
-      technologies: ["Python", "PyTorch", "LangChain", "Supabase", "Docker"]
-    });
-  }
-
-  // 5. EXPERIENCE EXTRACTION
-  const foundExperience: { title: string; company: string; description: string; duration?: string }[] = [];
-  if (isWeb) {
-    foundExperience.push({
-      title: "Frontend Developer Intern",
-      company: "Innovate Web Corp",
-      description: "Built and optimized responsive React components, leading to a 15% boost in mobile browser conversion rates.",
-      duration: "June 2025 - August 2025"
-    });
-  } else if (isCloud) {
-    foundExperience.push({
-      title: "Cloud Infrastructure Intern",
-      company: "ScaleOps Technologies",
-      description: "Maintained multi-node development environments. Wrote shell scripts and Python utilities to audit idle compute instances.",
-      duration: "May 2025 - July 2025"
-    });
-  } else if (isSecurity) {
-    foundExperience.push({
-      title: "Security Operations Center Intern",
-      company: "SecureLink Solutions",
-      description: "Monitored intrusion detection system alerts, ran regular credential vulnerability scans, and updated network compliance lists.",
-      duration: "May 2025 - August 2025"
-    });
-  } else {
-    foundExperience.push({
-      title: "Machine Learning Intern",
-      company: "Apex Analytics Inc",
-      description: "Pre-processed tabular time-series datasets, validated regression architectures, and built automated model performance dashboards.",
-      duration: "June 2025 - August 2025"
-    });
-  }
+  // 6. LANGUAGES
+  const languageList = ["English", "Spanish", "French", "German", "Mandarin", "Hindi", "Arabic", "Portuguese", "Russian", "Japanese"];
+  const languages = languageList.filter(l => new RegExp(`\\b${l}\\b`, 'i').test(text));
 
   return {
+    name, email, phone, linkedin, github, portfolio,
     skills: extractedSkills,
     education: { degree, college, cgpa, gradYear },
     certifications: foundCerts,
     projects: foundProjects,
-    experience: foundExperience
+    experience: foundExperience,
+    languages
   };
 }
 
@@ -921,83 +846,116 @@ router.post("/resume-optimize", authMiddleware, upload.single("file"), async (re
   }
 
   // Parse details using the comprehensive resume text parser
-  const parsedResume = parseResumeText(resumeText, userProfile?.interests || []);
-  const extractedSkills = parsedResume.skills;
-  const education = `${parsedResume.education.degree} at ${parsedResume.education.college} (CGPA: ${parsedResume.education.cgpa})`;
-  const certificationsMatched = parsedResume.certifications.map(c => c.name);
+    // Parse details using the comprehensive dynamic resume text parser
+    const parsedResume = parseResumeText(resumeText);
+    const extractedSkills = parsedResume.skills;
+    const education = `${parsedResume.education.degree} at ${parsedResume.education.college} (CGPA: ${parsedResume.education.cgpa})`;
+    const certificationsMatched = parsedResume.certifications.map(c => c.name);
 
-  // Dynamically generate strengths, weaknesses, formatting issues and recommendations
-  const formattingIssues: string[] = [];
-  if (resumeText.length < 500) {
-    formattingIssues.push("Resume length is very short. Expand descriptions to showcase accomplishments.");
-  }
-  if (!/@|email/i.test(resumeText)) {
-    formattingIssues.push("Contact email not explicitly detected in formatting scan.");
-  }
-  if (!/(?:education|degree|university|college|gpa)/i.test(resumeText)) {
-    formattingIssues.push("Academic or education headers are not clearly labeled.");
-  }
-
-  const strengths = keywordMatch.filter(k => k.status === "found").map(k => k.word);
-  const weaknesses = [...keywordMatch.filter(k => k.status === "missing").map(k => k.word), ...formattingIssues];
-  const recommendations = [...improvements];
-
-  let fileUrl = "";
-  let fileName = "";
-
-  try {
-    const originalName = req.file ? req.file.originalname : "resume.txt";
-    const fileBuffer = req.file ? req.file.buffer : Buffer.from(resumeText);
-    const fileMime = req.file ? req.file.mimetype : "text/plain";
-
-    const filePath = `${userId}/${Date.now()}_${originalName}`;
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from("resumes")
-      .upload(filePath, fileBuffer, {
-        contentType: fileMime,
-        upsert: true
-      });
-
-    if (uploadError) {
-      console.error("Storage upload error:", uploadError);
-      return res.status(500).json({ message: "Failed to upload resume file to storage: " + uploadError.message });
+    // Dynamically generate strengths, weaknesses, formatting issues and recommendations
+    const formattingIssues: string[] = [];
+    if (resumeText.length < 500) {
+      formattingIssues.push("Resume length is very short. Expand descriptions to showcase accomplishments.");
+    }
+    if (!parsedResume.email) {
+      formattingIssues.push("Contact email not explicitly detected in formatting scan.");
+    }
+    if (!parsedResume.education.degree) {
+      formattingIssues.push("Academic or education headers are not clearly labeled.");
     }
 
-    const { data: signedData, error: signedError } = await supabaseAdmin.storage
-      .from("resumes")
-      .createSignedUrl(filePath, 315360000);
+    const strengths = keywordMatch.filter(k => k.status === "found").map(k => k.word);
+    const weaknesses = [...keywordMatch.filter(k => k.status === "missing").map(k => k.word), ...formattingIssues];
+    const recommendations = [...improvements];
 
-    if (signedError) {
-      console.error("Signed URL creation error:", signedError);
-      return res.status(500).json({ message: "Failed to generate signed URL: " + signedError.message });
-    }
+    let fileUrl = "";
+    let fileName = "";
 
-    fileUrl = signedData.signedUrl;
-    fileName = originalName;
+    try {
+      const originalName = req.file ? req.file.originalname : "resume.txt";
+      const fileBuffer = req.file ? req.file.buffer : Buffer.from(resumeText);
+      const fileMime = req.file ? req.file.mimetype : "text/plain";
 
-    // Save resume to database (Saves education, skills, certs, projects, experience as single source of truth)
-    const { error: resumeError } = await supabaseAdmin
+      const filePath = `${userId}/${Date.now()}_${originalName}`;
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from("resumes")
+        .upload(filePath, fileBuffer, {
+          contentType: fileMime,
+          upsert: true
+        });
+
+      if (!uploadError) {
+        const { data: signedData } = await supabaseAdmin.storage
+          .from("resumes")
+          .createSignedUrl(filePath, 315360000);
+        if (signedData) {
+          fileUrl = signedData.signedUrl;
+          fileName = originalName;
+        }
+      }
+
+      // Save resume to database (Saves education, skills, certs, projects, experience as single source of truth)
+      const { error: resumeError } = await supabaseAdmin
       .from("resumes")
       .upsert({
         user_id: userId,
-        file_name: fileName,
-        file_url: fileUrl,
+        file_name: fileName || "resume.txt",
+        file_url: fileUrl || "",
         ats_score: score,
         skills: extractedSkills,
         education: education,
         certifications: certificationsMatched,
         improvements: improvements,
-        parsed_text: resumeText,
-        projects: parsedResume.projects.map(p => `${p.title}: ${p.description} (Tech: ${p.technologies.join(', ')})`),
-        experience: parsedResume.experience.map(e => `${e.title} at ${e.company} - ${e.description}`)
+        parsed_text: JSON.stringify({ // Store extended dynamically extracted details in parsed_text JSON
+          email: parsedResume.email,
+          phone: parsedResume.phone,
+          linkedin: parsedResume.linkedin,
+          github: parsedResume.github,
+          portfolio: parsedResume.portfolio,
+          projects: parsedResume.projects,
+          experience: parsedResume.experience,
+          languages: parsedResume.languages,
+          raw: resumeText
+        })
       });
 
     if (resumeError) {
       console.error("[Database Error] Failed to upsert resume:", resumeError);
-      throw new Error(`Failed to save resume details: ${resumeError.message}`);
     }
     
-    // Update profile
+    // Log Version History in User Activity Table
+    await supabaseAdmin.from("user_activity").insert({
+      user_id: userId,
+      action: "resume_upload_version",
+      metadata: {
+        file_name: fileName || "resume.txt",
+        file_url: fileUrl || "",
+        ats_score: score,
+        skills: extractedSkills,
+        education: education,
+        certifications: certificationsMatched,
+        projects: parsedResume.projects,
+        experience: parsedResume.experience,
+        improvements: improvements,
+        upload_date: new Date().toISOString()
+      }
+    });
+
+    // Automatically Update Profile (Name, Email, Links, Education) without user intervention
+    const profileUpdate: any = {};
+    if (parsedResume.name && parsedResume.name !== "Professional User") profileUpdate.name = parsedResume.name;
+    if (parsedResume.email) profileUpdate.email = parsedResume.email;
+    if (parsedResume.linkedin) profileUpdate.linkedin_url = parsedResume.linkedin;
+    if (parsedResume.github) profileUpdate.github_url = parsedResume.github;
+    if (parsedResume.education.degree) profileUpdate.degree = parsedResume.education.degree;
+    if (parsedResume.education.college) profileUpdate.college = parsedResume.education.college;
+    if (parsedResume.education.cgpa) profileUpdate.cgpa = parsedResume.education.cgpa;
+
+    if (Object.keys(profileUpdate).length > 0) {
+      await supabaseAdmin.from("profiles").update(profileUpdate).eq("id", userId);
+    }
+
+    // Return the response
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
       .update({ 
@@ -1527,6 +1485,76 @@ What would you like to discuss first?`;
   }
 
   return res.json({ reply });
+});
+
+// =========================================================================
+// 10. GET RESUME VERSION HISTORY
+// =========================================================================
+router.get("/resumes/history", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    const { data: history } = await supabaseAdmin
+      .from("user_activity")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("action", "resume_upload_version")
+      .order("created_at", { ascending: false });
+    
+    return res.json(history || []);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Failed to fetch resume history." });
+  }
+});
+
+// =========================================================================
+// 11. COMPARE RESUME VERSIONS
+// =========================================================================
+router.get("/resumes/compare", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    const { data: history } = await supabaseAdmin
+      .from("user_activity")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("action", "resume_upload_version")
+      .order("created_at", { ascending: false })
+      .limit(2);
+    
+    if (!history || history.length < 2) {
+      return res.json({ message: "Not enough resume versions to compare.", canCompare: false });
+    }
+
+    const latest = history[0].metadata;
+    const previous = history[1].metadata;
+
+    const addedSkills = (latest.skills || []).filter((s: string) => !(previous.skills || []).includes(s));
+    const removedSkills = (previous.skills || []).filter((s: string) => !(latest.skills || []).includes(s));
+    const newProjects = (latest.projects || []).filter((p: any) => !(previous.projects || []).some((pp: any) => pp.title === p.title));
+    const newCertifications = (latest.certifications || []).filter((c: any) => !(previous.certifications || []).some((pp: any) => typeof c === 'string' ? pp === c : pp.name === c.name));
+    
+    const atsImprovement = (latest.ats_score || 0) - (previous.ats_score || 0);
+
+    return res.json({
+      canCompare: true,
+      latestVersionDate: history[0].created_at,
+      previousVersionDate: history[1].created_at,
+      addedSkills,
+      removedSkills,
+      newProjects,
+      newCertifications,
+      atsImprovement,
+      latestScore: latest.ats_score,
+      previousScore: previous.ats_score
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Failed to compute resume comparison." });
+  }
 });
 
 export default router;
