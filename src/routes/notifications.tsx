@@ -1,9 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Bell, Award, BookOpen, Briefcase } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 
 export const Route = createFileRoute("/notifications")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && !localStorage.getItem("token")) {
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({ meta: [{ title: "Notifications — CognifyAI" }] }),
   component: Notifications,
 });
@@ -72,7 +77,7 @@ function Notifications() {
 
   return (
     <AppShell>
-      <PageHeader title="Notifications" back="/home" />
+      <PageHeader title="Notifications" back="/dashboard" />
       
       {loading ? (
         <div className="flex justify-center py-20">

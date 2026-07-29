@@ -12,11 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SkillGrowthRouteImport } from './routes/skill-growth'
 import { Route as SkillGapRouteImport } from './routes/skill-gap'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SavedJobsRouteImport } from './routes/saved-jobs'
 import { Route as SalaryInsightsRouteImport } from './routes/salary-insights'
 import { Route as RoadmapGeneratorRouteImport } from './routes/roadmap-generator'
+import { Route as ResumeAnalysisRouteImport } from './routes/resume-analysis'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as ProfileCompletionRouteImport } from './routes/profile-completion'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlatformAnalyticsRouteImport } from './routes/platform-analytics'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -24,9 +25,9 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as InterviewPrepRouteImport } from './routes/interview-prep'
 import { Route as IndustryDemandRouteImport } from './routes/industry-demand'
-import { Route as HomeRouteImport } from './routes/home'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as EmployabilityRouteImport } from './routes/employability'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as CourseProgressRouteImport } from './routes/course-progress'
 import { Route as CertificatesRouteImport } from './routes/certificates'
@@ -77,6 +78,11 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SavedJobsRoute = SavedJobsRouteImport.update({
   id: '/saved-jobs',
   path: '/saved-jobs',
@@ -92,14 +98,14 @@ const RoadmapGeneratorRoute = RoadmapGeneratorRouteImport.update({
   path: '/roadmap-generator',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResumeAnalysisRoute = ResumeAnalysisRouteImport.update({
+  id: '/resume-analysis',
+  path: '/resume-analysis',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileCompletionRoute = ProfileCompletionRouteImport.update({
-  id: '/profile-completion',
-  path: '/profile-completion',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -137,11 +143,6 @@ const IndustryDemandRoute = IndustryDemandRouteImport.update({
   path: '/industry-demand',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
@@ -150,6 +151,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const EmployabilityRoute = EmployabilityRouteImport.update({
   id: '/employability',
   path: '/employability',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoursesRoute = CoursesRouteImport.update({
@@ -248,39 +254,39 @@ const SkillsSkillIdRoute = SkillsSkillIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsThemeRoute = SettingsThemeRouteImport.update({
-  id: '/settings/theme',
-  path: '/settings/theme',
-  getParentRoute: () => rootRouteImport,
+  id: '/theme',
+  path: '/theme',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const SettingsSubscriptionRoute = SettingsSubscriptionRouteImport.update({
-  id: '/settings/subscription',
-  path: '/settings/subscription',
-  getParentRoute: () => rootRouteImport,
+  id: '/subscription',
+  path: '/subscription',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const SettingsSecurityRoute = SettingsSecurityRouteImport.update({
-  id: '/settings/security',
-  path: '/settings/security',
-  getParentRoute: () => rootRouteImport,
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const SettingsPrivacyRoute = SettingsPrivacyRouteImport.update({
-  id: '/settings/privacy',
-  path: '/settings/privacy',
-  getParentRoute: () => rootRouteImport,
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const SettingsLanguageRoute = SettingsLanguageRouteImport.update({
-  id: '/settings/language',
-  path: '/settings/language',
-  getParentRoute: () => rootRouteImport,
+  id: '/language',
+  path: '/language',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const SettingsAccountsRoute = SettingsAccountsRouteImport.update({
-  id: '/settings/accounts',
-  path: '/settings/accounts',
-  getParentRoute: () => rootRouteImport,
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const SettingsAccountRoute = SettingsAccountRouteImport.update({
-  id: '/settings/account',
-  path: '/settings/account',
-  getParentRoute: () => rootRouteImport,
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const LessonLessonIdRoute = LessonLessonIdRouteImport.update({
   id: '/lesson/$lessonId',
@@ -335,9 +341,9 @@ export interface FileRoutesByFullPath {
   '/certificates': typeof CertificatesRoute
   '/course-progress': typeof CourseProgressRoute
   '/courses': typeof CoursesRoute
+  '/dashboard': typeof DashboardRoute
   '/employability': typeof EmployabilityRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/home': typeof HomeRoute
   '/industry-demand': typeof IndustryDemandRoute
   '/interview-prep': typeof InterviewPrepRoute
   '/jobs': typeof JobsRoute
@@ -345,11 +351,12 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/platform-analytics': typeof PlatformAnalyticsRoute
   '/profile': typeof ProfileRoute
-  '/profile-completion': typeof ProfileCompletionRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/resume-analysis': typeof ResumeAnalysisRoute
   '/roadmap-generator': typeof RoadmapGeneratorRoute
   '/salary-insights': typeof SalaryInsightsRoute
   '/saved-jobs': typeof SavedJobsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/signup': typeof SignupRoute
   '/skill-gap': typeof SkillGapRoute
   '/skill-growth': typeof SkillGrowthRoute
@@ -389,9 +396,9 @@ export interface FileRoutesByTo {
   '/certificates': typeof CertificatesRoute
   '/course-progress': typeof CourseProgressRoute
   '/courses': typeof CoursesRoute
+  '/dashboard': typeof DashboardRoute
   '/employability': typeof EmployabilityRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/home': typeof HomeRoute
   '/industry-demand': typeof IndustryDemandRoute
   '/interview-prep': typeof InterviewPrepRoute
   '/jobs': typeof JobsRoute
@@ -399,11 +406,12 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/platform-analytics': typeof PlatformAnalyticsRoute
   '/profile': typeof ProfileRoute
-  '/profile-completion': typeof ProfileCompletionRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/resume-analysis': typeof ResumeAnalysisRoute
   '/roadmap-generator': typeof RoadmapGeneratorRoute
   '/salary-insights': typeof SalaryInsightsRoute
   '/saved-jobs': typeof SavedJobsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/signup': typeof SignupRoute
   '/skill-gap': typeof SkillGapRoute
   '/skill-growth': typeof SkillGrowthRoute
@@ -444,9 +452,9 @@ export interface FileRoutesById {
   '/certificates': typeof CertificatesRoute
   '/course-progress': typeof CourseProgressRoute
   '/courses': typeof CoursesRoute
+  '/dashboard': typeof DashboardRoute
   '/employability': typeof EmployabilityRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/home': typeof HomeRoute
   '/industry-demand': typeof IndustryDemandRoute
   '/interview-prep': typeof InterviewPrepRoute
   '/jobs': typeof JobsRoute
@@ -454,11 +462,12 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/platform-analytics': typeof PlatformAnalyticsRoute
   '/profile': typeof ProfileRoute
-  '/profile-completion': typeof ProfileCompletionRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/resume-analysis': typeof ResumeAnalysisRoute
   '/roadmap-generator': typeof RoadmapGeneratorRoute
   '/salary-insights': typeof SalaryInsightsRoute
   '/saved-jobs': typeof SavedJobsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/signup': typeof SignupRoute
   '/skill-gap': typeof SkillGapRoute
   '/skill-growth': typeof SkillGrowthRoute
@@ -500,9 +509,9 @@ export interface FileRouteTypes {
     | '/certificates'
     | '/course-progress'
     | '/courses'
+    | '/dashboard'
     | '/employability'
     | '/forgot-password'
-    | '/home'
     | '/industry-demand'
     | '/interview-prep'
     | '/jobs'
@@ -510,11 +519,12 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/platform-analytics'
     | '/profile'
-    | '/profile-completion'
     | '/reset-password'
+    | '/resume-analysis'
     | '/roadmap-generator'
     | '/salary-insights'
     | '/saved-jobs'
+    | '/settings'
     | '/signup'
     | '/skill-gap'
     | '/skill-growth'
@@ -554,9 +564,9 @@ export interface FileRouteTypes {
     | '/certificates'
     | '/course-progress'
     | '/courses'
+    | '/dashboard'
     | '/employability'
     | '/forgot-password'
-    | '/home'
     | '/industry-demand'
     | '/interview-prep'
     | '/jobs'
@@ -564,11 +574,12 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/platform-analytics'
     | '/profile'
-    | '/profile-completion'
     | '/reset-password'
+    | '/resume-analysis'
     | '/roadmap-generator'
     | '/salary-insights'
     | '/saved-jobs'
+    | '/settings'
     | '/signup'
     | '/skill-gap'
     | '/skill-growth'
@@ -608,9 +619,9 @@ export interface FileRouteTypes {
     | '/certificates'
     | '/course-progress'
     | '/courses'
+    | '/dashboard'
     | '/employability'
     | '/forgot-password'
-    | '/home'
     | '/industry-demand'
     | '/interview-prep'
     | '/jobs'
@@ -618,11 +629,12 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/platform-analytics'
     | '/profile'
-    | '/profile-completion'
     | '/reset-password'
+    | '/resume-analysis'
     | '/roadmap-generator'
     | '/salary-insights'
     | '/saved-jobs'
+    | '/settings'
     | '/signup'
     | '/skill-gap'
     | '/skill-growth'
@@ -663,9 +675,9 @@ export interface RootRouteChildren {
   CertificatesRoute: typeof CertificatesRoute
   CourseProgressRoute: typeof CourseProgressRoute
   CoursesRoute: typeof CoursesRoute
+  DashboardRoute: typeof DashboardRoute
   EmployabilityRoute: typeof EmployabilityRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
-  HomeRoute: typeof HomeRoute
   IndustryDemandRoute: typeof IndustryDemandRoute
   InterviewPrepRoute: typeof InterviewPrepRoute
   JobsRoute: typeof JobsRoute
@@ -673,11 +685,12 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   PlatformAnalyticsRoute: typeof PlatformAnalyticsRoute
   ProfileRoute: typeof ProfileRoute
-  ProfileCompletionRoute: typeof ProfileCompletionRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ResumeAnalysisRoute: typeof ResumeAnalysisRoute
   RoadmapGeneratorRoute: typeof RoadmapGeneratorRoute
   SalaryInsightsRoute: typeof SalaryInsightsRoute
   SavedJobsRoute: typeof SavedJobsRoute
+  SettingsRoute: typeof SettingsRouteWithChildren
   SignupRoute: typeof SignupRoute
   SkillGapRoute: typeof SkillGapRoute
   SkillGrowthRoute: typeof SkillGrowthRoute
@@ -689,13 +702,6 @@ export interface RootRouteChildren {
   JobJobIdRoute: typeof JobJobIdRoute
   LearningMyCoursesRoute: typeof LearningMyCoursesRoute
   LessonLessonIdRoute: typeof LessonLessonIdRoute
-  SettingsAccountRoute: typeof SettingsAccountRoute
-  SettingsAccountsRoute: typeof SettingsAccountsRoute
-  SettingsLanguageRoute: typeof SettingsLanguageRoute
-  SettingsPrivacyRoute: typeof SettingsPrivacyRoute
-  SettingsSecurityRoute: typeof SettingsSecurityRoute
-  SettingsSubscriptionRoute: typeof SettingsSubscriptionRoute
-  SettingsThemeRoute: typeof SettingsThemeRoute
   SkillsSkillIdRoute: typeof SkillsSkillIdRoute
   SkillsAddRoute: typeof SkillsAddRoute
   SkillsAssessmentRoute: typeof SkillsAssessmentRoute
@@ -729,6 +735,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/saved-jobs': {
       id: '/saved-jobs'
       path: '/saved-jobs'
@@ -750,18 +763,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoadmapGeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/resume-analysis': {
+      id: '/resume-analysis'
+      path: '/resume-analysis'
+      fullPath: '/resume-analysis'
+      preLoaderRoute: typeof ResumeAnalysisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile-completion': {
-      id: '/profile-completion'
-      path: '/profile-completion'
-      fullPath: '/profile-completion'
-      preLoaderRoute: typeof ProfileCompletionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -813,13 +826,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndustryDemandRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
@@ -832,6 +838,13 @@ declare module '@tanstack/react-router' {
       path: '/employability'
       fullPath: '/employability'
       preLoaderRoute: typeof EmployabilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/courses': {
@@ -969,52 +982,52 @@ declare module '@tanstack/react-router' {
     }
     '/settings/theme': {
       id: '/settings/theme'
-      path: '/settings/theme'
+      path: '/theme'
       fullPath: '/settings/theme'
       preLoaderRoute: typeof SettingsThemeRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/settings/subscription': {
       id: '/settings/subscription'
-      path: '/settings/subscription'
+      path: '/subscription'
       fullPath: '/settings/subscription'
       preLoaderRoute: typeof SettingsSubscriptionRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/settings/security': {
       id: '/settings/security'
-      path: '/settings/security'
+      path: '/security'
       fullPath: '/settings/security'
       preLoaderRoute: typeof SettingsSecurityRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/settings/privacy': {
       id: '/settings/privacy'
-      path: '/settings/privacy'
+      path: '/privacy'
       fullPath: '/settings/privacy'
       preLoaderRoute: typeof SettingsPrivacyRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/settings/language': {
       id: '/settings/language'
-      path: '/settings/language'
+      path: '/language'
       fullPath: '/settings/language'
       preLoaderRoute: typeof SettingsLanguageRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/settings/accounts': {
       id: '/settings/accounts'
-      path: '/settings/accounts'
+      path: '/accounts'
       fullPath: '/settings/accounts'
       preLoaderRoute: typeof SettingsAccountsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/settings/account': {
       id: '/settings/account'
-      path: '/settings/account'
+      path: '/account'
       fullPath: '/settings/account'
       preLoaderRoute: typeof SettingsAccountRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/lesson/$lessonId': {
       id: '/lesson/$lessonId'
@@ -1075,6 +1088,30 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface SettingsRouteChildren {
+  SettingsAccountRoute: typeof SettingsAccountRoute
+  SettingsAccountsRoute: typeof SettingsAccountsRoute
+  SettingsLanguageRoute: typeof SettingsLanguageRoute
+  SettingsPrivacyRoute: typeof SettingsPrivacyRoute
+  SettingsSecurityRoute: typeof SettingsSecurityRoute
+  SettingsSubscriptionRoute: typeof SettingsSubscriptionRoute
+  SettingsThemeRoute: typeof SettingsThemeRoute
+}
+
+const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsAccountRoute: SettingsAccountRoute,
+  SettingsAccountsRoute: SettingsAccountsRoute,
+  SettingsLanguageRoute: SettingsLanguageRoute,
+  SettingsPrivacyRoute: SettingsPrivacyRoute,
+  SettingsSecurityRoute: SettingsSecurityRoute,
+  SettingsSubscriptionRoute: SettingsSubscriptionRoute,
+  SettingsThemeRoute: SettingsThemeRoute,
+}
+
+const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
+  SettingsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AiAssistantRoute: AiAssistantRoute,
@@ -1087,9 +1124,9 @@ const rootRouteChildren: RootRouteChildren = {
   CertificatesRoute: CertificatesRoute,
   CourseProgressRoute: CourseProgressRoute,
   CoursesRoute: CoursesRoute,
+  DashboardRoute: DashboardRoute,
   EmployabilityRoute: EmployabilityRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
-  HomeRoute: HomeRoute,
   IndustryDemandRoute: IndustryDemandRoute,
   InterviewPrepRoute: InterviewPrepRoute,
   JobsRoute: JobsRoute,
@@ -1097,11 +1134,12 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   PlatformAnalyticsRoute: PlatformAnalyticsRoute,
   ProfileRoute: ProfileRoute,
-  ProfileCompletionRoute: ProfileCompletionRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ResumeAnalysisRoute: ResumeAnalysisRoute,
   RoadmapGeneratorRoute: RoadmapGeneratorRoute,
   SalaryInsightsRoute: SalaryInsightsRoute,
   SavedJobsRoute: SavedJobsRoute,
+  SettingsRoute: SettingsRouteWithChildren,
   SignupRoute: SignupRoute,
   SkillGapRoute: SkillGapRoute,
   SkillGrowthRoute: SkillGrowthRoute,
@@ -1113,13 +1151,6 @@ const rootRouteChildren: RootRouteChildren = {
   JobJobIdRoute: JobJobIdRoute,
   LearningMyCoursesRoute: LearningMyCoursesRoute,
   LessonLessonIdRoute: LessonLessonIdRoute,
-  SettingsAccountRoute: SettingsAccountRoute,
-  SettingsAccountsRoute: SettingsAccountsRoute,
-  SettingsLanguageRoute: SettingsLanguageRoute,
-  SettingsPrivacyRoute: SettingsPrivacyRoute,
-  SettingsSecurityRoute: SettingsSecurityRoute,
-  SettingsSubscriptionRoute: SettingsSubscriptionRoute,
-  SettingsThemeRoute: SettingsThemeRoute,
   SkillsSkillIdRoute: SkillsSkillIdRoute,
   SkillsAddRoute: SkillsAddRoute,
   SkillsAssessmentRoute: SkillsAssessmentRoute,

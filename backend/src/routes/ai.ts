@@ -36,18 +36,16 @@ async function checkOnboarding(userId: string) {
       .eq("user_id", userId)
       .maybeSingle();
 
-    const profileComplete = !!(profile?.onboarding_completed || (profile?.degree && profile?.college));
-    const assessmentTaken = !!(assessments && assessments.length > 0);
     const resumeUploaded = !!resume;
 
-    if (!profileComplete || !assessmentTaken || !resumeUploaded) {
+    if (!resumeUploaded) {
       return {
         locked: true,
-        message: "AI Career insights are locked. Please complete your profile details, upload your resume, and finish at least one skill assessment.",
+        message: "AI Career insights are locked. Please upload your resume first to unlock AI Analysis.",
         checklist: {
-          profile: profileComplete,
-          assessment: assessmentTaken,
-          resume: resumeUploaded
+          profile: true,
+          assessment: true,
+          resume: false
         }
       };
     }
@@ -902,8 +900,10 @@ router.post("/resume-optimize", authMiddleware, upload.single("file"), async (re
     };
   });
 
-  const baseScore = Math.floor((matchedCount / keywords.length) * 40) + 50;
-  score = Math.min(baseScore + Math.floor(Math.random() * 10), 100);
+  let calculatedScore = Math.round((matchedCount / keywords.length) * 80);
+  if (/@|email/i.test(resumeText)) calculatedScore += 10;
+  if (/(?:education|degree|university|college|gpa)/i.test(resumeText)) calculatedScore += 10;
+  score = Math.min(100, Math.max(30, calculatedScore));
 
   if (score < 75) {
     improvements.push("Incorporate more active verbs and quantify accomplishments (e.g. 'Improved latency by 20%').");
@@ -987,7 +987,7 @@ router.post("/resume-optimize", authMiddleware, upload.single("file"), async (re
     fileName = originalName;
 
     // Save resume to database (Saves education, skills, certs, projects, experience as single source of truth)
-    await supabaseAdmin
+    const { error: resumeError } = await supabaseAdmin
       .from("resumes")
       .upsert({
         user_id: userId,
@@ -1002,9 +1002,14 @@ router.post("/resume-optimize", authMiddleware, upload.single("file"), async (re
         projects: parsedResume.projects.map(p => `${p.title}: ${p.description} (Tech: ${p.technologies.join(', ')})`),
         experience: parsedResume.experience.map(e => `${e.title} at ${e.company} - ${e.description}`)
       });
+
+    if (resumeError) {
+      console.error("[Database Error] Failed to upsert resume:", resumeError);
+      throw new Error(`Failed to save resume details: ${resumeError.message}`);
+    }
     
     // Update profile
-    await supabaseAdmin
+    const { error: profileError } = await supabaseAdmin
       .from("profiles")
       .update({ 
         resume_url: fileUrl,
@@ -1016,8 +1021,13 @@ router.post("/resume-optimize", authMiddleware, upload.single("file"), async (re
       })
       .eq("id", userId);
 
+    if (profileError) {
+      console.error("[Database Error] Failed to update profile:", profileError);
+      throw new Error(`Failed to update profile: ${profileError.message}`);
+    }
+
     // Save ATS report
-    await supabaseAdmin
+    const { error: atsError } = await supabaseAdmin
       .from("ats_reports")
       .insert({
         user_id: userId,
@@ -1029,6 +1039,11 @@ router.post("/resume-optimize", authMiddleware, upload.single("file"), async (re
         extracted_skills: strengths,
         resume_url: fileUrl
       });
+
+    if (atsError) {
+      console.error("[Database Error] Failed to save ATS report:", atsError);
+      throw new Error(`Failed to save ATS report: ${atsError.message}`);
+    }
 
     // Save skills to skills table dynamically
     if (extractedSkills && Array.isArray(extractedSkills)) {
@@ -1127,7 +1142,7 @@ router.post("/resume-optimize", authMiddleware, upload.single("file"), async (re
       ? ["Distributed systems and platform infrastructure teams", "DevOps/SRE scaling divisions"]
       : ["Research labs / R&D Quantitative divisions", "Fast scaling product startups"];
 
-    await supabaseAdmin
+    const { error: dnaError } = await supabaseAdmin
       .from("career_dna")
       .upsert({
         user_id: userId,
@@ -1138,6 +1153,11 @@ router.post("/resume-optimize", authMiddleware, upload.single("file"), async (re
         weaknesses: weaknessesDna,
         recommended_environments: recommendedEnvironments
       });
+
+    if (dnaError) {
+      console.error("[Database Error] Failed to upsert Career DNA:", dnaError);
+      throw new Error(`Failed to save Career DNA details: ${dnaError.message}`);
+    }
 
     // Generate and Save Employability Score
     const certScore = Math.min(100, 50 + parsedResume.certifications.length * 15);
@@ -1157,7 +1177,7 @@ router.post("/resume-optimize", authMiddleware, upload.single("file"), async (re
       "Consider publishing 1-2 research notebooks or portfolio websites."
     ];
 
-    await supabaseAdmin
+    const { error: empError } = await supabaseAdmin
       .from("employability_scores")
       .upsert({
         user_id: userId,
@@ -1165,6 +1185,11 @@ router.post("/resume-optimize", authMiddleware, upload.single("file"), async (re
         components,
         feedback
       });
+
+    if (empError) {
+      console.error("[Database Error] Failed to upsert Employability Score:", empError);
+      throw new Error(`Failed to save Employability Score details: ${empError.message}`);
+    }
 
   } catch (dbErr: any) {
     console.error("Failed to save resume or ATS report to Supabase:", dbErr);

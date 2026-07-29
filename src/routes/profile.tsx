@@ -1,34 +1,56 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Award, BookOpen, Target, Settings, Shield, Bell, Moon, LogOut, ChevronRight, User as UserIcon } from "lucide-react";
+import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
+import { Award, BookOpen, Target, Settings, Shield, Bell, Moon, LogOut, ChevronRight, User as UserIcon, Upload } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && !localStorage.getItem("token")) {
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({ meta: [{ title: "Profile — CognifyAI" }] }),
   component: Profile,
 });
-
-
-
-const settings = [
-  { to: "/settings/account", label: "Account Settings", icon: Settings, color: "bg-gradient-primary" },
-  { to: "/settings/security", label: "Security & Privacy", icon: Shield, color: "bg-gradient-blue" },
-  { to: "/notifications", label: "Notifications", icon: Bell, color: "bg-gradient-pink" },
-  { to: "/settings/theme", label: "Theme", icon: Moon, color: "bg-gradient-primary" },
-];
 
 function Profile() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [replacing, setReplacing] = useState(false);
   const [assessments, setAssessments] = useState<any[]>([]);
   const [stats, setStats] = useState([
     { n: 0, label: "Certificates", color: "bg-gradient-blue", icon: Award },
     { n: 0, label: "Courses", color: "bg-gradient-primary", icon: BookOpen },
     { n: 0, label: "Skills", color: "bg-gradient-pink", icon: Target },
   ]);
+
+  const handleReplaceResume = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setReplacing(true);
+      const toastId = toast.loading("Uploading and analyzing new resume...");
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("targetJob", "Senior Data Scientist");
+
+        await api.optimizeResume(formData);
+        toast.success("Resume updated successfully!", { id: toastId });
+        
+        // Refetch profile details
+        const data = await api.getProfile();
+        setProfile(data);
+      } catch (err: any) {
+        console.error(err);
+        toast.error(err.message || "Failed to replace resume.", { id: toastId });
+      } finally {
+        setReplacing(false);
+      }
+    }
+  };
 
   useEffect(() => {
     async function fetchProfile() {
@@ -106,8 +128,88 @@ function Profile() {
         ))}
       </div>
 
+      {/* Resume Status Card */}
+      {profile?.resumeDetails ? (
+        <div className="rounded-3xl p-5 bg-card shadow-card mt-5 space-y-4 border border-border/10">
+          <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+            📄 Resume Status
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-muted-foreground">Status</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-success/15 text-success text-[10px] font-bold">
+                Resume Uploaded Successfully
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm border-b border-border/40 pb-2">
+              <span className="text-xs font-bold text-muted-foreground">Filename</span>
+              <span className="font-extrabold text-card-foreground text-xs truncate max-w-[200px]" title={profile.resumeDetails.file_name}>
+                {profile.resumeDetails.file_name || "resume.pdf"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm border-b border-border/40 pb-2">
+              <span className="text-xs font-bold text-muted-foreground">Upload Date</span>
+              <span className="font-extrabold text-card-foreground text-xs">
+                {profile.resumeDetails.upload_date
+                  ? new Date(profile.resumeDetails.upload_date).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "N/A"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm border-b border-border/40 pb-2">
+              <span className="text-xs font-bold text-muted-foreground">ATS Score</span>
+              <span className="font-extrabold text-card-foreground text-xs">
+                {profile.resumeDetails.ats_score}%
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm pb-2">
+              <span className="text-xs font-bold text-muted-foreground">Version</span>
+              <span className="font-extrabold text-card-foreground text-xs">v1.0</span>
+            </div>
+          </div>
+          
+          <div className="flex gap-3 pt-2">
+            <Link
+              to="/resume-analysis"
+              className="flex-1 text-center py-2.5 rounded-xl bg-primary text-white text-xs font-bold shadow-glow flex items-center justify-center cursor-pointer"
+            >
+              View Resume Analysis
+            </Link>
+            <label
+              className="flex-1 text-center py-2.5 rounded-xl bg-muted/60 text-xs font-bold text-card-foreground hover:bg-muted/80 transition cursor-pointer border-0 flex items-center justify-center"
+            >
+              Replace Resume
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,.txt"
+                className="hidden"
+                disabled={replacing}
+                onChange={handleReplaceResume}
+              />
+            </label>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-3xl p-5 bg-card shadow-card mt-5 text-center border border-dashed border-border/40 space-y-4">
+          <p className="text-sm font-semibold text-muted-foreground">No resume has been uploaded yet.</p>
+          <label className="inline-block px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold shadow-glow cursor-pointer">
+            Upload Resume
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,.txt"
+              className="hidden"
+              disabled={replacing}
+              onChange={handleReplaceResume}
+            />
+          </label>
+        </div>
+      )}
+
       {/* Academic Credentials */}
-      {profile?.onboarding_completed ? (
+      {profile?.resumeDetails && (
         <div className="rounded-3xl p-5 bg-card shadow-card mt-5 space-y-4 border border-border/10">
           <h3 className="text-lg font-bold text-primary flex items-center gap-2">
             🎓 Academic Credentials
@@ -115,7 +217,7 @@ function Profile() {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-xs text-muted-foreground font-semibold">Degree</p>
-              <p className="font-bold text-card-foreground mt-0.5">{profile.degree}</p>
+              <p className="font-bold text-card-foreground mt-0.5">{profile.degree || "N/A"}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground font-semibold">Department</p>
@@ -123,12 +225,12 @@ function Profile() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground font-semibold">College / University</p>
-              <p className="font-bold text-card-foreground mt-0.5">{profile.college}</p>
+              <p className="font-bold text-card-foreground mt-0.5">{profile.college || "N/A"}</p>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <p className="text-xs text-muted-foreground font-semibold">CGPA</p>
-                <p className="font-bold text-card-foreground mt-0.5">{profile.cgpa}</p>
+                <p className="font-bold text-card-foreground mt-0.5">{profile.cgpa || "N/A"}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-semibold">Grad Year</p>
@@ -162,107 +264,24 @@ function Profile() {
             </div>
           )}
         </div>
-      ) : (
-        <div className="rounded-3xl p-5 bg-card shadow-card mt-5 text-center border border-dashed border-border/40">
-          <p className="text-sm font-semibold text-muted-foreground mb-3">Academic credentials and links are missing.</p>
-          <Link
-            to="/profile-completion"
-            className="inline-block px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold shadow-glow"
-          >
-            Complete Onboarding Checklist
-          </Link>
-        </div>
       )}
 
-      {/* Resume ATS Analysis */}
-      {profile?.resumeDetails && (
-        <div className="rounded-3xl p-5 bg-card shadow-card mt-5 space-y-4 border border-border/10">
-          <h3 className="text-lg font-bold text-primary flex items-center gap-2">
-            📄 Resume ATS Analysis
-          </h3>
-          <div className="flex items-center gap-4">
-            <div className="relative h-14 w-14 flex items-center justify-center rounded-2xl bg-gradient-blue text-white font-black text-lg shadow-glow">
-              {profile.resumeDetails.ats_score}%
-            </div>
-            <div>
-              <p className="text-sm font-bold text-card-foreground">ATS Optimization Score</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Parsed details and improvements detected below</p>
-            </div>
+      <Link
+        to="/settings"
+        className="mt-6 flex items-center justify-between p-4 rounded-2xl bg-card shadow-card border border-border/10 hover:bg-muted/30 transition-all font-semibold"
+      >
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center text-white">
+            <Settings className="h-5 w-5" />
           </div>
-
-          {profile.resumeDetails.skills && profile.resumeDetails.skills.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-xs text-muted-foreground font-semibold">Extracted Skills</p>
-              <div className="flex flex-wrap gap-1.5">
-                {profile.resumeDetails.skills.map((s: string) => (
-                  <span key={s} className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-bold">
-                    {s}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {profile.resumeDetails.improvements && profile.resumeDetails.improvements.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-xs text-muted-foreground font-semibold">Key Improvements Recommended</p>
-              <ul className="list-disc list-inside text-xs text-muted-foreground space-y-1 pl-1">
-                {profile.resumeDetails.improvements.map((imp: string, index: number) => (
-                  <li key={index}>{imp}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <span className="text-sm font-bold text-card-foreground">Preferences & Settings</span>
         </div>
-      )}
-
-      {/* Skill Assessments History */}
-      {assessments.length > 0 && (
-        <div className="rounded-3xl p-5 bg-card shadow-card mt-5 space-y-4 border border-border/10">
-          <h3 className="text-lg font-bold text-primary flex items-center gap-2">
-            🏆 Completed Assessments
-          </h3>
-          <div className="space-y-3">
-            {assessments.map((a: any, idx: number) => (
-              <div key={a._id || idx} className="flex items-center justify-between p-3 rounded-2xl bg-muted/40 border border-border/20">
-                <div>
-                  <p className="text-sm font-bold text-card-foreground">{a.category}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    Completed: {new Date(a.completedAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className={`px-3 py-1.5 rounded-xl font-bold text-xs ${
-                  a.score >= 80 ? "bg-green-500/10 text-green-500" :
-                  a.score >= 60 ? "bg-amber-500/10 text-amber-500" : "bg-red-500/10 text-red-500"
-                }`}>
-                  Score: {a.score}%
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <h2 className="text-lg font-bold mt-7 mb-3">Settings</h2>
-      <div className="rounded-2xl bg-card shadow-card overflow-hidden">
-        {settings.map((s, i) => (
-          <Link
-            key={s.label}
-            to={s.to}
-            className={`flex items-center gap-4 p-4 ${i > 0 ? "border-t border-border" : ""}`}
-          >
-            <div className={`h-10 w-10 rounded-xl ${s.color} flex items-center justify-center text-white`}>
-              <s.icon className="h-5 w-5" />
-            </div>
-            <span className="flex-1 font-semibold">{s.label}</span>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </Link>
-        ))}
-      </div>
+        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+      </Link>
 
       <button
         onClick={handleSignOut}
-        className="mt-5 flex items-center justify-center gap-2 w-full h-14 rounded-2xl bg-destructive/10 text-destructive font-bold cursor-pointer hover:bg-destructive/15 border-0"
+        className="mt-4 flex items-center justify-center gap-2 w-full h-14 rounded-2xl bg-destructive/10 text-destructive font-bold cursor-pointer hover:bg-destructive/15 border-0"
       >
         <LogOut className="h-5 w-5" /> Sign Out
       </button>

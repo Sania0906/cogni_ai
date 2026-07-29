@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Brain, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({ meta: [{ title: "Sign up — CognifyAI" }] }),
@@ -16,48 +17,52 @@ function Signup() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    console.log("[Auth Signup] Continue button clicked / Form submit triggered.");
+    console.log("[Auth Signup] Input state values:", { name, email, passwordLength: password.length, confirmPasswordLength: confirmPassword.length });
 
     // Client-side validations
     if (!name.trim() || !email.trim() || !password || !confirmPassword) {
-      toast.error("All fields are required");
+      console.warn("[Auth Signup] Validation failed: Some fields are empty.");
+      setError("All fields are required");
       return;
     }
 
     if (password.length < 6) {
-      toast.error("Password must be at least 6 characters long");
+      console.warn("[Auth Signup] Validation failed: Password length < 6.");
+      setError("Password must be at least 6 characters long");
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+      console.warn("[Auth Signup] Validation failed: Password and confirmPassword do not match.");
+      setError("Passwords do not match");
       return;
     }
 
+    console.log("[Auth Signup] Client-side validations passed. Calling signup API...");
     setLoading(true);
     try {
       const res = await api.signup(name, email, password, confirmPassword);
-      if ((res as any).mockLink) {
-        toast.success("Account created! Please confirm your email using the link below.", {
-          duration: 15000,
-          action: {
-            label: "Confirm Now",
-            onClick: () => {
-              window.open((res as any).mockLink, "_blank");
-            }
-          }
-        });
-      } else {
-        toast.success(res.message || "Account created! Please check your email for the confirmation link.");
-      }
-      navigate({ to: "/login" });
+      console.log("[Auth Signup] API signup success! Response:", res);
+
+      // Auto login
+      const loginRes = await api.login(email, password);
+      localStorage.setItem("token", loginRes.token);
+      localStorage.setItem("userName", loginRes.user.name);
+
+      toast.success("Account created and logged in successfully!");
+      navigate({ to: "/dashboard" });
     } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || "Failed to sign up. Email may already be registered.");
+      console.error("[Auth Signup] API signup failed:", err);
+      setError(err.message || "Failed to sign up. Email may already be registered.");
     } finally {
       setLoading(false);
+      console.log("[Auth Signup] Signup process finished.");
     }
   };
 
@@ -80,6 +85,13 @@ function Signup() {
           onSubmit={handleSignup}
           className="rounded-3xl bg-white/15 backdrop-blur-xl border border-white/25 p-6 space-y-4"
         >
+          {error && (
+            <Alert variant="destructive" className="bg-destructive/10 text-white border-destructive/20">
+              <AlertDescription className="text-xs font-semibold leading-relaxed">
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
           {/* Name input */}
           <div className="relative">
             <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/70" />

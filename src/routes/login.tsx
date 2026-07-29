@@ -56,7 +56,7 @@ function Login() {
               localStorage.setItem("token", res.token);
               localStorage.setItem("userName", res.user.name);
               toast.success("Welcome back, " + res.user.name + "!");
-              navigate({ to: "/home" });
+              navigate({ to: "/dashboard" });
             } catch (err: any) {
               console.error(err);
               if (err.status === 403 && err.data?.unverified) {

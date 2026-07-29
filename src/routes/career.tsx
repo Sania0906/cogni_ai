@@ -1,10 +1,15 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { Briefcase, TrendingUp, MessageSquare, Target, Award } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api/client";
 
 export const Route = createFileRoute("/career")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && !localStorage.getItem("token")) {
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({ meta: [{ title: "Career Paths — CognifyAI" }] }),
   component: Career,
 });

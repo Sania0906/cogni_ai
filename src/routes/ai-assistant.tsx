@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { Send, Sparkles, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -6,6 +6,11 @@ import { PageHeader } from "@/components/PageHeader";
 import { api } from "@/lib/api/client";
 
 export const Route = createFileRoute("/ai-assistant")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && !localStorage.getItem("token")) {
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({ meta: [{ title: "AI Assistant — CognifyAI" }] }),
   component: AIAssistant,
 });
@@ -67,7 +72,7 @@ function AIAssistant() {
 
   return (
     <AppShell>
-      <PageHeader title="AI Assistant" back="/home" />
+      <PageHeader title="AI Assistant" back="/dashboard" />
 
       <div className="space-y-4 mb-24 pb-4">
         {msgs.map((m, i) => (

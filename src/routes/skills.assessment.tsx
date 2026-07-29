@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { Award, Clock, CheckCircle2, ChevronRight, Play } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -7,6 +7,11 @@ import { api } from "@/lib/api/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/skills/assessment")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && !localStorage.getItem("token")) {
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({ meta: [{ title: "Skill Assessment — CognifyAI" }] }),
   component: Assessment,
 });
@@ -157,7 +162,7 @@ function Assessment() {
             Take Another Assessment
           </button>
           <button
-            onClick={() => navigate({ to: "/home" })}
+            onClick={() => navigate({ to: "/dashboard" })}
             className="w-full h-14 rounded-2xl bg-muted text-foreground font-bold cursor-pointer border-0 mt-2"
           >
             Go to Dashboard
@@ -232,7 +237,7 @@ function Assessment() {
 
   return (
     <AppShell>
-      <PageHeader title="Skill Assessment" back="/home" />
+      <PageHeader title="Skill Assessment" back="/dashboard" />
 
       <div className="rounded-3xl p-6 bg-gradient-primary text-white shadow-glow flex gap-4 items-center mb-6">
         <div className="h-14 w-14 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">

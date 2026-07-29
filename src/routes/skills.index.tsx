@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { Plus, Code2, Brain, BarChart3, Database, Sparkles, AlertCircle, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useState, useEffect } from "react";
@@ -6,6 +6,11 @@ import { api } from "@/lib/api/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/skills/")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && !localStorage.getItem("token")) {
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({ meta: [{ title: "My Skills — CognifyAI" }] }),
   component: Skills,
 });

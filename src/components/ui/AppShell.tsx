@@ -1,11 +1,11 @@
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { Home, Sparkles, Briefcase, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
-  { to: "/home", label: "Home", icon: Home },
-  { to: "/skills", label: "Skills", icon: Sparkles },
+  { to: "/dashboard", label: "Dashboard", icon: Home },
   { to: "/career", label: "Career", icon: Briefcase },
+  { to: "/resume-analysis", label: "Resume", icon: Sparkles },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
@@ -48,35 +48,7 @@ export function BottomNav() {
   );
 }
 
-import { useEffect } from "react";
-import { api } from "@/lib/api/client";
-
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate({ to: "/login" });
-        return;
-      }
-
-      const pathname = window.location.pathname;
-      if (pathname !== "/profile-completion") {
-        api.getProfile()
-          .then((profile) => {
-            if (profile && profile.onboarding_completed === false) {
-              navigate({ to: "/profile-completion" });
-            }
-          })
-          .catch((err) => {
-            console.error("AppShell onboarding check error:", err);
-          });
-      }
-    }
-  }, [navigate]);
-
   return (
     <div className="mx-auto max-w-md min-h-screen pb-28 px-5 pt-8">
       {children}
