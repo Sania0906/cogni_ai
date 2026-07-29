@@ -54,5 +54,27 @@ export default defineConfig({
         },
       },
     },
+    build: {
+      minify: "esbuild",
+      cssMinify: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('@tanstack')) {
+                return 'vendor';
+              }
+              if (id.includes('lucide-react')) {
+                return 'icons';
+              }
+              if (id.includes('recharts')) {
+                return 'charts';
+              }
+              return 'lib';
+            }
+          }
+        }
+      }
+    }
   },
 });

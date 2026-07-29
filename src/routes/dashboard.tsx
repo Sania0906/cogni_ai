@@ -472,7 +472,7 @@ function Dashboard() {
                     <p className="font-bold truncate">{m.title}</p>
                     <p className="text-xs text-muted-foreground mb-2">{m.pct}% match based on your skills</p>
                     <div className="flex gap-2 flex-wrap">
-                      {m.tags.map((t, i) => (
+                      {m.tags.map((t: string, i: number) => (
                         <span
                           key={t}
                           className={`text-xs font-medium px-2.5 py-1 rounded-lg ${

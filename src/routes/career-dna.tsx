@@ -143,7 +143,7 @@ function CareerDNA() {
             {/* Axis Labels */}
             {data.dimensions.map((d, i) => {
               const labelPos = getCoordinates(d.angle, 118);
-              let textAnchor = "middle";
+              let textAnchor: "middle" | "start" | "end" = "middle";
               if (d.angle > 0 && d.angle < 180) textAnchor = "start";
               if (d.angle > 180 && d.angle < 360) textAnchor = "end";
 

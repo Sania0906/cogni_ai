@@ -132,7 +132,7 @@ function CareerTwin() {
               </h3>
               
               <ProgressBar label="Technical Prowess" score={report.technical_score} icon={Zap} colorClass="text-primary" />
-              <ProgressBar label="Soft Skills" score={report.soft_skills_score} icon={MessageSquare} colorClass="text-pink" style={{color: "oklch(0.65 0.24 350)"}} />
+              <ProgressBar label="Soft Skills" score={report.soft_skills_score} icon={MessageSquare} colorClass="text-pink" />
               <ProgressBar label="Leadership Potential" score={report.leadership_potential} icon={Shield} colorClass="text-warning" />
               <ProgressBar label="Communication" score={report.communication_score} icon={MessageSquare} colorClass="text-success" />
               <ProgressBar label="Problem Solving" score={report.problem_solving_score} icon={Target} colorClass="text-primary" />
