@@ -1930,4 +1930,206 @@ router.get("/career-twin/latest", authMiddleware, async (req: AuthRequest, res: 
   }
 });
 
+// =========================================================================
+// 14. AI INTERVIEW SIMULATOR - GENERATE
+// =========================================================================
+router.post("/interview/generate", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  const { company, role } = req.body;
+  if (!company || !role) {
+    return res.status(400).json({ message: "Company and Role are required." });
+  }
+
+  try {
+    // 1. Fetch Latest Resume
+    const { data: resumes } = await supabaseAdmin
+      .from("resumes")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const latestResume = resumes && resumes.length > 0 ? resumes[0] : null;
+    const skills = latestResume?.skills || [];
+    let experience = [];
+    try {
+        if (latestResume?.parsed_text) {
+            experience = JSON.parse(latestResume.parsed_text).experience || [];
+        }
+    } catch(e) {}
+    
+    // 2. Synthesize Contextual Questions
+    const questions = [];
+    
+    // Technical Question (Based on role and skills)
+    if (role.toLowerCase().includes("data") || role.toLowerCase().includes("ml")) {
+      questions.push({ type: "Technical", text: `How would you optimize a machine learning model deployed at ${company} to handle high traffic inference without latency spikes?` });
+    } else if (role.toLowerCase().includes("front")) {
+      questions.push({ type: "Technical", text: `Explain how you would architect a highly performant and accessible React application for ${company}'s core product.` });
+    } else {
+      questions.push({ type: "Technical", text: `Describe your approach to designing a scalable distributed system for a high-availability service at ${company}.` });
+    }
+
+    // Coding Question
+    questions.push({ type: "Coding", text: `Write an algorithm to detect cycles in a directed graph. Explain its time and space complexity, and why it matters for ${company}.` });
+
+    // Behavioral Question (Based on resume experience length)
+    if (experience.length > 1) {
+      questions.push({ type: "Behavioral", text: `Tell me about a time you had a disagreement with a senior stakeholder. How did you resolve it and what was the outcome?` });
+    } else {
+      questions.push({ type: "Behavioral", text: `Describe a time when you had to learn a complex new technology very quickly under pressure.` });
+    }
+
+    // HR Question
+    questions.push({ type: "HR", text: `Why do you want to join ${company} specifically as a ${role}, and where do you see your career going in the next 3 years?` });
+
+    // Project-based Question (Based on specific skills)
+    const primarySkill = skills.length > 0 ? skills[0] : "your primary technical stack";
+    questions.push({ type: "Project-based", text: `Walk me through the most complex project you built using ${primarySkill}. What were the biggest technical hurdles?` });
+
+    // 3. Create Session in DB
+    const { data: session, error: sessionErr } = await supabaseAdmin
+      .from("interview_sessions")
+      .insert({
+        user_id: userId,
+        company,
+        role,
+        status: "in_progress"
+      })
+      .select()
+      .single();
+
+    if (sessionErr || !session) throw sessionErr;
+
+    // 4. Create Questions in DB
+    const insertQuestions = questions.map(q => ({
+      session_id: session.id,
+      question_type: q.type,
+      question_text: q.text
+    }));
+
+    const { data: savedQs, error: qErr } = await supabaseAdmin
+      .from("interview_questions")
+      .insert(insertQuestions)
+      .select();
+      
+    if (qErr) throw qErr;
+
+    return res.json({ session_id: session.id, questions: savedQs });
+  } catch (err) {
+    console.error("Failed to generate interview:", err);
+    return res.status(500).json({ message: "Failed to generate interview questions." });
+  }
+});
+
+// =========================================================================
+// 15. AI INTERVIEW SIMULATOR - EVALUATE
+// =========================================================================
+router.post("/interview/evaluate", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  const { sessionId, answers } = req.body;
+  if (!sessionId || !answers || !Array.isArray(answers)) {
+    return res.status(400).json({ message: "Session ID and an array of answers are required." });
+  }
+
+  try {
+    // 1. Fetch the session and verify ownership
+    const { data: session } = await supabaseAdmin
+      .from("interview_sessions")
+      .select("*")
+      .eq("id", sessionId)
+      .eq("user_id", userId)
+      .single();
+
+    if (!session) return res.status(404).json({ message: "Session not found." });
+
+    let totalQuality = 0;
+    let totalConfidence = 0;
+    const evaluatedAnswers = [];
+
+    // 2. Evaluate each answer
+    for (const ans of answers) {
+      const text = (ans.answer || "").trim();
+      const wordCount = text.split(/\s+/).length;
+      
+      let qScore = 0;
+      let cScore = 0;
+      let suggestion = "";
+
+      if (wordCount < 10) {
+        qScore = 20;
+        cScore = 30;
+        suggestion = "Your answer is too short. Please provide the STAR (Situation, Task, Action, Result) method to give more context.";
+      } else if (wordCount < 30) {
+        qScore = 50;
+        cScore = 60;
+        suggestion = "You have the right idea, but try to expand on your specific actions and the measurable outcomes of your work.";
+      } else {
+        qScore = Math.min(100, 60 + (wordCount > 60 ? 30 : 15) + (Math.random() * 10)); // Simulated AI heuristics
+        cScore = Math.min(100, 70 + (wordCount > 60 ? 20 : 10) + (Math.random() * 10));
+        
+        if (text.toLowerCase().includes("i don't know") || text.toLowerCase().includes("not sure")) {
+          cScore -= 30;
+          qScore -= 20;
+          suggestion = "Avoid saying 'I don't know'. Instead, walk through how you would find the answer or solve the problem.";
+        } else {
+          suggestion = "Good use of detail. To improve further, ensure you quantify your achievements with metrics where possible.";
+        }
+      }
+
+      qScore = Math.round(qScore);
+      cScore = Math.round(cScore);
+
+      totalQuality += qScore;
+      totalConfidence += cScore;
+
+      // Update DB question row
+      await supabaseAdmin
+        .from("interview_questions")
+        .update({
+          user_answer: text,
+          quality_score: qScore,
+          confidence_score: cScore,
+          improvement_suggestion: suggestion
+        })
+        .eq("id", ans.question_id);
+
+      evaluatedAnswers.push({
+        question_id: ans.question_id,
+        quality_score: qScore,
+        confidence_score: cScore,
+        improvement_suggestion: suggestion
+      });
+    }
+
+    // 3. Finalize Session
+    const overallQuality = Math.round(totalQuality / answers.length);
+    const overallConfidence = Math.round(totalConfidence / answers.length);
+
+    await supabaseAdmin
+      .from("interview_sessions")
+      .update({
+        overall_quality_score: overallQuality,
+        overall_confidence_score: overallConfidence,
+        status: "completed",
+        completed_at: new Date().toISOString()
+      })
+      .eq("id", sessionId);
+
+    return res.json({
+      overall_quality_score: overallQuality,
+      overall_confidence_score: overallConfidence,
+      evaluations: evaluatedAnswers
+    });
+
+  } catch (err) {
+    console.error("Failed to evaluate interview:", err);
+    return res.status(500).json({ message: "Failed to evaluate interview answers." });
+  }
+});
+
 export default router;

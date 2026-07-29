@@ -352,6 +352,20 @@ export const api = {
     return fetchAPI<any>(`/ai/resumes/restore/${id}`, {
       method: "POST"
     });
+  },
+
+  generateInterview: async (data: { company: string; role: string }) => {
+    return fetchAPI<any>("/ai/interview/generate", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  },
+
+  evaluateInterview: async (data: { sessionId: string; answers: any[] }) => {
+    return fetchAPI<any>("/ai/interview/evaluate", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
   }
 };
 
