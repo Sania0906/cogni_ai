@@ -1539,6 +1539,14 @@ router.get("/resumes/compare", authMiddleware, async (req: AuthRequest, res: Res
     
     const atsImprovement = (latest.ats_score || 0) - (previous.ats_score || 0);
 
+    // Dynamic Missing Sections Detection
+    const missingSections = [];
+    if (!latest.education || latest.education.trim() === "" || latest.education === " at  (CGPA: )") missingSections.push("Education");
+    if (!latest.projects || latest.projects.length === 0) missingSections.push("Projects");
+    if (!latest.experience || latest.experience.length === 0) missingSections.push("Work Experience");
+    if (!latest.certifications || latest.certifications.length === 0) missingSections.push("Certifications");
+    if (!latest.skills || latest.skills.length === 0) missingSections.push("Skills");
+
     return res.json({
       canCompare: true,
       latestVersionDate: history[0].created_at,
@@ -1548,12 +1556,78 @@ router.get("/resumes/compare", authMiddleware, async (req: AuthRequest, res: Res
       newProjects,
       newCertifications,
       atsImprovement,
+      missingSections,
       latestScore: latest.ats_score,
       previousScore: previous.ats_score
     });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Failed to compute resume comparison." });
+  }
+});
+
+// =========================================================================
+// 11b. RESTORE RESUME VERSION
+// =========================================================================
+router.post("/resumes/restore/:id", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+  const activityId = req.params.id;
+
+  try {
+    // 1. Fetch the requested history entry
+    const { data: activity } = await supabaseAdmin
+      .from("user_activity")
+      .select("*")
+      .eq("id", activityId)
+      .eq("user_id", userId)
+      .eq("action", "resume_upload_version")
+      .single();
+    
+    if (!activity) {
+      return res.status(404).json({ message: "History record not found." });
+    }
+
+    const meta = activity.metadata;
+
+    // 2. Overwrite the active resume with the historical metadata
+    const { error: resumeError } = await supabaseAdmin
+      .from("resumes")
+      .upsert({
+        user_id: userId,
+        file_name: meta.file_name || "resume.txt",
+        file_url: meta.file_url || "",
+        ats_score: meta.ats_score || 0,
+        skills: meta.skills || [],
+        education: meta.education || "",
+        certifications: meta.certifications || [],
+        improvements: meta.improvements || [],
+        parsed_text: JSON.stringify({
+          projects: meta.projects || [],
+          experience: meta.experience || [],
+        })
+      });
+
+    if (resumeError) {
+      console.error("[Database Error] Failed to restore resume:", resumeError);
+      return res.status(500).json({ message: "Failed to restore resume state." });
+    }
+
+    // 3. Log a new history entry saying it was restored (preserves timeline linearity)
+    await supabaseAdmin.from("user_activity").insert({
+      user_id: userId,
+      action: "resume_upload_version",
+      metadata: {
+        ...meta,
+        restored_from: activityId,
+        upload_date: new Date().toISOString()
+      }
+    });
+
+    return res.json({ message: "Resume successfully restored." });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Failed to restore resume." });
   }
 });
 

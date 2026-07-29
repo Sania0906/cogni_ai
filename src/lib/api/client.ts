@@ -347,5 +347,11 @@ export const api = {
   getLatestCareerTwin: async () => {
     return fetchAPI<any>("/ai/career-twin/latest");
   },
+
+  restoreResumeVersion: async (id: string) => {
+    return fetchAPI<any>(`/ai/resumes/restore/${id}`, {
+      method: "POST"
+    });
+  }
 };
 

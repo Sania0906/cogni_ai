@@ -58,6 +58,24 @@ function Profile() {
     }
   };
 
+  const handleRestoreVersion = async (id: string) => {
+    const toastId = toast.loading("Restoring resume version...");
+    try {
+      await api.restoreResumeVersion(id);
+      toast.success("Resume restored successfully!", { id: toastId });
+      
+      const data = await api.getProfile();
+      setProfile(data);
+      const historyData = await api.getResumeHistory().catch(() => []);
+      const compData = await api.getResumeComparison().catch(() => null);
+      setHistory(historyData);
+      setComparison(compData);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to restore resume.", { id: toastId });
+    }
+  };
+
   useEffect(() => {
     async function fetchProfile() {
       try {
@@ -280,25 +298,37 @@ function Profile() {
       {history.length > 0 && (
         <div className="rounded-3xl p-5 bg-card shadow-card mt-5 space-y-4 border border-border/10">
           <h3 className="text-lg font-bold text-primary flex items-center gap-2">
-            🕒 Resume Version History
+            🕒 Resume Evolution Timeline
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-4 pl-4 border-l-2 border-border/40 relative ml-2">
             {history.map((ver, idx) => (
-              <div key={ver.id} className="flex justify-between items-center text-sm border-b border-border/40 pb-3 last:border-0 last:pb-0">
-                <div>
+              <div key={ver.id} className="flex justify-between items-center text-sm relative border-b border-border/40 pb-3 last:border-0 last:pb-0">
+                <div className="absolute -left-[21px] top-2 w-3 h-3 rounded-full bg-primary ring-4 ring-card" />
+                <div className="pl-2">
                   <span className="font-extrabold text-card-foreground text-sm flex items-center gap-2">
                     Version {history.length - idx}
                     {idx === 0 && <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] uppercase font-bold">Latest</span>}
+                    {ver.metadata?.restored_from && <span className="px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-500 text-[9px] uppercase font-bold">Restored</span>}
                   </span>
-                  <span className="text-[11px] font-bold text-muted-foreground">
+                  <span className="text-[11px] font-bold text-muted-foreground block mt-0.5">
                     {new Date(ver.created_at).toLocaleString()}
                   </span>
                 </div>
-                <div className="text-right">
-                  <span className="text-xs font-bold text-muted-foreground block">ATS Score</span>
-                  <span className={`font-extrabold text-sm ${ver.metadata?.ats_score >= 80 ? 'text-success' : 'text-primary'}`}>
-                    {ver.metadata?.ats_score || "N/A"}%
-                  </span>
+                <div className="text-right flex flex-col items-end gap-1">
+                  <span className="text-xs font-bold text-muted-foreground">ATS Score</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`font-extrabold text-sm ${ver.metadata?.ats_score >= 80 ? 'text-success' : 'text-primary'}`}>
+                      {ver.metadata?.ats_score || "N/A"}%
+                    </span>
+                    {idx > 0 && (
+                      <button 
+                        onClick={() => handleRestoreVersion(ver.id)} 
+                        className="text-[10px] bg-primary/10 text-primary hover:bg-primary/20 px-2.5 py-1 rounded-md font-bold transition border-0 cursor-pointer"
+                      >
+                        Restore
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -330,10 +360,28 @@ function Profile() {
                   <span className="font-bold text-card-foreground">{comparison.addedSkills.join(", ")}</span>
                 </div>
               )}
+              {comparison.removedSkills?.length > 0 && (
+                <div className="mt-2 text-xs">
+                  <span className="font-bold text-muted-foreground">Removed Skills: </span>
+                  <span className="font-bold text-destructive">{comparison.removedSkills.join(", ")}</span>
+                </div>
+              )}
               {comparison.newProjects?.length > 0 && (
                 <div className="mt-2 text-xs">
                   <span className="font-bold text-muted-foreground">New Projects: </span>
                   <span className="font-bold text-card-foreground">{comparison.newProjects.length} Added</span>
+                </div>
+              )}
+              {comparison.newCertifications?.length > 0 && (
+                <div className="mt-2 text-xs">
+                  <span className="font-bold text-muted-foreground">New Certifications: </span>
+                  <span className="font-bold text-card-foreground">{comparison.newCertifications.length} Added</span>
+                </div>
+              )}
+              {comparison.missingSections?.length > 0 && (
+                <div className="mt-2 text-xs p-2 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <span className="font-bold text-destructive flex items-center gap-1 mb-1">⚠️ Missing Sections</span>
+                  <span className="font-semibold text-card-foreground">{comparison.missingSections.join(", ")}</span>
                 </div>
               )}
             </div>
