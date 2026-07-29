@@ -326,4 +326,15 @@ export const api = {
       message?: string;
     }>("/ai/resumes/compare");
   },
+
+  generateCompanyReadiness: async (companyName: string, targetRole: string) => {
+    return fetchAPI<any>("/ai/company-readiness", {
+      method: "POST",
+      body: JSON.stringify({ companyName, targetRole })
+    });
+  },
+
+  getLatestCompanyReadiness: async () => {
+    return fetchAPI<any>("/ai/company-readiness/latest");
+  },
 };

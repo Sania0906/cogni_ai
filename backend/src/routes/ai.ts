@@ -1557,4 +1557,146 @@ router.get("/resumes/compare", authMiddleware, async (req: AuthRequest, res: Res
   }
 });
 
+// =========================================================================
+// 12. COMPANY READINESS ANALYSIS
+// =========================================================================
+router.post("/company-readiness", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  const { companyName, targetRole } = req.body;
+  if (!companyName || !targetRole) {
+    return res.status(400).json({ message: "Company Name and Target Role are required." });
+  }
+
+  try {
+    // 1. Fetch latest resume
+    const { data: resumes } = await supabaseAdmin
+      .from("resumes")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (!resumes || resumes.length === 0) {
+      return res.status(404).json({ message: "No resume found. Please upload a resume first." });
+    }
+
+    const latestResume = resumes[0];
+    const userSkills = latestResume.skills || [];
+    const userExperience = latestResume.parsed_text?.experience || [];
+    const userProjects = latestResume.parsed_text?.projects || [];
+    const userCerts = latestResume.certifications || [];
+
+    // 2. Mock Role Requirements based on Company and Role
+    // In a real scenario, this would query a "company_requirements" table
+    const techReqs = targetRole.toLowerCase().includes("front") 
+      ? ["React", "TypeScript", "Next.js", "CSS"]
+      : targetRole.toLowerCase().includes("data") || targetRole.toLowerCase().includes("ml") || targetRole.toLowerCase().includes("ai")
+      ? ["Python", "Machine Learning", "SQL", "Deep Learning", "TensorFlow", "PyTorch"]
+      : ["Java", "Spring Boot", "AWS", "SQL", "Docker", "Kubernetes", "System Design"];
+      
+    if (companyName.toLowerCase() === "google") techReqs.push("Go", "GCP");
+    if (companyName.toLowerCase() === "microsoft") techReqs.push("C#", ".NET", "Azure");
+    if (companyName.toLowerCase() === "amazon") techReqs.push("AWS", "DynamoDB");
+
+    const requiredSoft = ["System Design", "Communication", "Problem Solving", "Agile"];
+    const requiredCerts = companyName.toLowerCase() === "amazon" ? ["AWS Certified Solutions Architect"] 
+                        : companyName.toLowerCase() === "microsoft" ? ["Azure Fundamentals"] 
+                        : [];
+    
+    // 3. Analyze Matches
+    const userSkillsLower = userSkills.map((s: string) => s.toLowerCase());
+    const missingTech = techReqs.filter(r => !userSkillsLower.includes(r.toLowerCase()));
+    
+    // Check if user has projects mapped to these tech reqs
+    const projectTech = userProjects.flatMap((p: any) => p.technologies || []).map((t: string) => t.toLowerCase());
+    const missingProjectExp = techReqs.filter(r => !projectTech.includes(r.toLowerCase()));
+
+    // Experience Check
+    const missingSoft = requiredSoft.filter(r => !userSkillsLower.includes(r.toLowerCase()));
+    const missingCerts = requiredCerts.filter(r => !userCerts.map((c: any) => typeof c === 'string' ? c.toLowerCase() : c.name?.toLowerCase()).includes(r.toLowerCase()));
+
+    // 4. Calculate Dynamic Score
+    const techScore = Math.max(0, 100 - (missingTech.length * (100 / techReqs.length)));
+    const expScore = Math.max(0, 100 - (missingProjectExp.length * 10));
+    const finalScore = Math.round((techScore * 0.7) + (expScore * 0.3));
+
+    // 5. Generate Recommendations
+    const recommendations = [];
+    if (missingTech.length > 0) {
+      recommendations.push(`Master these missing technologies: ${missingTech.slice(0, 3).join(", ")}`);
+    }
+    if (missingProjectExp.length > 0) {
+      recommendations.push(`Build projects showcasing: ${missingProjectExp.slice(0, 2).join(", ")}`);
+    }
+    if (missingCerts.length > 0) {
+      recommendations.push(`Consider pursuing certifications like ${missingCerts[0]} to stand out at ${companyName}.`);
+    }
+    if (finalScore < 60) {
+      recommendations.push(`Your profile needs significant alignment with ${companyName}'s requirements for a ${targetRole} role.`);
+    }
+
+    const missingSkillsObj = {
+      technical: missingTech,
+      soft: missingSoft,
+      certifications: missingCerts,
+      projects: missingProjectExp.slice(0, 3)
+    };
+
+    // 6. Store in Database
+    const { data: savedReport, error: insertError } = await supabaseAdmin
+      .from("company_readiness_reports")
+      .insert({
+        user_id: userId,
+        company_name: companyName,
+        target_role: targetRole,
+        readiness_score: finalScore,
+        missing_skills: missingSkillsObj,
+        recommendations: recommendations
+      })
+      .select("*")
+      .single();
+
+    if (insertError) {
+      console.error("[Database Error] Failed to save company readiness report:", insertError);
+      return res.status(500).json({ message: "Analysis complete, but failed to save report." });
+    }
+
+    return res.json(savedReport);
+  } catch (err) {
+    console.error("Company Readiness Error:", err);
+    return res.status(500).json({ message: "Failed to generate company readiness report." });
+  }
+});
+
+router.get("/company-readiness/latest", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    const { data: report, error } = await supabaseAdmin
+      .from("company_readiness_reports")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error("[Database Error] fetching latest company readiness:", error);
+      return res.status(500).json({ message: "Failed to fetch company readiness report." });
+    }
+
+    if (!report) {
+      return res.status(404).json({ message: "No company readiness report found." });
+    }
+
+    return res.json(report);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error fetching company readiness report." });
+  }
+});
+
 export default router;

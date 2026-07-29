@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-ro
 import { useState, useEffect } from "react";
 import { 
   Bell, Search, Award, BookOpen, Brain, GitFork, 
-  Flame, CheckCircle, LineChart, FileText, Monitor, ShieldAlert, Sparkles, Upload
+  Flame, CheckCircle, LineChart, FileText, Monitor, ShieldAlert, Sparkles, Upload, Building
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { api } from "@/lib/api/client";
@@ -28,6 +28,7 @@ const aiModules = [
   { to: "/skill-growth", label: "Growth Engine", icon: Sparkles, color: "text-success", bg: "bg-success/10" },
   { to: "/platform-analytics", label: "Platform Metrics", icon: Monitor, color: "text-primary", bg: "bg-primary/10" },
   { to: "/career-forecasting", label: "Career Forecast", icon: ShieldAlert, color: "text-warning", bg: "bg-warning/10" },
+  { to: "/company-readiness", label: "Company Readiness", icon: Building, color: "text-primary", bg: "bg-primary/10" },
 ];
 
 function Dashboard() {
@@ -47,6 +48,7 @@ function Dashboard() {
   const [employabilityScore, setEmployabilityScore] = useState<number | null>(null);
   const [learningProgress, setLearningProgress] = useState<number | null>(null);
   const [careerDnaArchetype, setCareerDnaArchetype] = useState<string | null>(null);
+  const [companyReadiness, setCompanyReadiness] = useState<any>(null);
   
   // Skill Gap Analysis State
   const [skillGap, setSkillGap] = useState<{
@@ -98,10 +100,14 @@ function Dashboard() {
       }
 
       // 4. Fetch Career DNA Archetype
-      const dnaData = await api.getCareerDNA().catch(() => null);
-      if (dnaData?.archetype) {
-        setCareerDnaArchetype(dnaData.archetype);
+      const careerDna = await api.getCareerDNA().catch(() => null);
+      if (careerDna?.archetype) {
+        setCareerDnaArchetype(careerDna.archetype);
       }
+
+      // 5. Fetch Company Readiness
+      const compReadiness = await api.getLatestCompanyReadiness().catch(() => null);
+      setCompanyReadiness(compReadiness);
 
       // 5. Fetch Enrolled/Active Courses
       const courses = await api.getMyCourses().catch(() => []);
@@ -340,6 +346,42 @@ function Dashboard() {
               </div>
             </div>
           </div>
+
+          {/* Company Readiness Analysis Section */}
+          {companyReadiness ? (
+            <div className="rounded-3xl p-5 bg-card shadow-card border border-border/10 mb-6">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-lg font-bold flex items-center gap-2 text-foreground">
+                  <Building className="h-5 w-5 text-primary" /> Company Readiness: {companyReadiness.company_name}
+                </h2>
+                <Link to="/company-readiness" className="text-xs font-bold text-primary hover:underline">
+                  View Full Report
+                </Link>
+              </div>
+              <div className="mb-4">
+                <p className="text-sm font-extrabold text-foreground">Target Role: {companyReadiness.target_role}</p>
+                <div className="flex justify-between items-center text-xs font-bold text-muted-foreground mt-1">
+                  <span>Alignment Score</span>
+                  <span className="text-primary">{companyReadiness.readiness_score}% Match</span>
+                </div>
+                <div className="h-2 w-full bg-muted rounded-full overflow-hidden mt-1.5">
+                  <div className="h-full bg-gradient-primary rounded-full transition-all" style={{ width: `${companyReadiness.readiness_score}%` }} />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-3xl p-5 bg-card shadow-card border border-dashed border-border/40 mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold flex items-center gap-2 text-foreground">
+                  <Building className="h-5 w-5 text-muted-foreground" /> Company Readiness
+                </h2>
+                <p className="text-xs text-muted-foreground mt-1">See how you stack up against top tech companies.</p>
+              </div>
+              <Link to="/company-readiness" className="bg-primary/10 text-primary px-4 py-2 rounded-xl text-sm font-bold hover:bg-primary/20 transition">
+                Analyze
+              </Link>
+            </div>
+          )}
 
           {/* Skill Gap Analysis Section */}
           {skillGap && (

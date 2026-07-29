@@ -30,6 +30,7 @@ import { Route as EmployabilityRouteImport } from './routes/employability'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as CourseProgressRouteImport } from './routes/course-progress'
+import { Route as CompanyReadinessRouteImport } from './routes/company-readiness'
 import { Route as CertificatesRouteImport } from './routes/certificates'
 import { Route as CareerSuccessRouteImport } from './routes/career-success'
 import { Route as CareerForecastingRouteImport } from './routes/career-forecasting'
@@ -166,6 +167,11 @@ const CoursesRoute = CoursesRouteImport.update({
 const CourseProgressRoute = CourseProgressRouteImport.update({
   id: '/course-progress',
   path: '/course-progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompanyReadinessRoute = CompanyReadinessRouteImport.update({
+  id: '/company-readiness',
+  path: '/company-readiness',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CertificatesRoute = CertificatesRouteImport.update({
@@ -339,6 +345,7 @@ export interface FileRoutesByFullPath {
   '/career-forecasting': typeof CareerForecastingRoute
   '/career-success': typeof CareerSuccessRoute
   '/certificates': typeof CertificatesRoute
+  '/company-readiness': typeof CompanyReadinessRoute
   '/course-progress': typeof CourseProgressRoute
   '/courses': typeof CoursesRoute
   '/dashboard': typeof DashboardRoute
@@ -394,6 +401,7 @@ export interface FileRoutesByTo {
   '/career-forecasting': typeof CareerForecastingRoute
   '/career-success': typeof CareerSuccessRoute
   '/certificates': typeof CertificatesRoute
+  '/company-readiness': typeof CompanyReadinessRoute
   '/course-progress': typeof CourseProgressRoute
   '/courses': typeof CoursesRoute
   '/dashboard': typeof DashboardRoute
@@ -450,6 +458,7 @@ export interface FileRoutesById {
   '/career-forecasting': typeof CareerForecastingRoute
   '/career-success': typeof CareerSuccessRoute
   '/certificates': typeof CertificatesRoute
+  '/company-readiness': typeof CompanyReadinessRoute
   '/course-progress': typeof CourseProgressRoute
   '/courses': typeof CoursesRoute
   '/dashboard': typeof DashboardRoute
@@ -507,6 +516,7 @@ export interface FileRouteTypes {
     | '/career-forecasting'
     | '/career-success'
     | '/certificates'
+    | '/company-readiness'
     | '/course-progress'
     | '/courses'
     | '/dashboard'
@@ -562,6 +572,7 @@ export interface FileRouteTypes {
     | '/career-forecasting'
     | '/career-success'
     | '/certificates'
+    | '/company-readiness'
     | '/course-progress'
     | '/courses'
     | '/dashboard'
@@ -617,6 +628,7 @@ export interface FileRouteTypes {
     | '/career-forecasting'
     | '/career-success'
     | '/certificates'
+    | '/company-readiness'
     | '/course-progress'
     | '/courses'
     | '/dashboard'
@@ -673,6 +685,7 @@ export interface RootRouteChildren {
   CareerForecastingRoute: typeof CareerForecastingRoute
   CareerSuccessRoute: typeof CareerSuccessRoute
   CertificatesRoute: typeof CertificatesRoute
+  CompanyReadinessRoute: typeof CompanyReadinessRoute
   CourseProgressRoute: typeof CourseProgressRoute
   CoursesRoute: typeof CoursesRoute
   DashboardRoute: typeof DashboardRoute
@@ -859,6 +872,13 @@ declare module '@tanstack/react-router' {
       path: '/course-progress'
       fullPath: '/course-progress'
       preLoaderRoute: typeof CourseProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/company-readiness': {
+      id: '/company-readiness'
+      path: '/company-readiness'
+      fullPath: '/company-readiness'
+      preLoaderRoute: typeof CompanyReadinessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/certificates': {
@@ -1122,6 +1142,7 @@ const rootRouteChildren: RootRouteChildren = {
   CareerForecastingRoute: CareerForecastingRoute,
   CareerSuccessRoute: CareerSuccessRoute,
   CertificatesRoute: CertificatesRoute,
+  CompanyReadinessRoute: CompanyReadinessRoute,
   CourseProgressRoute: CourseProgressRoute,
   CoursesRoute: CoursesRoute,
   DashboardRoute: DashboardRoute,
