@@ -62,10 +62,9 @@ router.get(
 
         return {
           ...p,
-          ats_score:
-            resume?.metadata?.ats_score || Math.floor(Math.random() * 40) + 40, // fallback for mock
+          ats_score: resume?.ats_score || 0,
           skills: resume?.skills || [],
-          experience_years: totalExpYears || Math.floor(Math.random() * 5) + 1,
+          experience_years: totalExpYears || 0,
           latest_resume_id: resume?.id,
         };
       });
@@ -204,10 +203,9 @@ router.get(
 
         return {
           ...p,
-          ats_score:
-            resume?.metadata?.ats_score || Math.floor(Math.random() * 40) + 40,
+          ats_score: resume?.ats_score || 0,
           skills: resume?.skills || [],
-          experience_years: totalExpYears || Math.floor(Math.random() * 5) + 1,
+          experience_years: totalExpYears || 0,
           latest_resume_id: resume?.id,
           is_shortlisted: true,
         };

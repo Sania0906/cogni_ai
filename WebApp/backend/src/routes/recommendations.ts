@@ -65,10 +65,8 @@ router.get(
         .maybeSingle();
 
       let missingKeywords = [];
-      if (ats && ats.keywordMatch) {
-        missingKeywords = (ats.keywordMatch as any[])
-          .filter((kw) => kw.status === "missing")
-          .map((kw) => kw.word.toLowerCase());
+      if (ats && ats.weaknesses) {
+        missingKeywords = ats.weaknesses.map((word: string) => word.toLowerCase());
       }
 
       const recommendations = [];
@@ -220,14 +218,12 @@ router.get(
         .limit(1)
         .maybeSingle();
 
-      if (!ats || !ats.keywordMatch) {
+      if (!ats || !ats.weaknesses) {
         return res.json([]);
       }
 
-      const missing = (ats.keywordMatch as any[])
-        .filter((kw) => kw.status === "missing")
-        .map((kw) => ({
-          name: kw.word,
+      const missing = ats.weaknesses.map((word: string) => ({
+          name: word,
           category: "Suggested",
           importance: "High",
           reason: "Missing from your current resume for target role",

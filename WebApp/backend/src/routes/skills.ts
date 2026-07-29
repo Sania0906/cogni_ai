@@ -173,26 +173,27 @@ router.get("/gap", authMiddleware, async (req: AuthRequest, res: Response) => {
         });
     }
 
+    const strengths = ats.strengths || [];
+    const weaknesses = ats.weaknesses || [];
     const targetRole = ats.targetJob || "Professional";
     const matchPercentage = ats.score || 0;
-    const keywordMatch = ats.keywordMatch || [];
 
-    const gapSkills = keywordMatch.map((kw: any) => {
-      const isFound = kw.status === "found";
-      const current = isFound ? 85 : 15;
-      const required = 80;
-      const gap = current - required;
-      const status =
-        gap >= 0 ? "Met" : gap > -20 ? "Needs Improvement" : "Critical Gap";
-
-      return {
-        name: kw.word,
-        current,
-        required,
-        gap,
-        status,
-      };
-    });
+    const gapSkills = [
+      ...strengths.map((word: string) => ({
+        name: word,
+        current: 85,
+        required: 80,
+        gap: 5,
+        status: "Met",
+      })),
+      ...weaknesses.map((word: string) => ({
+        name: word,
+        current: 15,
+        required: 80,
+        gap: -65,
+        status: "Critical Gap",
+      })),
+    ];
 
     return res.json({
       targetRole,
