@@ -9,7 +9,7 @@ export const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 15000,
+  timeout: 30000,
 });
 
 let userToken: string | null = null;
@@ -261,6 +261,7 @@ export const api = {
   uploadResume: async (formData: FormData) => {
     const res = await apiClient.post("/resume/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
+      timeout: 60000,
     });
     return res.data;
   },
@@ -268,6 +269,7 @@ export const api = {
   optimizeResume: async (formData: FormData) => {
     const res = await apiClient.post("/ai/resume-optimize", formData, {
       headers: { "Content-Type": "multipart/form-data" },
+      timeout: 60000,
     });
     return res.data;
   },
