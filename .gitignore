@@ -1,0 +1,67 @@
+# ==============================================================================
+# CognifyAI Root Git Ignore Rules
+# ==============================================================================
+
+# Environment secrets (preserve .env.example templates)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Node.js / Vite / TanStack / Express build outputs
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.output/
+.vinxi/
+.nitro/
+.tanstack/
+*.tsbuildinfo
+
+# Mobile / Expo / Native build outputs & signing secrets
+MobileApp/.expo/
+MobileApp/dist/
+MobileApp/web-build/
+MobileApp/android/
+MobileApp/ios/
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+*.orig.*
+.kotlin/
+
+# Python virtual environments & caches
+.venv/
+venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Oversized raw Kaggle corpus (~56.27 MB, exceeds GitHub 50 MB soft limit)
+# Trained .joblib artifacts and processed CSVs remain tracked for deployment
+ml_engine/datasets/raw/Resume.csv
+
+# Local database files
+*.db
+*.sqlite*
+
+# Logs, OS & editor metadata
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db
+**/.vscode/*
+!**/.vscode/extensions.json
+.idea/
+

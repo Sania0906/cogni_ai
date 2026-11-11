@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { supabaseAdmin } from "./supabase";
+import { supabaseAdmin } from "./supabase.js";
 
 dotenv.config();
 

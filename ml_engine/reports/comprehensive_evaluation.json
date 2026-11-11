@@ -1,0 +1,263 @@
+{
+  "report_generated_at": "2026-11-11T13:20:39.836635+00:00",
+  "model_1_ats_scorer": {
+    "model_type": "TF-IDF Cosine + Hybrid Taxonomy ATS Scorer",
+    "training_samples": 114,
+    "vocabulary_size": 5000,
+    "benchmark_roles_count": 9,
+    "scoring_weights": {
+      "skill_coverage": 0.5,
+      "semantic_similarity": 0.35,
+      "section_completeness": 0.15
+    },
+    "in_domain_mean_similarity": 0.0661,
+    "out_domain_mean_similarity": 0.0249,
+    "role_alignment_breakdown": {
+      "Data Scientist": {
+        "samples": 16,
+        "in_domain_mean_similarity": 0.1171,
+        "in_domain_std": 0.0618,
+        "out_domain_mean_similarity": 0.0235,
+        "similarity_margin": 0.0936
+      },
+      "Machine Learning Engineer": {
+        "samples": 7,
+        "in_domain_mean_similarity": 0.0242,
+        "in_domain_std": 0.0164,
+        "out_domain_mean_similarity": 0.0226,
+        "similarity_margin": 0.0016
+      },
+      "Frontend Developer": {
+        "samples": 11,
+        "in_domain_mean_similarity": 0.0687,
+        "in_domain_std": 0.0389,
+        "out_domain_mean_similarity": 0.0297,
+        "similarity_margin": 0.0391
+      },
+      "Full Stack Developer": {
+        "samples": 33,
+        "in_domain_mean_similarity": 0.0195,
+        "in_domain_std": 0.0122,
+        "out_domain_mean_similarity": 0.0229,
+        "similarity_margin": -0.0034
+      },
+      "DevOps Engineer": {
+        "samples": 9,
+        "in_domain_mean_similarity": 0.0672,
+        "in_domain_std": 0.0435,
+        "out_domain_mean_similarity": 0.019,
+        "similarity_margin": 0.0482
+      },
+      "Cloud Engineer": {
+        "samples": 5,
+        "in_domain_mean_similarity": 0.0474,
+        "in_domain_std": 0.051,
+        "out_domain_mean_similarity": 0.0221,
+        "similarity_margin": 0.0254
+      },
+      "Data Analyst": {
+        "samples": 28,
+        "in_domain_mean_similarity": 0.0643,
+        "in_domain_std": 0.0327,
+        "out_domain_mean_similarity": 0.0377,
+        "similarity_margin": 0.0266
+      },
+      "Python Developer": {
+        "samples": 5,
+        "in_domain_mean_similarity": 0.1205,
+        "in_domain_std": 0.0281,
+        "out_domain_mean_similarity": 0.0219,
+        "similarity_margin": 0.0987
+      }
+    }
+  },
+  "model_2_career_classifier": {
+    "model_type": "FeatureUnion TF-IDF + GradientBoosting",
+    "best_algorithm": "GradientBoosting",
+    "training_samples": 114,
+    "target_classes": [
+      "Cloud Engineer",
+      "Data Analyst",
+      "Data Scientist",
+      "DevOps Engineer",
+      "Frontend Developer",
+      "Full Stack Developer",
+      "Machine Learning Engineer",
+      "Python Developer"
+    ],
+    "cross_validation_results": {
+      "LogisticRegression": {
+        "mean_accuracy": 0.6324,
+        "std_accuracy": 0.058,
+        "mean_f1_weighted": 0.5587,
+        "mean_f1_macro": 0.4636
+      },
+      "RandomForest": {
+        "mean_accuracy": 0.6589,
+        "std_accuracy": 0.0862,
+        "mean_f1_weighted": 0.5705,
+        "mean_f1_macro": 0.4479
+      },
+      "GradientBoosting": {
+        "mean_accuracy": 0.7377,
+        "std_accuracy": 0.0543,
+        "mean_f1_weighted": 0.7023,
+        "mean_f1_macro": 0.6919
+      }
+    },
+    "test_metrics": {
+      "accuracy": 1.0,
+      "precision_weighted": 1.0,
+      "recall_weighted": 1.0,
+      "f1_weighted": 1.0,
+      "precision_macro": 1.0,
+      "recall_macro": 1.0,
+      "f1_macro": 1.0,
+      "confusion_matrix": [
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          6,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          7,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "Cloud Engineer": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "Data Analyst": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 6.0
+        },
+        "Data Scientist": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 3.0
+        },
+        "DevOps Engineer": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 2.0
+        },
+        "Frontend Developer": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 2.0
+        },
+        "Full Stack Developer": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 7.0
+        },
+        "Machine Learning Engineer": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "Python Developer": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 23.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 23.0
+        }
+      }
+    }
+  }
+}

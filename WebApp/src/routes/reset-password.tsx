@@ -40,10 +40,11 @@ function ResetPassword() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters long");
+    if (password.trim().length < 8) {
+      toast.error("Password must be at least 8 characters long");
       return;
     }
+
 
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");

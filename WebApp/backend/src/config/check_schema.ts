@@ -1,10 +1,15 @@
 import dotenv from "dotenv";
-import { supabaseAdmin } from "./supabase";
+import { supabaseAdmin, isSupabaseConfigured } from "./supabase.js";
 
 dotenv.config();
 
 async function checkSchema() {
-  console.log("Checking remote database schema...");
+  if (!isSupabaseConfigured()) {
+    console.error("❌ Supabase is NOT configured. Please verify SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.");
+    process.exit(1);
+  }
+
+  console.log("Checking database connectivity and schema...");
 
   const tables = [
     "profiles",

@@ -104,9 +104,10 @@ function Courses() {
           {filteredCourses.length > 0 ? (
             filteredCourses.map((c) => (
               <Link
-                to="/courses"
-                key={c.title || c._id}
-                className="block p-4 rounded-2xl bg-card shadow-card border border-border/10"
+                to="/course/$courseId"
+                params={{ courseId: c._id || c.id }}
+                key={c.title || c._id || c.id}
+                className="block p-4 rounded-2xl bg-card shadow-card border border-border/10 hover:border-primary/30 transition-all cursor-pointer"
               >
                 <div className="flex gap-4">
                   <div className="h-14 w-14 rounded-2xl bg-gradient-primary flex items-center justify-center text-white shrink-0">

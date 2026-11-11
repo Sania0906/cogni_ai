@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { supabase, isSupabaseConfigured } from "../config/supabase";
+import { supabase, supabaseAdmin, isSupabaseConfigured } from "../config/supabase.js";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -25,46 +24,95 @@ export async function authMiddleware(
 
   const token = authHeader.split(" ")[1];
 
-  // If Supabase is configured, verify access token against Supabase Auth service
-  if (isSupabaseConfigured()) {
-    try {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser(token);
-      if (error || !user) {
-        return res
-          .status(401)
-          .json({
-            message: "Session is invalid or expired. Please sign in again.",
-          });
-      }
-      req.user = {
-        id: user.id,
-        email: user.email,
-        name: user.user_metadata?.name,
-        role: user.user_metadata?.role || "user",
-      };
-      return next();
-    } catch (err) {
-      return res.status(401).json({ message: "Token verification failed" });
-    }
+  if (!isSupabaseConfigured()) {
+    return res.status(503).json({
+      message: "Authentication service is unavailable: database is not configured.",
+    });
   }
 
-  // Fallback to local JWT verification for offline mock mode
+  // Verify access token against Supabase Auth service
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "cognify_jwt_secret_key_12345",
-    ) as {
-      id: string;
-      email?: string;
-      name?: string;
-      role: string;
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({
+        message: "Session is invalid or expired. Please sign in again.",
+      });
+    }
+
+    // Query trusted profile record from database to obtain the real role (never trust 'admin' from user_metadata)
+    let trustedRole = "user";
+    try {
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("role, name")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profile?.role) {
+        trustedRole = profile.role;
+      } else if (
+        user.user_metadata?.role === "organization" ||
+        user.user_metadata?.role === "recruiter"
+      ) {
+        trustedRole = user.user_metadata.role;
+      }
+    } catch (_) {
+      trustedRole = "user";
+    }
+
+    req.user = {
+      id: user.id,
+      email: user.email,
+      name: user.user_metadata?.name,
+      role: trustedRole,
     };
-    req.user = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Token is not valid" });
+    return next();
+  } catch (err) {
+    return res.status(401).json({ message: "Token verification failed" });
   }
+}
+
+/**
+ * Role authorization guard middleware.
+ * Verifies that the authenticated user possesses one of the allowed roles.
+ * Normalizes 'organization' and 'recruiter' as interchangeable partner roles.
+ * Admin role is universally permitted.
+ */
+export function requireRole(...allowedRoles: string[]) {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized. Valid token required." });
+    }
+
+    const userRole = (req.user.role || "user").toLowerCase().trim();
+
+    // Admins always have access
+    if (userRole === "admin") {
+      return next();
+    }
+
+    const isAuthorized = allowedRoles.some((role) => {
+      const targetRole = role.toLowerCase().trim();
+      if (targetRole === userRole) return true;
+      // Allow recruiter and organization interchangeably
+      if (
+        (targetRole === "organization" || targetRole === "recruiter") &&
+        (userRole === "organization" || userRole === "recruiter")
+      ) {
+        return true;
+      }
+      return false;
+    });
+
+    if (!isAuthorized) {
+      return res.status(403).json({
+        message: `Access denied. Endpoint requires one of: [${allowedRoles.join(", ")}]. Current role: '${userRole}'.`,
+      });
+    }
+
+    return next();
+  };
 }

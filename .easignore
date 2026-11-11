@@ -1,0 +1,69 @@
+# ==============================================================================
+# CognifyAI EAS Build Ignore Rules (Git Repository Root)
+# Note: .easignore completely replaces .gitignore when uploading archives to EAS.
+# Keep MobileApp configuration (app.json, eas.json, package.json, package-lock.json,
+# tsconfig.json, App.tsx, src/, assets/, scripts/) unignored so EAS can build cleanly.
+# ==============================================================================
+
+# Exclude sibling monorepo services & non-mobile backend/ML trees
+/WebApp/
+/ml_engine/
+/render.yaml
+/README.md
+
+# Environment secrets (preserve .env.example templates; EAS uses eas.json/EAS env vars)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies (reinstalled on EAS cloud build workers from package.json & package-lock.json)
+node_modules/
+**/node_modules/
+
+# Expo / Metro / Native build outputs & signing secrets
+.expo/
+**/.expo/
+dist/
+**/dist/
+web-build/
+**/web-build/
+MobileApp/android/
+MobileApp/ios/
+expo-env.d.ts
+.metro-health-check*
+.kotlin/
+*.orig.*
+*.tsbuildinfo
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+
+# Python caches & virtualenvs
+.venv/
+venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local databases, logs, OS & editor metadata
+*.db
+*.sqlite*
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db
+**/.vscode/*
+!**/.vscode/extensions.json
+.idea/
+

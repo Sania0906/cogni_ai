@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -6,58 +6,65 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load backend/.env
-dotenv.config({
-  path: path.resolve(__dirname, "../../.env"),
-});
+// Load dotenv environment variables from backend/.env first, then root WebApp/.env
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
-// DEBUG
-console.log("=================================");
-console.log("SUPABASE_URL:", process.env.SUPABASE_URL);
-console.log("ANON KEY FOUND:", !!process.env.SUPABASE_ANON_KEY);
-console.log("SERVICE KEY FOUND:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-console.log("=================================");
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.SUPABASE_URL?.trim() || "";
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY?.trim() || "";
 const supabaseServiceRoleKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
-
-if (
-  !supabaseUrl ||
-  !supabaseAnonKey ||
-  supabaseUrl.includes("your-project-id") ||
-  supabaseAnonKey.includes("your-supabase-anon-key")
-) {
-  throw new Error(
-    "CRITICAL CONFIGURATION ERROR: Supabase URL and Anon Key are required for this production application. Fallback mock modes have been disabled.",
-  );
-}
-
-if (!supabaseServiceRoleKey || supabaseServiceRoleKey === supabaseAnonKey) {
-  console.warn(
-    "WARNING: SUPABASE_SERVICE_ROLE_KEY is missing or set to the public anon key. Backend operations requiring RLS bypass (such as profile complete sync and system updates) will fail or be blocked by RLS policies!",
-  );
-}
-
-// Public client obeying Row Level Security (RLS)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Admin client bypassing Row Level Security (RLS) for system actions
-export const supabaseAdmin = createClient(
-  supabaseUrl,
-  supabaseServiceRoleKey || supabaseAnonKey,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  },
-);
+  process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || "";
 
 /**
- * Checks if Supabase credentials are configured in the environment (always returns true in production mode)
+ * Validates whether Supabase environment variables are properly configured.
+ * Checks for presence, valid URL scheme, and ensures no dummy placeholders are used.
  */
 export function isSupabaseConfigured(): boolean {
-  return true;
+  if (!supabaseUrl) return false;
+
+  const activeKey = supabaseServiceRoleKey || supabaseAnonKey;
+  if (!activeKey) return false;
+
+  // Reject placeholder values
+  if (
+    supabaseUrl.includes("your-project-id") ||
+    supabaseUrl.includes("example.com") ||
+    activeKey.includes("your-anon-key") ||
+    activeKey.includes("your-service-role-key")
+  ) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(supabaseUrl);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
+
+// Fallback dummy credentials to allow module initialization without crashing,
+// while ensuring actual network requests produce explicit configuration errors.
+const dummyUrl = "https://unconfigured-project.supabase.co";
+const dummyKey = "unconfigured-key";
+
+// Standard Supabase client (client-safe anon context)
+export const supabase: SupabaseClient = isSupabaseConfigured()
+  ? createClient(supabaseUrl, supabaseAnonKey || supabaseServiceRoleKey)
+  : createClient(dummyUrl, dummyKey);
+
+// Supabase Admin client with service_role key (server-only administrative context)
+export const supabaseAdmin: SupabaseClient = isSupabaseConfigured()
+  ? createClient(supabaseUrl, supabaseServiceRoleKey || supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+  : createClient(dummyUrl, dummyKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+

@@ -1,6 +1,7 @@
 import { Router, Response } from "express";
-import { authMiddleware, AuthRequest } from "../middleware/auth";
-import { supabase, supabaseAdmin } from "../config/supabase";
+import { authMiddleware, AuthRequest } from "../middleware/auth.js";
+import { supabase, supabaseAdmin, isSupabaseConfigured } from "../config/supabase.js";
+import jwt from "jsonwebtoken";
 
 const router = Router();
 
@@ -13,61 +14,132 @@ function validateEmail(email: string): boolean {
 // 1. SIGNUP
 // =========================================================================
 router.post("/signup", async (req, res) => {
-  const { name, email, password, confirmPassword } = req.body;
+  const { name, email, password, confirmPassword, role } = req.body;
 
   // Validation
-  if (!name || !email || !password || !confirmPassword) {
-    return res.status(400).json({ message: "All fields are required" });
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: "Name, email, and password are required" });
+  }
+
+  // Validate confirmPassword if provided (MobileApp may omit it, sending role instead)
+  const effectiveConfirmPassword = confirmPassword !== undefined ? confirmPassword : password;
+  if (password !== effectiveConfirmPassword) {
+    return res.status(400).json({ message: "Passwords do not match" });
   }
 
   if (!validateEmail(email)) {
     return res.status(400).json({ message: "Invalid email format" });
   }
 
-  if (password.length < 6) {
+  if (password.length < 8) {
     return res
       .status(400)
-      .json({ message: "Password must be at least 6 characters long" });
+      .json({ message: "Password must be at least 8 characters long" });
   }
 
-  if (password !== confirmPassword) {
-    return res.status(400).json({ message: "Passwords do not match" });
+  // Controlled role selection: Allow 'user' and 'organization' (or 'recruiter' mapped to 'organization')
+  // Public signup must NEVER assign 'admin'. Admin accounts must be securely provisioned.
+  const requestedRole = (role || "user").toLowerCase().trim();
+  if (requestedRole === "admin") {
+    return res.status(403).json({
+      message: "Admin accounts cannot be created via public registration. Admin access must be provisioned securely.",
+    });
+  }
+
+  let assignedRole = "user";
+  if (requestedRole === "organization" || requestedRole === "recruiter") {
+    assignedRole = "organization";
   }
 
   const formattedEmail = email.toLowerCase().trim();
 
   try {
-    
-    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+    console.log(`Creating user with role: ${assignedRole}...`);
+
+    let userObj: any = null;
+    let authError: any = null;
+
+    if (!isSupabaseConfigured()) {
+      return res.status(503).json({
+        message:
+          "Database service is not configured. Please verify SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the backend environment.",
+      });
+    }
+
+    const adminRes = await supabaseAdmin.auth.admin.createUser({
       email: formattedEmail,
       password,
       email_confirm: true,
       user_metadata: {
         name,
-        role: "user",
+        role: assignedRole,
       },
     });
 
-    if (error) {
-      return res.status(400).json({ message: error.message });
+    if (adminRes.data?.user) {
+      userObj = adminRes.data.user;
+      console.log("User created successfully via admin");
+    } else {
+      console.warn(
+        "Admin createUser failed/unauthorized, falling back to signUp:",
+        adminRes.error?.message,
+      );
+      const signUpRes = await supabase.auth.signUp({
+        email: formattedEmail,
+        password,
+        options: {
+          data: {
+            name,
+            role: assignedRole,
+          },
+        },
+      });
+
+      if (signUpRes.data?.user) {
+        userObj = signUpRes.data.user;
+        console.log("User created successfully via signUp");
+      } else {
+        authError = signUpRes.error || adminRes.error;
+      }
     }
 
-    // If the database trigger fails or RLS needs manual sync, write profile using service role
-    if (data.user) {
+    if (authError && !userObj) {
+      console.error("Signup Auth Error:", authError);
+      return res.status(400).json({
+        message: authError.message || "Failed to create user",
+      });
+    }
+
+    // Write profile record using service role
+    if (userObj) {
       try {
         const { error: profileError } = await supabaseAdmin
           .from("profiles")
           .upsert({
-            id: data.user.id,
+            id: userObj.id,
             name,
             email: formattedEmail,
-            role: "user",
+            role: assignedRole,
           });
         if (profileError) {
           console.warn(
             "[Supabase Profiles] Profile sync warning:",
             profileError.message,
           );
+        }
+
+        // Seed welcome notification for new user (matching live schema: is_read)
+        const { error: notifErr } = await supabaseAdmin.from("notifications").insert({
+          user_id: userObj.id,
+          title: "Welcome to CognifyAI!",
+          message:
+            assignedRole === "organization"
+              ? "Your organization recruiter workspace is ready. Discover AI-matched candidates today."
+              : "Upload your resume to unlock instant ATS optimization and AI Career Twin predictions.",
+          is_read: false,
+        });
+        if (notifErr) {
+          console.warn("[Supabase Notifications] Welcome seed warning:", notifErr.message);
         }
       } catch (syncErr) {
         console.warn("[Supabase Profiles] Profile sync warning:", syncErr);
@@ -77,7 +149,14 @@ router.post("/signup", async (req, res) => {
     return res.status(201).json({
       message: "Registration successful! You can now log in immediately.",
       email: formattedEmail,
+      user: {
+        id: userObj.id,
+        email: formattedEmail,
+        name,
+        role: assignedRole,
+      },
     });
+
   } catch (err: any) {
     console.error("Supabase Signup Exception:", err);
     return res
@@ -101,6 +180,13 @@ router.post("/login", async (req, res) => {
   const formattedEmail = email.toLowerCase().trim();
 
   try {
+    if (!isSupabaseConfigured()) {
+      return res.status(503).json({
+        message:
+          "Authentication service is not configured. Please verify SUPABASE_URL and SUPABASE_ANON_KEY in the backend environment.",
+      });
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email: formattedEmail,
       password,
@@ -123,23 +209,43 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: error.message });
     }
 
-    // Fetch user profile info
+    // Fetch user profile info from database (trusted authority)
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("*")
       .eq("id", data.user?.id)
       .maybeSingle();
 
+    let trustedRole = "user";
+    if (profile?.role) {
+      trustedRole = profile.role;
+    } else if (
+      data.user?.user_metadata?.role === "organization" ||
+      data.user?.user_metadata?.role === "recruiter"
+    ) {
+      trustedRole = data.user.user_metadata.role;
+    }
+    const userName = profile?.name || data.user?.user_metadata?.name || formattedEmail.split("@")[0];
+
+    // If profile didn't exist, create it with trusted role
+    if (!profile && data.user) {
+      await supabaseAdmin.from("profiles").upsert({
+        id: data.user.id,
+        name: userName,
+        email: formattedEmail,
+        role: trustedRole,
+      });
+    }
+
     return res.json({
       token: data.session?.access_token,
+      access_token: data.session?.access_token,
+      refresh_token: data.session?.refresh_token,
       user: {
         id: data.user?.id,
-        name:
-          profile?.name ||
-          data.user?.user_metadata?.name ||
-          formattedEmail.split("@")[0],
+        name: userName,
         email: data.user?.email,
-        role: profile?.role || "user",
+        role: trustedRole,
       },
     });
   } catch (err: any) {
@@ -151,34 +257,22 @@ router.post("/login", async (req, res) => {
 });
 
 // =========================================================================
-// 3. SEND OTP (FORGOT PASSWORD BADGE)
+// 2b. LOGOUT
 // =========================================================================
-router.post("/send-otp", async (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ message: "Email is required" });
-  }
-
-  const formattedEmail = email.toLowerCase().trim();
-
+router.post("/logout", async (req, res) => {
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(formattedEmail);
-    if (error) {
-      return res.status(400).json({ message: error.message });
-    }
-    return res.json({
-      message: "Password reset verification code sent to email",
-      email: formattedEmail,
-    });
+    await supabase.auth.signOut();
+    return res.json({ message: "Logged out successfully" });
   } catch (err: any) {
     return res
       .status(500)
-      .json({ message: err.message || "Failed to send reset code" });
+      .json({ message: err.message || "Logout failed" });
   }
 });
 
+
 // =========================================================================
-// 4. VERIFY OTP
+// 3. VERIFY OTP
 // =========================================================================
 router.post("/verify-otp", async (req, res) => {
   const { email, code } = req.body;
@@ -218,7 +312,7 @@ router.post("/verify-otp", async (req, res) => {
 });
 
 // =========================================================================
-// 5. FORGOT PASSWORD
+// 4. FORGOT PASSWORD
 // =========================================================================
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
@@ -246,7 +340,7 @@ router.post("/forgot-password", async (req, res) => {
 });
 
 // =========================================================================
-// 6. RESET PASSWORD
+// 5. RESET PASSWORD
 // =========================================================================
 router.post("/reset-password", async (req, res) => {
   const { email, code, password, confirmPassword } = req.body;
@@ -255,10 +349,10 @@ router.post("/reset-password", async (req, res) => {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  if (password.length < 6) {
+  if (password.length < 8) {
     return res
       .status(400)
-      .json({ message: "Password must be at least 6 characters long" });
+      .json({ message: "Password must be at least 8 characters long" });
   }
 
   if (password !== confirmPassword) {
@@ -300,7 +394,7 @@ router.post("/reset-password", async (req, res) => {
 });
 
 // =========================================================================
-// 7. GET PROFILE
+// 6. GET PROFILE
 // =========================================================================
 router.get(
   "/profile",
@@ -328,14 +422,45 @@ router.get(
           .eq("user_id", req.user?.id)
           .maybeSingle();
 
+        const { data: metaData } = await supabaseAdmin
+          .from("user_activity")
+          .select("metadata")
+          .eq("user_id", req.user?.id)
+          .eq("action", "profile_meta")
+          .maybeSingle();
+
+        const extra = metaData?.metadata || {};
+
         return res.json({
           ...data,
+          headline: extra.headline || extra.title || "Professional",
+          title: extra.title || extra.headline || "Professional",
+          bio: extra.bio || "",
+          location: extra.location || "Remote",
           academicDetails: acadData || null,
           resumeDetails: resumeData || null,
         });
       }
 
-      return res.status(404).json({ message: "Profile not found" });
+      // If profile record does not exist in DB yet, auto-create it using user details
+      const fallbackProfile = {
+        id: req.user?.id,
+        name: req.user?.email ? req.user.email.split("@")[0] : "User",
+        email: req.user?.email || "",
+        role: req.user?.role || "user",
+        onboarding_completed: false,
+      };
+
+      await supabaseAdmin.from("profiles").upsert(fallbackProfile);
+
+      return res.json({
+        ...fallbackProfile,
+        title: "Professional",
+        location: "Remote",
+        academicDetails: null,
+        resumeDetails: null,
+      });
+
     } catch (err: any) {
       console.error("Supabase Profile Fetch Error:", err.message);
       return res
@@ -346,7 +471,7 @@ router.get(
 );
 
 // =========================================================================
-// 8. COMPLETE PROFILE (ONBOARDING)
+// 7. COMPLETE PROFILE (ONBOARDING)
 // =========================================================================
 router.post(
   "/profile/complete",
@@ -376,7 +501,7 @@ router.post(
         interests: interests || [],
         linkedin_url,
         github_url,
-        onboarding_completed: false,
+        onboarding_completed: true,
         updated_at: new Date().toISOString(),
       };
 
@@ -390,37 +515,33 @@ router.post(
       if (profileErr) throw profileErr;
 
       // 2. Write to academic_details table as well
-      await supabaseAdmin.from("academic_details").upsert({
-        user_id: req.user?.id,
-        degree,
-        department,
-        college,
-        grad_year: grad_year ? parseInt(grad_year) : null,
-        cgpa: cgpa ? parseFloat(cgpa) : null,
-        updated_at: new Date().toISOString(),
-      });
+      const { error: academicError } = await supabaseAdmin
+        .from("academic_details")
+        .upsert({
+          user_id: req.user?.id,
+          degree,
+          department,
+          college,
+          grad_year: grad_year ? parseInt(grad_year) : null,
+          cgpa: cgpa ? parseFloat(cgpa) : null,
+          updated_at: new Date().toISOString(),
+        });
 
-      // 3. Insert skills if provided
-      if (skills && Array.isArray(skills)) {
-        for (const skillName of skills) {
-          // Query to check if skill already exists
-          const { data: existingSkill } = await supabaseAdmin
-            .from("skills")
-            .select("*")
-            .eq("user_id", req.user?.id)
-            .eq("name", skillName)
-            .maybeSingle();
+      if (academicError) {
+        throw academicError;
+      }
 
-          if (!existingSkill) {
-            await supabaseAdmin.from("skills").insert({
-              name: skillName,
-              category: "General",
-              level: "Intermediate",
-              progress: 60,
-              user_id: req.user?.id,
-            });
-          }
-        }
+      // 3. Bulk insert skills if provided
+      if (skills && Array.isArray(skills) && skills.length > 0) {
+        const skillsData = skills.map((skillName: string) => ({
+          name: skillName,
+          category: "General",
+          level: "Intermediate",
+          progress: 60,
+          user_id: req.user?.id,
+        }));
+
+        await supabaseAdmin.from("skills").insert(skillsData);
       }
 
       return res.json(profile);
@@ -434,7 +555,7 @@ router.post(
 );
 
 // =========================================================================
-// 8b. COMPLETE ONBOARDING
+// 8. COMPLETE ONBOARDING
 // =========================================================================
 router.post(
   "/onboarding/complete",
@@ -485,39 +606,39 @@ router.post(
       // 3. Compute Career DNA
       const progScore =
         userAssessments?.find((a) => a.category.toLowerCase().includes("prog"))
-          ?.score ||
-        assessmentScore ||
+          ?.score ??
+        assessmentScore ??
         80;
       const dbScore =
         userAssessments?.find(
           (a) =>
             a.category.toLowerCase().includes("db") ||
             a.category.toLowerCase().includes("data"),
-        )?.score ||
-        assessmentScore ||
+        )?.score ??
+        assessmentScore ??
         75;
       const aiScore =
         userAssessments?.find(
           (a) =>
             a.category.toLowerCase().includes("ai") ||
             a.category.toLowerCase().includes("ml"),
-        )?.score ||
-        assessmentScore ||
+        )?.score ??
+        assessmentScore ??
         70;
       const cloudScore =
         userAssessments?.find((a) => a.category.toLowerCase().includes("cloud"))
-          ?.score ||
-        assessmentScore ||
+          ?.score ??
+        assessmentScore ??
         70;
       const webScore =
         userAssessments?.find((a) => a.category.toLowerCase().includes("web"))
-          ?.score ||
-        assessmentScore ||
+          ?.score ??
+        assessmentScore ??
         75;
       const aptScore =
         userAssessments?.find((a) => a.category.toLowerCase().includes("apt"))
-          ?.score ||
-        assessmentScore ||
+          ?.score ??
+        assessmentScore ??
         80;
 
       let archetype = "The Algorithmic Architect";
@@ -695,15 +816,17 @@ router.put(
   "/profile",
   authMiddleware,
   async (req: AuthRequest, res: Response) => {
-    const { name, title, bio, location, avatar } = req.body;
+    const { name, phone, degree, department, college, linkedin_url, github_url, headline, title, bio, location, avatar } = req.body;
 
     try {
       const updates: any = {};
       if (name !== undefined) updates.name = name;
-      if (title !== undefined) updates.title = title;
-      if (bio !== undefined) updates.bio = bio;
-      if (location !== undefined) updates.location = location;
-      if (avatar !== undefined) updates.avatar = avatar;
+      if (phone !== undefined) updates.phone = phone;
+      if (degree !== undefined) updates.degree = degree;
+      if (department !== undefined) updates.department = department;
+      if (college !== undefined) updates.college = college;
+      if (linkedin_url !== undefined) updates.linkedin_url = linkedin_url;
+      if (github_url !== undefined) updates.github_url = github_url;
       updates.updated_at = new Date().toISOString();
 
       const { data, error } = await supabaseAdmin
@@ -717,7 +840,43 @@ router.put(
         return res.status(400).json({ message: error.message });
       }
 
-      return res.json(data);
+      // Persist extended profile metadata (headline, bio, title, location) in user_activity
+      const { data: existingMeta } = await supabaseAdmin
+        .from("user_activity")
+        .select("id, metadata")
+        .eq("user_id", req.user?.id)
+        .eq("action", "profile_meta")
+        .maybeSingle();
+
+      const mergedMeta = {
+        ...(existingMeta?.metadata || {}),
+        ...(headline !== undefined ? { headline } : {}),
+        ...(title !== undefined ? { title } : {}),
+        ...(bio !== undefined ? { bio } : {}),
+        ...(location !== undefined ? { location } : {}),
+      };
+
+      if (existingMeta) {
+        await supabaseAdmin
+          .from("user_activity")
+          .update({ metadata: mergedMeta })
+          .eq("id", existingMeta.id);
+      } else {
+        await supabaseAdmin.from("user_activity").insert({
+          user_id: req.user?.id,
+          action: "profile_meta",
+          metadata: mergedMeta,
+        });
+      }
+
+      return res.json({
+        ...data,
+        headline: mergedMeta.headline || mergedMeta.title || "Professional",
+        title: mergedMeta.title || mergedMeta.headline || "Professional",
+        bio: mergedMeta.bio || "",
+        location: mergedMeta.location || "Remote",
+        avatar: avatar || "",
+      });
     } catch (err: any) {
       return res
         .status(500)
@@ -725,5 +884,106 @@ router.put(
     }
   },
 );
+
+// =========================================================================
+// 10. DELETE ACCOUNT
+// =========================================================================
+router.delete("/account", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    // Delete profile and related records
+    await supabaseAdmin.from("notifications").delete().eq("user_id", userId);
+    await supabaseAdmin.from("user_activity").delete().eq("user_id", userId);
+    await supabaseAdmin.from("user_courses").delete().eq("user_id", userId);
+    await supabaseAdmin.from("skills").delete().eq("user_id", userId);
+    await supabaseAdmin.from("resumes").delete().eq("user_id", userId);
+    await supabaseAdmin.from("ats_reports").delete().eq("user_id", userId);
+    await supabaseAdmin.from("subscriptions").delete().eq("user_id", userId);
+    await supabaseAdmin.from("profiles").delete().eq("id", userId);
+
+    // Delete from Supabase Auth admin
+    await supabaseAdmin.auth.admin.deleteUser(userId);
+
+    return res.json({ message: "Account deleted successfully" });
+  } catch (err: any) {
+    return res.status(500).json({ message: err.message || "Failed to delete account" });
+  }
+});
+
+// =========================================================================
+// 11. CONNECTED ACCOUNTS
+// =========================================================================
+const DEFAULT_CONNECTED_ACCOUNTS = [
+  { name: "Google", desc: "alex@gmail.com", color: "bg-gradient-pink", connected: true },
+  { name: "GitHub", desc: "@alexcodes", color: "bg-gradient-primary", connected: true },
+  { name: "LinkedIn", desc: "Connect for insights", color: "bg-gradient-blue", connected: false },
+  { name: "Apple", desc: "Sign in with Apple", color: "bg-gradient-primary", connected: false },
+  { name: "Slack", desc: "Team notifications", color: "bg-gradient-pink", connected: false },
+];
+
+router.get("/connected-accounts", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    const { data: activity } = await supabaseAdmin
+      .from("user_activity")
+      .select("metadata")
+      .eq("user_id", userId)
+      .eq("action", "connected_accounts")
+      .maybeSingle();
+
+    if (activity?.metadata?.accounts) {
+      return res.json(activity.metadata.accounts);
+    }
+  } catch {
+    // ignore
+  }
+
+  return res.json(DEFAULT_CONNECTED_ACCOUNTS);
+});
+
+router.post("/connected-accounts/toggle", authMiddleware, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  const { provider } = req.body;
+  if (!provider) return res.status(400).json({ message: "Provider is required" });
+
+  try {
+    const { data: activity } = await supabaseAdmin
+      .from("user_activity")
+      .select("id, metadata")
+      .eq("user_id", userId)
+      .eq("action", "connected_accounts")
+      .maybeSingle();
+
+    let accounts = activity?.metadata?.accounts || DEFAULT_CONNECTED_ACCOUNTS;
+    accounts = accounts.map((a: any) =>
+      a.name.toLowerCase() === provider.toLowerCase()
+        ? { ...a, connected: !a.connected, desc: !a.connected ? `Connected as ${req.user?.email || "User"}` : `Connect for insights` }
+        : a
+    );
+
+    if (activity) {
+      await supabaseAdmin
+        .from("user_activity")
+        .update({ metadata: { accounts } })
+        .eq("id", activity.id);
+    } else {
+      await supabaseAdmin.from("user_activity").insert({
+        user_id: userId,
+        action: "connected_accounts",
+        metadata: { accounts },
+      });
+    }
+
+    return res.json(accounts);
+  } catch (err: any) {
+    return res.status(500).json({ message: err.message || "Failed to toggle connected account" });
+  }
+});
 
 export default router;

@@ -1,0 +1,64 @@
+{
+  "evaluation_timestamp": "2026-11-11T13:08:49.569236+00:00",
+  "benchmark_roles_count": 8,
+  "role_alignment_stats": {
+    "Data Scientist": {
+      "samples": 16,
+      "in_domain_mean_similarity": 0.1171,
+      "in_domain_std": 0.0618,
+      "out_domain_mean_similarity": 0.0235,
+      "similarity_margin": 0.0936
+    },
+    "Machine Learning Engineer": {
+      "samples": 7,
+      "in_domain_mean_similarity": 0.0242,
+      "in_domain_std": 0.0164,
+      "out_domain_mean_similarity": 0.0226,
+      "similarity_margin": 0.0016
+    },
+    "Frontend Developer": {
+      "samples": 11,
+      "in_domain_mean_similarity": 0.0687,
+      "in_domain_std": 0.0389,
+      "out_domain_mean_similarity": 0.0297,
+      "similarity_margin": 0.0391
+    },
+    "Full Stack Developer": {
+      "samples": 33,
+      "in_domain_mean_similarity": 0.0195,
+      "in_domain_std": 0.0122,
+      "out_domain_mean_similarity": 0.0229,
+      "similarity_margin": -0.0034
+    },
+    "DevOps Engineer": {
+      "samples": 9,
+      "in_domain_mean_similarity": 0.0672,
+      "in_domain_std": 0.0435,
+      "out_domain_mean_similarity": 0.019,
+      "similarity_margin": 0.0482
+    },
+    "Cloud Engineer": {
+      "samples": 5,
+      "in_domain_mean_similarity": 0.0474,
+      "in_domain_std": 0.051,
+      "out_domain_mean_similarity": 0.0221,
+      "similarity_margin": 0.0254
+    },
+    "Data Analyst": {
+      "samples": 28,
+      "in_domain_mean_similarity": 0.0643,
+      "in_domain_std": 0.0327,
+      "out_domain_mean_similarity": 0.0377,
+      "similarity_margin": 0.0266
+    },
+    "Python Developer": {
+      "samples": 5,
+      "in_domain_mean_similarity": 0.1205,
+      "in_domain_std": 0.0281,
+      "out_domain_mean_similarity": 0.0219,
+      "similarity_margin": 0.0987
+    }
+  },
+  "overall_mean_in_domain_similarity": 0.0661,
+  "overall_mean_out_domain_similarity": 0.0249
+}

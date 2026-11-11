@@ -1,0 +1,73 @@
+# Render Blueprint Specification for CognifyAI
+# Topology: Option A — Unified Web + Express Gateway + Private Python ML Service
+# External DB/Auth/Storage: Supabase Cloud
+# Mobile Client: Expo EAS Android Build -> https://<web-service>.onrender.com/api
+#
+# Cost & Plan Notes:
+# - cognifyai-web can run on 'free' ($0/mo, sleeps after idle) or 'starter' ($7/mo, always-on).
+# - cognifyai-ml uses 'type: pserv' (no public URL); Render requires at least 'starter' ($7/mo)
+#   for private services (upgrade to 'standard' $25/mo if workload exceeds 512 MB RAM).
+
+services:
+  - type: web
+    name: cognifyai-web
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: WebApp
+    buildCommand: npm install --include=dev && npm --prefix backend install --include=dev && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        value: /api
+      - key: STORAGE_RESUME_BUCKET
+        value: resumes
+      - key: ML_SERVICE_URL
+        fromService:
+          type: pserv
+          name: cognifyai-ml
+          property: hostport
+      - key: ML_SERVICE_SECRET
+        fromService:
+          type: pserv
+          name: cognifyai-ml
+          envVarKey: ML_SERVICE_SECRET
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_EMAIL
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+
+  - type: pserv
+    name: cognifyai-ml
+    runtime: python
+    region: oregon
+    plan: starter
+    rootDir: .
+    buildCommand: pip install --upgrade pip && pip install -r ml_engine/requirements.txt
+    startCommand: uvicorn ml_engine.src.inference_service:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.3
+      - key: ML_SERVICE_SECRET
+        generateValue: true
+      - key: ML_CORS_ORIGINS
+        value: ""
+

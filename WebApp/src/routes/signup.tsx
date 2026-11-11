@@ -22,23 +22,26 @@ function Signup() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
-    
+
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    const trimmedConfirm = confirmPassword.trim();
 
     // Client-side validations
-    if (!name.trim() || !email.trim() || !password || !confirmPassword) {
+    if (!trimmedName || !trimmedEmail || !trimmedPassword || !trimmedConfirm) {
       console.warn("[Auth Signup] Validation failed: Some fields are empty.");
       setError("All fields are required");
       return;
     }
 
-    if (password.length < 6) {
-      console.warn("[Auth Signup] Validation failed: Password length < 6.");
-      setError("Password must be at least 6 characters long");
+    if (trimmedPassword.length < 8) {
+      console.warn("[Auth Signup] Validation failed: Password length < 8.");
+      setError("Password must be at least 8 characters long");
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (trimmedPassword !== trimmedConfirm) {
       console.warn(
         "[Auth Signup] Validation failed: Password and confirmPassword do not match.",
       );
@@ -46,14 +49,17 @@ function Signup() {
       return;
     }
 
-    
     setLoading(true);
     try {
-      const res = await api.signup(name, email, password, confirmPassword);
-      
+      const res = await api.signup(
+        trimmedName,
+        trimmedEmail,
+        trimmedPassword,
+        trimmedConfirm,
+      );
 
       // Auto login
-      const loginRes = await api.login(email, password);
+      const loginRes = await api.login(trimmedEmail, trimmedPassword);
       localStorage.setItem("token", loginRes.token);
       localStorage.setItem("userName", loginRes.user.name);
 
@@ -66,7 +72,6 @@ function Signup() {
       );
     } finally {
       setLoading(false);
-      
     }
   };
 
@@ -135,10 +140,11 @@ function Signup() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password (min 6 chars)"
+              placeholder="Password (min 8 chars)"
               className="w-full h-14 rounded-2xl bg-white/10 border border-white/20 pl-12 pr-4 text-white placeholder:text-white/70 focus:outline-none focus:bg-white/15"
             />
           </div>
+
 
           {/* Confirm Password input */}
           <div className="relative">

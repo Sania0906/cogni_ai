@@ -1,5 +1,15 @@
 // CognifyAI API Client for REST Server
-const BASE_URL = "/api";
+const rawEnvApiUrl = import.meta.env?.VITE_API_URL;
+const isLocalhostEnvUrl =
+  typeof rawEnvApiUrl === "string" &&
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(rawEnvApiUrl);
+
+const BASE_URL = import.meta.env?.PROD
+  ? rawEnvApiUrl && !isLocalhostEnvUrl
+    ? rawEnvApiUrl
+    : "/api"
+  : rawEnvApiUrl || "http://localhost:5000/api";
+
 
 async function fetchAPI<T>(
   endpoint: string,
@@ -115,6 +125,10 @@ export const api = {
     return fetchAPI<any[]>("/notifications");
   },
 
+  markNotificationRead: async (id: string) => {
+    return fetchAPI<any>(`/notifications/${id}/read`, { method: "POST" });
+  },
+
   completeProfile: async (data: any) => {
     return fetchAPI<any>("/auth/profile/complete", {
       method: "POST",
@@ -225,6 +239,13 @@ export const api = {
 
   getAppliedJobs: async () => {
     return fetchAPI<any[]>("/jobs/applied");
+  },
+
+  applyJob: async (jobId: string) => {
+    return fetchAPI<{ message: string; applied: boolean; status: string; jobId: string }>("/jobs/apply", {
+      method: "POST",
+      body: JSON.stringify({ jobId }),
+    });
   },
 
   // AI Innovation Modules
@@ -466,4 +487,157 @@ export const api = {
       body: JSON.stringify(data),
     });
   },
+
+
+  logout: async () => {
+    return fetchAPI<{ message: string }>("/auth/logout", {
+      method: "POST",
+    });
+  },
+
+  uploadResume: async (data: FormData | { resumeText: string; targetJob?: string }) => {
+    if (data instanceof FormData) {
+      return fetchAPI<any>("/resume/upload", {
+        method: "POST",
+        body: data,
+      });
+    }
+    return fetchAPI<any>("/resume/upload", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  analyzeSkillGap: async (targetRole: string, skills?: string[]) => {
+    return fetchAPI<any>("/skill/analyze", {
+      method: "POST",
+      body: JSON.stringify({ targetRole, skills }),
+    });
+  },
+
+  getJobRecommendations: async () => {
+    return fetchAPI<any[]>("/jobs/recommend");
+  },
+
+  // Admin APIs
+  getAdminUsers: async () => {
+    return fetchAPI<any[]>("/admin/users");
+  },
+
+  deleteAdminUser: async (id: string) => {
+    return fetchAPI<{ message: string }>(`/admin/users/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  getAdminResumes: async () => {
+    return fetchAPI<any[]>("/admin/resumes");
+  },
+
+  getAdminAnalytics: async () => {
+    return fetchAPI<any>("/admin/analytics");
+  },
+
+  getAdminReports: async () => {
+    return fetchAPI<{ totalGenerated: number; quarterGenerated: number; reports: any[] }>("/admin/reports");
+  },
+
+  downloadAdminReport: async (reportId: string) => {
+    return fetchAPI<any>(`/admin/reports/${reportId}/download`);
+  },
+
+  // Job APIs
+  getJobById: async (id: string) => {
+    return fetchAPI<any>(`/jobs/${id}`);
+  },
+
+  saveJob: async (jobId: string) => {
+    return fetchAPI<{ message: string; saved: boolean }>("/jobs/save", {
+      method: "POST",
+      body: JSON.stringify({ jobId }),
+    });
+  },
+
+  getSavedJobs: async () => {
+    return fetchAPI<any[]>("/jobs/saved");
+  },
+
+  deleteSavedJob: async (jobId: string) => {
+    return fetchAPI<{ message: string; saved: boolean }>(`/jobs/save/${jobId}`, {
+      method: "DELETE",
+    });
+  },
+
+  getCompanyById: async (companyId: string) => {
+    return fetchAPI<any>(`/jobs/company/${companyId}`);
+  },
+
+  // Course & Lesson APIs
+  getCourseById: async (courseId: string) => {
+    return fetchAPI<any>(`/courses/${courseId}`);
+  },
+
+  enrollCourse: async (courseId: string) => {
+    return fetchAPI<any>(`/courses/${courseId}/enroll`, {
+      method: "POST",
+    });
+  },
+
+  getLessonById: async (lessonId: string, courseId?: string) => {
+    const query = courseId ? `?courseId=${encodeURIComponent(courseId)}` : "";
+    return fetchAPI<any>(`/courses/lesson/${lessonId}${query}`);
+  },
+
+  completeLesson: async (lessonId: string, courseId?: string) => {
+    return fetchAPI<any>(`/courses/lesson/${lessonId}/complete`, {
+      method: "POST",
+      body: JSON.stringify({ courseId }),
+    });
+  },
+
+  // Skill Details API
+  getSkillById: async (id: string) => {
+    return fetchAPI<any>(`/skills/${id}`);
+  },
+
+  // Certificate APIs
+  downloadCertificate: async (id: string) => {
+    return fetchAPI<any>(`/certificates/${id}/download`);
+  },
+
+  shareCertificate: async (id: string) => {
+    return fetchAPI<{ message: string; shareUrl: string }>(`/certificates/${id}/share`, {
+      method: "POST",
+    });
+  },
+
+  // Account & Subscription APIs
+  deleteAccount: async () => {
+    return fetchAPI<{ message: string }>("/auth/account", {
+      method: "DELETE",
+    });
+  },
+
+  getSubscription: async () => {
+    return fetchAPI<{ plan: string; status: string; endDate: string | null }>("/subscriptions");
+  },
+
+  upgradeSubscription: async (plan: string) => {
+    return fetchAPI<{ plan: string; status: string; endDate: string | null }>("/subscriptions/upgrade", {
+      method: "POST",
+      body: JSON.stringify({ plan }),
+    });
+  },
+
+  getConnectedAccounts: async () => {
+    return fetchAPI<any[]>("/auth/connected-accounts");
+  },
+
+  toggleConnectedAccount: async (provider: string) => {
+    return fetchAPI<any[]>("/auth/connected-accounts/toggle", {
+      method: "POST",
+      body: JSON.stringify({ provider }),
+    });
+  },
 };
+

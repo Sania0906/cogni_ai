@@ -16,6 +16,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SavedJobsRouteImport } from './routes/saved-jobs'
 import { Route as SalaryInsightsRouteImport } from './routes/salary-insights'
 import { Route as RoadmapGeneratorRouteImport } from './routes/roadmap-generator'
+import { Route as ResumeUploadRouteImport } from './routes/resume-upload'
 import { Route as ResumeAnalysisRouteImport } from './routes/resume-analysis'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -23,6 +24,7 @@ import { Route as PlatformAnalyticsRouteImport } from './routes/platform-analyti
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JobsRouteImport } from './routes/jobs'
+import { Route as JobRecommendationRouteImport } from './routes/job-recommendation'
 import { Route as InterviewPrepRouteImport } from './routes/interview-prep'
 import { Route as IndustryDemandRouteImport } from './routes/industry-demand'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -101,6 +103,11 @@ const RoadmapGeneratorRoute = RoadmapGeneratorRouteImport.update({
   path: '/roadmap-generator',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResumeUploadRoute = ResumeUploadRouteImport.update({
+  id: '/resume-upload',
+  path: '/resume-upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResumeAnalysisRoute = ResumeAnalysisRouteImport.update({
   id: '/resume-analysis',
   path: '/resume-analysis',
@@ -134,6 +141,11 @@ const LoginRoute = LoginRouteImport.update({
 const JobsRoute = JobsRouteImport.update({
   id: '/jobs',
   path: '/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobRecommendationRoute = JobRecommendationRouteImport.update({
+  id: '/job-recommendation',
+  path: '/job-recommendation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InterviewPrepRoute = InterviewPrepRouteImport.update({
@@ -366,6 +378,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/industry-demand': typeof IndustryDemandRoute
   '/interview-prep': typeof InterviewPrepRoute
+  '/job-recommendation': typeof JobRecommendationRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
@@ -373,6 +386,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resume-analysis': typeof ResumeAnalysisRoute
+  '/resume-upload': typeof ResumeUploadRoute
   '/roadmap-generator': typeof RoadmapGeneratorRoute
   '/salary-insights': typeof SalaryInsightsRoute
   '/saved-jobs': typeof SavedJobsRoute
@@ -424,6 +438,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/industry-demand': typeof IndustryDemandRoute
   '/interview-prep': typeof InterviewPrepRoute
+  '/job-recommendation': typeof JobRecommendationRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
@@ -431,6 +446,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resume-analysis': typeof ResumeAnalysisRoute
+  '/resume-upload': typeof ResumeUploadRoute
   '/roadmap-generator': typeof RoadmapGeneratorRoute
   '/salary-insights': typeof SalaryInsightsRoute
   '/saved-jobs': typeof SavedJobsRoute
@@ -483,6 +499,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/industry-demand': typeof IndustryDemandRoute
   '/interview-prep': typeof InterviewPrepRoute
+  '/job-recommendation': typeof JobRecommendationRoute
   '/jobs': typeof JobsRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
@@ -490,6 +507,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resume-analysis': typeof ResumeAnalysisRoute
+  '/resume-upload': typeof ResumeUploadRoute
   '/roadmap-generator': typeof RoadmapGeneratorRoute
   '/salary-insights': typeof SalaryInsightsRoute
   '/saved-jobs': typeof SavedJobsRoute
@@ -543,6 +561,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/industry-demand'
     | '/interview-prep'
+    | '/job-recommendation'
     | '/jobs'
     | '/login'
     | '/notifications'
@@ -550,6 +569,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/resume-analysis'
+    | '/resume-upload'
     | '/roadmap-generator'
     | '/salary-insights'
     | '/saved-jobs'
@@ -601,6 +621,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/industry-demand'
     | '/interview-prep'
+    | '/job-recommendation'
     | '/jobs'
     | '/login'
     | '/notifications'
@@ -608,6 +629,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/resume-analysis'
+    | '/resume-upload'
     | '/roadmap-generator'
     | '/salary-insights'
     | '/saved-jobs'
@@ -659,6 +681,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/industry-demand'
     | '/interview-prep'
+    | '/job-recommendation'
     | '/jobs'
     | '/login'
     | '/notifications'
@@ -666,6 +689,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/resume-analysis'
+    | '/resume-upload'
     | '/roadmap-generator'
     | '/salary-insights'
     | '/saved-jobs'
@@ -718,6 +742,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   IndustryDemandRoute: typeof IndustryDemandRoute
   InterviewPrepRoute: typeof InterviewPrepRoute
+  JobRecommendationRoute: typeof JobRecommendationRoute
   JobsRoute: typeof JobsRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -725,6 +750,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResumeAnalysisRoute: typeof ResumeAnalysisRoute
+  ResumeUploadRoute: typeof ResumeUploadRoute
   RoadmapGeneratorRoute: typeof RoadmapGeneratorRoute
   SalaryInsightsRoute: typeof SalaryInsightsRoute
   SavedJobsRoute: typeof SavedJobsRoute
@@ -802,6 +828,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoadmapGeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/resume-upload': {
+      id: '/resume-upload'
+      path: '/resume-upload'
+      fullPath: '/resume-upload'
+      preLoaderRoute: typeof ResumeUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/resume-analysis': {
       id: '/resume-analysis'
       path: '/resume-analysis'
@@ -849,6 +882,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs'
       fullPath: '/jobs'
       preLoaderRoute: typeof JobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/job-recommendation': {
+      id: '/job-recommendation'
+      path: '/job-recommendation'
+      fullPath: '/job-recommendation'
+      preLoaderRoute: typeof JobRecommendationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/interview-prep': {
@@ -1191,6 +1231,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   IndustryDemandRoute: IndustryDemandRoute,
   InterviewPrepRoute: InterviewPrepRoute,
+  JobRecommendationRoute: JobRecommendationRoute,
   JobsRoute: JobsRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
@@ -1198,6 +1239,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ResumeAnalysisRoute: ResumeAnalysisRoute,
+  ResumeUploadRoute: ResumeUploadRoute,
   RoadmapGeneratorRoute: RoadmapGeneratorRoute,
   SalaryInsightsRoute: SalaryInsightsRoute,
   SavedJobsRoute: SavedJobsRoute,

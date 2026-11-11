@@ -159,7 +159,7 @@ function Dashboard() {
 
   async function loadDashboardData() {
     try {
-      const profile = await api.getProfile();
+      const profile = await api.getProfile().catch(() => null);
       if (profile?.name) {
         setUserName(profile.name);
         localStorage.setItem("userName", profile.name);
@@ -262,8 +262,12 @@ function Dashboard() {
       }
     } catch (err) {
       console.error("Dashboard dynamic load error:", err);
+      setHasResume(false);
+    } finally {
+      setHasResume((prev) => (prev === null ? false : prev));
     }
   }
+
 
   useEffect(() => {
     // Initial load from localStorage for instant display
@@ -337,9 +341,6 @@ function Dashboard() {
         </div>
       ) : !hasResume ? (
         <div className="rounded-3xl bg-white/15 backdrop-blur-xl border border-white/25 p-8 text-center space-y-6 shadow-card bg-card">
-          <div className="mx-auto h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-2xl">
-            <Upload className="h-8 w-8 text-primary" />
-          </div>
           <div className="space-y-2">
             <h2 className="text-xl font-bold text-foreground">
               Upload Your Resume
