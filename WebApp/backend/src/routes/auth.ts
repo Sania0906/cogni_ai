@@ -1,5 +1,18 @@
 import { Router, Response } from "express";
-import { authMiddleware, AuthRequest } from "../middleware/auth.js";
+import {
+  authMiddleware,
+  AuthRequest,
+  normalizeLegacyRecruiterRole,
+  normalizeRoleFallback,
+  resolveTrustedUserRole,
+} from "../middleware/auth.js";
+import {
+  signupRateLimiter,
+  loginRateLimiter,
+  verifyOtpRateLimiter,
+  forgotPasswordRateLimiter,
+  resetPasswordRateLimiter,
+} from "../middleware/rateLimiter.js";
 import { supabase, supabaseAdmin, isSupabaseConfigured } from "../config/supabase.js";
 import jwt from "jsonwebtoken";
 
@@ -13,7 +26,7 @@ function validateEmail(email: string): boolean {
 // =========================================================================
 // 1. SIGNUP
 // =========================================================================
-router.post("/signup", async (req, res) => {
+router.post("/signup", signupRateLimiter, async (req, res) => {
   const { name, email, password, confirmPassword, role } = req.body;
 
   // Validation
@@ -170,7 +183,7 @@ router.post("/signup", async (req, res) => {
 // =========================================================================
 // 2. LOGIN
 // =========================================================================
-router.post("/login", async (req, res) => {
+router.post("/login", loginRateLimiter, async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -216,15 +229,9 @@ router.post("/login", async (req, res) => {
       .eq("id", data.user?.id)
       .maybeSingle();
 
-    let trustedRole = "user";
-    if (profile?.role) {
-      trustedRole = profile.role;
-    } else if (
-      data.user?.user_metadata?.role === "organization" ||
-      data.user?.user_metadata?.role === "recruiter"
-    ) {
-      trustedRole = data.user.user_metadata.role;
-    }
+    const trustedRole = profile?.role
+      ? normalizeLegacyRecruiterRole(profile.role)
+      : normalizeRoleFallback(data.user?.user_metadata?.role);
     const userName = profile?.name || data.user?.user_metadata?.name || formattedEmail.split("@")[0];
 
     // If profile didn't exist, create it with trusted role
@@ -270,11 +277,51 @@ router.post("/logout", async (req, res) => {
   }
 });
 
+// =========================================================================
+// 2c. REFRESH SESSION
+// =========================================================================
+router.post("/refresh", async (req, res) => {
+  const { refresh_token } = req.body;
+  if (!refresh_token || typeof refresh_token !== "string") {
+    return res.status(400).json({ message: "refresh_token is required" });
+  }
+
+  try {
+    if (!isSupabaseConfigured()) {
+      return res
+        .status(503)
+        .json({ message: "Authentication service is not configured." });
+    }
+
+    const { data, error } = await supabase.auth.refreshSession({
+      refresh_token: refresh_token.trim(),
+    });
+
+    if (error || !data.session) {
+      return res
+        .status(401)
+        .json({ message: error?.message || "Invalid or expired refresh token" });
+    }
+
+    return res.json({
+      token: data.session.access_token,
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      user: data.user,
+    });
+  } catch (err: any) {
+    console.error("Token Refresh Exception:", err);
+    return res
+      .status(500)
+      .json({ message: err.message || "Failed to refresh token" });
+  }
+});
+
 
 // =========================================================================
 // 3. VERIFY OTP
 // =========================================================================
-router.post("/verify-otp", async (req, res) => {
+router.post("/verify-otp", verifyOtpRateLimiter, async (req, res) => {
   const { email, code } = req.body;
   if (!email || !code) {
     return res.status(400).json({ message: "Email and code are required" });
@@ -295,13 +342,18 @@ router.post("/verify-otp", async (req, res) => {
         .json({ message: error?.message || "Invalid or expired reset code" });
     }
 
+    const trustedRole = await resolveTrustedUserRole(
+      data.user.id,
+      data.user.user_metadata?.role,
+    );
+
     return res.json({
       message: "Code verified successfully.",
       token: data.session?.access_token,
       user: {
         id: data.user?.id,
         email: data.user?.email,
-        role: "user",
+        role: trustedRole,
       },
     });
   } catch (err: any) {
@@ -314,16 +366,21 @@ router.post("/verify-otp", async (req, res) => {
 // =========================================================================
 // 4. FORGOT PASSWORD
 // =========================================================================
-router.post("/forgot-password", async (req, res) => {
+router.post("/forgot-password", forgotPasswordRateLimiter, async (req, res) => {
   const { email } = req.body;
-  if (!email) {
+  if (!email || typeof email !== "string" || !email.trim()) {
     return res.status(400).json({ message: "Email is required" });
   }
 
-  const formattedEmail = email.toLowerCase().trim();
+  const formattedEmail = email.trim().toLowerCase();
 
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(formattedEmail);
+    const appUrl =
+      process.env.APP_URL || process.env.FRONTEND_URL || "http://localhost:5173";
+    const redirectTo = `${appUrl.replace(/\/$/, "")}/reset-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(formattedEmail, {
+      redirectTo,
+    });
     if (error) {
       return res.status(400).json({ message: error.message });
     }
@@ -342,11 +399,26 @@ router.post("/forgot-password", async (req, res) => {
 // =========================================================================
 // 5. RESET PASSWORD
 // =========================================================================
-router.post("/reset-password", async (req, res) => {
+router.post("/reset-password", resetPasswordRateLimiter, async (req, res) => {
   const { email, code, password, confirmPassword } = req.body;
 
   if (!email || !code || !password || !confirmPassword) {
     return res.status(400).json({ message: "All fields are required" });
+  }
+
+  const formattedEmail =
+    typeof email === "string" ? email.trim().toLowerCase() : "";
+  const formattedCode =
+    typeof code === "string" ? code.trim() : String(code || "").trim();
+
+  if (!formattedEmail) {
+    return res.status(400).json({ message: "Valid email is required" });
+  }
+
+  if (!/^\d{6}$/.test(formattedCode)) {
+    return res
+      .status(400)
+      .json({ message: "Verification code must be exactly 6 digits" });
   }
 
   if (password.length < 8) {
@@ -359,34 +431,64 @@ router.post("/reset-password", async (req, res) => {
     return res.status(400).json({ message: "Passwords do not match" });
   }
 
-  const formattedEmail = email.toLowerCase().trim();
-
   try {
-    // 1. Verify code
-    const { data, error } = await supabase.auth.verifyOtp({
+    // 1. Verify OTP using stateless client (persistSession: false)
+    let verificationResult = await supabase.auth.verifyOtp({
       email: formattedEmail,
-      token: code,
+      token: formattedCode,
       type: "recovery",
     });
 
-    if (error || !data.user) {
-      return res
-        .status(400)
-        .json({ message: error?.message || "Invalid or expired reset code" });
+    // If client verification didn't succeed, retry with admin client as safe fallback
+    if (verificationResult.error && supabaseAdmin) {
+      const adminResult = await supabaseAdmin.auth.verifyOtp({
+        email: formattedEmail,
+        token: formattedCode,
+        type: "recovery",
+      });
+      if (!adminResult.error && adminResult.data?.user) {
+        verificationResult = adminResult;
+      }
     }
 
-    // 2. Use admin client to override password
+    const { data, error } = verificationResult;
+
+    if (error || !data?.user) {
+      const emailDomain = formattedEmail.includes("@")
+        ? formattedEmail.split("@")[1]
+        : "unknown";
+      console.error(`[Auth] verifyOtp rejected for @${emailDomain}:`, {
+        status: error?.status,
+        code: (error as any)?.code,
+        name: error?.name,
+        message: error?.message,
+        hasUser: !!data?.user,
+        codeLength: formattedCode.length,
+      });
+
+      return res.status(400).json({
+        message: error?.message || "Invalid or expired reset code",
+      });
+    }
+
+    // 2. Override password ONLY after successful recovery OTP verification
     const { error: updateError } =
       await supabaseAdmin.auth.admin.updateUserById(data.user.id, {
         password,
       });
 
     if (updateError) {
+      console.error("[Auth] updateUserById error:", {
+        message: updateError.message,
+      });
       return res.status(400).json({ message: updateError.message });
     }
 
     return res.json({ message: "Password has been reset successfully." });
   } catch (err: any) {
+    console.error("[Auth] reset-password unexpected error:", {
+      message: err?.message,
+    });
     return res
       .status(500)
       .json({ message: err.message || "Failed to reset password" });
@@ -437,6 +539,8 @@ router.get(
           title: extra.title || extra.headline || "Professional",
           bio: extra.bio || "",
           location: extra.location || "Remote",
+          target_role: extra.target_role || extra.targetRole || (data?.interests && data.interests[0]) || "Software Engineer",
+          targetRole: extra.target_role || extra.targetRole || (data?.interests && data.interests[0]) || "Software Engineer",
           academicDetails: acadData || null,
           resumeDetails: resumeData || null,
         });
@@ -447,7 +551,7 @@ router.get(
         id: req.user?.id,
         name: req.user?.email ? req.user.email.split("@")[0] : "User",
         email: req.user?.email || "",
-        role: req.user?.role || "user",
+        role: normalizeLegacyRecruiterRole(req.user?.role),
         onboarding_completed: false,
       };
 
@@ -816,11 +920,11 @@ router.put(
   "/profile",
   authMiddleware,
   async (req: AuthRequest, res: Response) => {
-    const { name, phone, degree, department, college, linkedin_url, github_url, headline, title, bio, location, avatar } = req.body;
+    const { name, phone, degree, department, college, linkedin_url, github_url, headline, title, bio, location, target_role, targetRole, avatar } = req.body;
 
     try {
       const updates: any = {};
-      if (name !== undefined) updates.name = name;
+      if (name !== undefined) updates.name = name.trim();
       if (phone !== undefined) updates.phone = phone;
       if (degree !== undefined) updates.degree = degree;
       if (department !== undefined) updates.department = department;
@@ -840,7 +944,14 @@ router.put(
         return res.status(400).json({ message: error.message });
       }
 
-      // Persist extended profile metadata (headline, bio, title, location) in user_activity
+      // Synchronize Supabase Auth user_metadata to prevent stale name discrepancies
+      if (name && req.user?.id) {
+        await supabaseAdmin.auth.admin.updateUserById(req.user.id, {
+          user_metadata: { name: name.trim() },
+        }).catch((e) => console.warn("Failed to sync auth user_metadata name:", e.message));
+      }
+
+      // Persist extended profile metadata (headline, bio, title, location, target_role) in user_activity
       const { data: existingMeta } = await supabaseAdmin
         .from("user_activity")
         .select("id, metadata")
@@ -854,6 +965,7 @@ router.put(
         ...(title !== undefined ? { title } : {}),
         ...(bio !== undefined ? { bio } : {}),
         ...(location !== undefined ? { location } : {}),
+        ...(target_role !== undefined ? { target_role } : targetRole !== undefined ? { target_role: targetRole } : {}),
       };
 
       if (existingMeta) {
@@ -871,10 +983,13 @@ router.put(
 
       return res.json({
         ...data,
+        name: data?.name || (name ? name.trim() : undefined),
         headline: mergedMeta.headline || mergedMeta.title || "Professional",
         title: mergedMeta.title || mergedMeta.headline || "Professional",
         bio: mergedMeta.bio || "",
         location: mergedMeta.location || "Remote",
+        target_role: mergedMeta.target_role || "Software Engineer",
+        targetRole: mergedMeta.target_role || "Software Engineer",
         avatar: avatar || "",
       });
     } catch (err: any) {

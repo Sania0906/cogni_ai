@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Lock, Mail, ArrowRight, ArrowLeft, KeyRound } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { toast } from "sonner";
@@ -16,26 +16,44 @@ function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("pendingEmail");
       if (stored) {
-        setEmail(stored);
+        setEmail(stored.trim().toLowerCase());
+      }
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get("email");
+      const codeParam = params.get("code");
+      if (emailParam) {
+        setEmail(emailParam.trim().toLowerCase());
+      }
+      // Only set code from URL if code is not already entered and code is exactly 6 digits
+      if (codeParam) {
+        const cleanParam = codeParam.trim();
+        if (/^\d{6}$/.test(cleanParam)) {
+          setCode((prev) => (prev ? prev : cleanParam));
+        }
       }
     }
   }, []);
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading || isSubmittingRef.current) return;
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const trimmedCode = code.trim();
 
     // Validations
-    if (!email.trim() || !code.trim() || !password || !confirmPassword) {
+    if (!normalizedEmail || !trimmedCode || !password || !confirmPassword) {
       toast.error("All fields are required");
       return;
     }
 
-    if (code.length < 6) {
+    if (trimmedCode.length !== 6 || !/^\d{6}$/.test(trimmedCode)) {
       toast.error("Please enter the complete 6-digit verification code");
       return;
     }
@@ -45,17 +63,17 @@ function ResetPassword() {
       return;
     }
 
-
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
 
+    isSubmittingRef.current = true;
     setLoading(true);
     try {
       const res = await api.resetPassword(
-        email,
-        code,
+        normalizedEmail,
+        trimmedCode,
         password,
         confirmPassword,
       );
@@ -68,6 +86,7 @@ function ResetPassword() {
         err.message || "Failed to reset password. Verify the reset code.",
       );
     } finally {
+      isSubmittingRef.current = false;
       setLoading(false);
     }
   };
@@ -137,7 +156,7 @@ function ResetPassword() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="New password (min 6 chars)"
+              placeholder="New password (min 8 chars)"
               className="w-full h-14 rounded-2xl bg-white/10 border border-white/20 pl-12 pr-4 text-white placeholder:text-white/70 focus:outline-none focus:bg-white/15"
             />
           </div>

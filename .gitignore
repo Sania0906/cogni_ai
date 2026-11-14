@@ -19,6 +19,8 @@ dist/
 .vinxi/
 .nitro/
 .tanstack/
+.vite/
+**/.vite/
 *.tsbuildinfo
 
 # Mobile / Expo / Native build outputs & signing secrets

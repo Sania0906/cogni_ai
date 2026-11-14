@@ -53,15 +53,33 @@ app.add_middleware(
 )
 
 
+def is_production_environment() -> bool:
+    """Detects production deployment contexts where shared-secret auth must fail closed."""
+    for env_key in ("APP_ENV", "ENVIRONMENT", "ENV", "NODE_ENV"):
+        if os.getenv(env_key, "").strip().lower() in ("production", "prod"):
+            return True
+    if os.getenv("RENDER", "").strip().lower() in ("true", "1", "yes"):
+        return True
+    if os.getenv("ML_REQUIRE_SECRET", "").strip().lower() in ("true", "1", "yes"):
+        return True
+    return False
+
+
 def verify_service_secret(
     x_ml_service_secret: Optional[str] = Header(default=None, alias="X-ML-Service-Secret")
 ):
     """
-    Validates optional shared secret between Express backend and private FastAPI ML service.
-    If ML_SERVICE_SECRET is configured, requests must supply an identical header value.
+    Validates shared secret between Express backend and private FastAPI ML service.
+    In production, fails closed if ML_SERVICE_SECRET is missing or empty.
+    In non-production local development, bypasses secret check when ML_SERVICE_SECRET is unset.
     """
     expected = os.getenv("ML_SERVICE_SECRET", "").strip()
     if not expected:
+        if is_production_environment():
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="ML service authentication secret is not configured for production.",
+            )
         return
     provided = (x_ml_service_secret or "").strip()
     if not provided or not hmac.compare_digest(provided, expected):

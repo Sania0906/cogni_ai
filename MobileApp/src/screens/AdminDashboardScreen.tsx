@@ -12,6 +12,7 @@ import {
 import { api } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Shield, Users, Briefcase, BookOpen, CheckCircle, LogOut, Activity } from "lucide-react-native";
+import { colors } from "../theme/colors";
 
 export function AdminDashboardScreen() {
   const { user, logout } = useAuth();
@@ -74,37 +75,37 @@ export function AdminDashboardScreen() {
           <Text style={styles.subTitle}>Signed in as {user?.email}</Text>
         </View>
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <LogOut color="#ef4444" size={20} />
+          <LogOut color={colors.destructive} size={20} />
         </TouchableOpacity>
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#6366f1" style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <View style={{ marginTop: 16 }}>
           {/* Real Database KPI Metrics */}
           <Text style={styles.sectionTitle}>Database & Platform Overview</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Users color="#6366f1" size={24} />
+              <Users color={colors.primary} size={24} />
               <Text style={styles.statNumber}>{totalUsers}</Text>
               <Text style={styles.statLabel}>Total Users</Text>
             </View>
 
             <View style={styles.statCard}>
-              <Briefcase color="#10b981" size={24} />
+              <Briefcase color={colors.success} size={24} />
               <Text style={styles.statNumber}>{totalJobs}</Text>
               <Text style={styles.statLabel}>Active Jobs</Text>
             </View>
 
             <View style={styles.statCard}>
-              <BookOpen color="#f59e0b" size={24} />
+              <BookOpen color={colors.warning} size={24} />
               <Text style={styles.statNumber}>{totalCourses}</Text>
               <Text style={styles.statLabel}>Courses</Text>
             </View>
 
             <View style={styles.statCard}>
-              <Activity color="#ec4899" size={24} />
+              <Activity color={colors.accentPink} size={24} />
               <Text style={styles.statNumber}>{healthLabel}</Text>
               <Text style={styles.statLabel}>System Health</Text>
             </View>
@@ -116,7 +117,7 @@ export function AdminDashboardScreen() {
             <View style={styles.sysRow}>
               <Text style={styles.sysName}>Supabase PostgreSQL Database</Text>
               <View style={styles.healthyBadge}>
-                <CheckCircle color="#10b981" size={14} />
+                <CheckCircle color={colors.success} size={14} />
                 <Text style={styles.healthyText}>{analytics?.subsystems?.database || "ONLINE"}</Text>
               </View>
             </View>
@@ -124,7 +125,7 @@ export function AdminDashboardScreen() {
             <View style={styles.sysRow}>
               <Text style={styles.sysName}>Express Unified REST API</Text>
               <View style={styles.healthyBadge}>
-                <CheckCircle color="#10b981" size={14} />
+                <CheckCircle color={colors.success} size={14} />
                 <Text style={styles.healthyText}>{analytics?.subsystems?.backend || "PORT 5000"}</Text>
               </View>
             </View>
@@ -132,7 +133,7 @@ export function AdminDashboardScreen() {
             <View style={styles.sysRow}>
               <Text style={styles.sysName}>FastAPI Python ML Inference Engine</Text>
               <View style={styles.healthyBadge}>
-                <CheckCircle color="#10b981" size={14} />
+                <CheckCircle color={colors.success} size={14} />
                 <Text style={styles.healthyText}>{mlStatusText}</Text>
               </View>
             </View>
@@ -144,29 +145,67 @@ export function AdminDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#090d16" },
+  container: { flex: 1, backgroundColor: colors.background },
   content: { padding: 16, paddingBottom: 40 },
   topBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 },
-  headerTitle: { color: "#ffffff", fontSize: 24, fontWeight: "bold" },
-  subTitle: { color: "#94a3b8", fontSize: 13, marginTop: 2 },
-  logoutBtn: { backgroundColor: "#1e293b", padding: 10, borderRadius: 8, borderWidth: 1, borderColor: "#334155" },
-  sectionTitle: { color: "#f8fafc", fontSize: 16, fontWeight: "600", marginBottom: 12 },
+  headerTitle: { color: colors.textPrimary, fontSize: 24, fontWeight: "bold" },
+  subTitle: { color: colors.textSecondary, fontSize: 13, marginTop: 2 },
+  logoutBtn: {
+    backgroundColor: colors.destructiveBg,
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.destructiveBorder,
+  },
+  sectionTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: "700", marginBottom: 12 },
   statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
   statCard: {
-    backgroundColor: "#1e293b",
+    backgroundColor: colors.card,
     width: "48%",
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 12,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.cardBorder,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  statNumber: { color: "#ffffff", fontSize: 26, fontWeight: "bold", marginTop: 8 },
-  statLabel: { color: "#94a3b8", fontSize: 12, marginTop: 4 },
-  systemBox: { backgroundColor: "#1e293b", borderRadius: 12, padding: 16, borderWidth: 1, borderColor: "#334155" },
-  sysRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#334155" },
-  sysName: { color: "#e2e8f0", fontSize: 13, fontWeight: "500", flex: 1 },
-  healthyBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "#065f46", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  healthyText: { color: "#34d399", fontSize: 11, fontWeight: "bold", marginLeft: 4 },
+  statNumber: { color: colors.textPrimary, fontSize: 26, fontWeight: "bold", marginTop: 8 },
+  statLabel: { color: colors.textSecondary, fontSize: 12, marginTop: 4, fontWeight: "500" },
+  systemBox: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  sysRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.cardBorderSubtle,
+  },
+  sysName: { color: colors.textPrimary, fontSize: 13, fontWeight: "600", flex: 1 },
+  healthyBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.successBg,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.successBorder,
+  },
+  healthyText: { color: colors.success, fontSize: 11, fontWeight: "bold", marginLeft: 4 },
 });

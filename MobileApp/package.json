@@ -1,6 +1,6 @@
 {
   "name": "mobileappexpo",
-  "main": "App.tsx",
+  "main": "expo/AppEntry.js",
   "version": "1.0.0",
   "dependencies": {
     "@expo/ui": "~57.0.26",

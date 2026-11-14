@@ -17,19 +17,34 @@ function CourseDetails() {
   const [error, setError] = useState<string | null>(null);
   const [isEnrolling, setIsEnrolling] = useState(false);
 
-  useEffect(() => {
-    async function loadCourse() {
-      try {
-        setLoading(true);
-        const data = await api.getCourseById(courseId);
-        setCourse(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load course details.");
-      } finally {
-        setLoading(false);
-      }
+  const loadCourse = async () => {
+    try {
+      const data = await api.getCourseById(courseId);
+      setCourse(data);
+    } catch (err: any) {
+      setError(err.message || "Failed to load course details.");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadCourse();
+
+    const handleFocus = () => loadCourse();
+    window.addEventListener("focus", handleFocus);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") loadCourse();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    const interval = setInterval(loadCourse, 10000);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      clearInterval(interval);
+    };
   }, [courseId]);
 
   const handleEnroll = async () => {

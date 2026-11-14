@@ -22,6 +22,7 @@ import recruiterRoutes from "./routes/recruiter.js";
 import adminRoutes from "./routes/admin.js";
 import resumeRoutes from "./routes/resume.js";
 import skillRoutes from "./routes/skill.js";
+import { resolveTrustProxyHops } from "./middleware/rateLimiter.js";
 
 // Load environment variables
 const __filename = fileURLToPath(import.meta.url);
@@ -29,6 +30,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express();
+app.set("trust proxy", resolveTrustProxyHops(process.env));
 const PORT = process.env.PORT || 5000;
 
 import compression from "compression";

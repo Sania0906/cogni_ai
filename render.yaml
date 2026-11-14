@@ -21,6 +21,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: TRUST_PROXY_HOPS
+        value: "1"
       - key: VITE_API_URL
         value: /api
       - key: STORAGE_RESUME_BUCKET
@@ -62,8 +64,11 @@ services:
     rootDir: .
     buildCommand: pip install --upgrade pip && pip install -r ml_engine/requirements.txt
     startCommand: uvicorn ml_engine.src.inference_service:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /health
+    # Private services (type: pserv) use Render TCP port health checks;
+    # FastAPI /health remains active for internal backend readiness probes.
     envVars:
+      - key: APP_ENV
+        value: production
       - key: PYTHON_VERSION
         value: 3.13.3
       - key: ML_SERVICE_SECRET

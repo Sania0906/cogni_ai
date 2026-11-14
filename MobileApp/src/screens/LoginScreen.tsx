@@ -6,11 +6,12 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
+import { colors } from "../theme/colors";
 
 export function LoginScreen({ navigation, route }: any) {
   const roleType = route?.params?.role || "user"; // 'user' | 'organization' | 'admin'
@@ -57,7 +58,7 @@ export function LoginScreen({ navigation, route }: any) {
           <TextInput
             style={styles.input}
             placeholder="email@example.com"
-            placeholderTextColor="#666"
+            placeholderTextColor={colors.textMuted}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -70,7 +71,7 @@ export function LoginScreen({ navigation, route }: any) {
           <TextInput
             style={styles.input}
             placeholder="••••••••"
-            placeholderTextColor="#666"
+            placeholderTextColor={colors.textMuted}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -113,34 +114,46 @@ export function LoginScreen({ navigation, route }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#090d16" },
+  container: { flex: 1, backgroundColor: colors.background },
   inner: { flex: 1, padding: 24, justifyContent: "center" },
   headerBox: { marginBottom: 32, alignItems: "center" },
-  brandTitle: { fontSize: 32, fontWeight: "bold", color: "#6366f1", marginBottom: 4 },
-  roleTitle: { fontSize: 20, fontWeight: "600", color: "#e2e8f0" },
-  error: { color: "#ef4444", marginBottom: 16, textAlign: "center" },
+  brandTitle: { fontSize: 32, fontWeight: "bold", color: colors.primary, marginBottom: 4 },
+  roleTitle: { fontSize: 20, fontWeight: "700", color: colors.textPrimary },
+  error: { color: colors.destructive, marginBottom: 16, textAlign: "center", fontSize: 13, fontWeight: "600" },
   inputContainer: { marginBottom: 16 },
-  label: { color: "#94a3b8", fontSize: 14, marginBottom: 6 },
+  label: { color: colors.textSecondary, fontSize: 13, fontWeight: "600", marginBottom: 6 },
   input: {
-    backgroundColor: "#1e293b",
-    color: "#ffffff",
+    backgroundColor: colors.inputBg,
+    color: colors.textPrimary,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#334155",
-    fontSize: 16,
+    borderColor: colors.inputBorder,
+    fontSize: 15,
   },
   btnPrimary: {
-    backgroundColor: "#6366f1",
+    backgroundColor: colors.primary,
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: "center",
     marginTop: 12,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  btnText: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
+  btnText: { color: colors.textInverse, fontSize: 16, fontWeight: "700" },
   linkBtn: { marginTop: 20, alignItems: "center" },
-  linkText: { color: "#818cf8", fontSize: 14 },
-  roleSwitcher: { marginTop: 40, borderTopWidth: 1, borderTopColor: "#1e293b", paddingTop: 16, flexDirection: "row", justifyContent: "space-around" },
-  switchText: { color: "#64748b", fontSize: 12 },
+  linkText: { color: colors.primary, fontSize: 14, fontWeight: "600" },
+  roleSwitcher: {
+    marginTop: 40,
+    borderTopWidth: 1,
+    borderTopColor: colors.cardBorderSubtle,
+    paddingTop: 16,
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
+  switchText: { color: colors.textSecondary, fontSize: 12, fontWeight: "500" },
 });

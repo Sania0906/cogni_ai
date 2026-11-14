@@ -16,10 +16,12 @@ function ForgotPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    const normalizedEmail = email.trim().toLowerCase();
     setLoading(true);
     try {
-      const res = await api.forgotPassword(email);
-      localStorage.setItem("pendingEmail", email);
+      const res = await api.forgotPassword(normalizedEmail);
+      localStorage.setItem("pendingEmail", normalizedEmail);
       if (res.otp) {
         toast.success(`Verification code sent! Code: ${res.otp}`, {
           duration: 10000,
@@ -28,9 +30,9 @@ function ForgotPassword() {
         toast.success("Verification code sent to your email!");
       }
       navigate({ to: "/reset-password" });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error("Failed to send code. Please try again.");
+      toast.error(err?.message || "Failed to send code. Please try again.");
     } finally {
       setLoading(false);
     }

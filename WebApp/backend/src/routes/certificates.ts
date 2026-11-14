@@ -49,27 +49,27 @@ router.get("/", authMiddleware, async (req: AuthRequest, res: Response) => {
 
     if (error) throw error;
 
-    if (data && data.length > 0) {
-      const mapped = data.map((c, i) => ({
-        id: c.id,
-        _id: c.id,
-        title: (c as any).courses?.title || `Certified Specialist ${i + 1}`,
-        issued: new Date(c.issue_date).toLocaleDateString("en-US", {
-          month: "short",
-          year: "numeric",
-        }),
-        issuer: "CognifyAI Academy",
-        credentialId: c.certificate_id || `COG-CERT-${c.id.slice(0, 8).toUpperCase()}`,
-        color: i % 2 === 0 ? "bg-gradient-primary" : "bg-gradient-blue",
-      }));
-      return res.json(mapped);
+    if (!data || data.length === 0) {
+      return res.json([]);
     }
+
+    const mapped = data.map((c, i) => ({
+      id: c.id,
+      _id: c.id,
+      title: (c as any).courses?.title || `Certified Specialist ${i + 1}`,
+      issued: new Date(c.issue_date).toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+      }),
+      issuer: "CognifyAI Academy",
+      credentialId: c.certificate_id || `COG-CERT-${c.id.slice(0, 8).toUpperCase()}`,
+      color: i % 2 === 0 ? "bg-gradient-primary" : "bg-gradient-blue",
+    }));
+    return res.json(mapped);
   } catch (err: any) {
     console.warn("Supabase Certificates Fetch Notice:", err?.message);
+    return res.json([]);
   }
-
-  // Fallback to default verified certificates
-  return res.json(DEFAULT_CERTIFICATES);
 });
 
 // =========================================================================

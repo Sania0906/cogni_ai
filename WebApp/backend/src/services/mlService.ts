@@ -4,6 +4,29 @@
  * Provides ATS Resume Scoring, Career Trajectory Prediction, and Candidate Ranking.
  */
 
+const ML_PROD_ENV_KEYS = ["APP_ENV", "ENVIRONMENT", "ENV", "NODE_ENV"] as const;
+const ML_PROD_ENV_VALUES = new Set(["production", "prod"]);
+const ML_TRUTHY_FLAGS = new Set(["true", "1", "yes"]);
+
+/**
+ * Mirrors FastAPI `is_production_environment()` so Express fails closed under identical runtime flags.
+ */
+export function isMlProductionEnvironment(env: NodeJS.ProcessEnv = process.env): boolean {
+  for (const key of ML_PROD_ENV_KEYS) {
+    const val = (env[key] || "").trim().toLowerCase();
+    if (ML_PROD_ENV_VALUES.has(val)) {
+      return true;
+    }
+  }
+  if (ML_TRUTHY_FLAGS.has((env.RENDER || "").trim().toLowerCase())) {
+    return true;
+  }
+  if (ML_TRUTHY_FLAGS.has((env.ML_REQUIRE_SECRET || "").trim().toLowerCase())) {
+    return true;
+  }
+  return false;
+}
+
 function normalizeServiceUrl(rawUrl?: string): string {
   const trimmed = (rawUrl || "").trim().replace(/\/+$/, "");
   if (!trimmed) return "http://127.0.0.1:8000";
@@ -85,6 +108,26 @@ export class MLService {
     return MLService.instance;
   }
 
+  private hasWarnedMissingSecret: boolean = false;
+
+  private isProductionRuntime(): boolean {
+    return isMlProductionEnvironment(process.env);
+  }
+
+  private hasValidProductionAuth(): boolean {
+    const secret = process.env.ML_SERVICE_SECRET?.trim();
+    if (!secret && this.isProductionRuntime()) {
+      if (!this.hasWarnedMissingSecret) {
+        this.hasWarnedMissingSecret = true;
+        console.error(
+          "[MLService] Security error: ML_SERVICE_SECRET is missing or empty in production; failing closed to fallback."
+        );
+      }
+      return false;
+    }
+    return true;
+  }
+
   private getBaseUrl(): string {
     return normalizeServiceUrl(process.env.ML_SERVICE_URL || process.env.ML_ENGINE_URL);
   }
@@ -111,6 +154,12 @@ export class MLService {
    * Health check to detect if Python ML engine is active and models are loaded.
    */
   public async checkHealth(force: boolean = false): Promise<boolean> {
+    if (!this.hasValidProductionAuth()) {
+      this.isOnline = false;
+      this.lastHealthCheck = Date.now();
+      return false;
+    }
+
     const now = Date.now();
     // Cache positive health status for 5 seconds, don't cache failure if forced
     if (!force && this.isOnline === true && now - this.lastHealthCheck < 5000) {

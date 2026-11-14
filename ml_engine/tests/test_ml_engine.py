@@ -19,6 +19,7 @@ from skill_extractor import SkillExtractor
 from ats_predictor import ATSPredictor
 from career_predictor import CareerPredictor
 from inference_service import (
+    app,
     health_check,
     get_models_status,
     predict_ats,
@@ -215,6 +216,206 @@ class TestInferenceHandlers(unittest.TestCase):
         self.assertIn("React", data["matched_skills"])
         self.assertIn("Node.js", data["matched_skills"])
         self.assertIn("MongoDB", data["matched_skills"])
+
+
+def _get_inference_module():
+    import sys
+    for route in app.routes:
+        if getattr(route, "path", None) == "/health" and hasattr(route, "endpoint"):
+            return sys.modules[route.endpoint.__module__]
+    raise RuntimeError("Could not resolve inference_service module from FastAPI app routes")
+
+
+class TestInferenceAuthentication(unittest.TestCase):
+    ENV_KEYS = (
+        "APP_ENV",
+        "ENVIRONMENT",
+        "ENV",
+        "NODE_ENV",
+        "RENDER",
+        "ML_REQUIRE_SECRET",
+        "ML_SERVICE_SECRET",
+    )
+
+    @classmethod
+    def setUpClass(cls):
+        load_models()
+
+    def setUp(self):
+        self._saved_env = {k: os.environ.get(k) for k in self.ENV_KEYS}
+        for k in self.ENV_KEYS:
+            os.environ.pop(k, None)
+
+    def tearDown(self):
+        for k, v in self._saved_env.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+    def test_protected_routes_register_verify_service_secret_dependency(self):
+        from fastapi import FastAPI
+        mod = _get_inference_module()
+        verify_service_secret = mod.verify_service_secret
+
+        route_deps = {
+            r.path: [getattr(d, "call", None) for d in r.dependant.dependencies]
+            for r in app.routes
+            if hasattr(r, "dependant")
+        }
+        self.assertIsInstance(app, FastAPI)
+        self.assertIn("/health", route_deps)
+        self.assertEqual(route_deps["/health"], [])
+
+        for protected_path in (
+            "/models/status",
+            "/predict/ats",
+            "/predict/ats/upload",
+            "/predict/career",
+            "/predict/career/upload",
+            "/score-candidates",
+            "/extract-skills",
+        ):
+            self.assertIn(protected_path, route_deps)
+            self.assertIn(verify_service_secret, route_deps[protected_path])
+
+    def test_missing_secret_fails_closed_in_production(self):
+        from fastapi import HTTPException
+        mod = _get_inference_module()
+
+        os.environ["APP_ENV"] = "production"
+        os.environ["ML_SERVICE_SECRET"] = ""
+
+        # Health endpoint stays available for probes while inference dependency fails closed
+        health = mod.health_check()
+        self.assertEqual(health.get("status"), "healthy")
+
+        with self.assertRaises(HTTPException) as ctx:
+            mod.verify_service_secret(x_ml_service_secret=None)
+        self.assertEqual(ctx.exception.status_code, 503)
+
+    def test_render_env_without_secret_also_fails_closed(self):
+        from fastapi import HTTPException
+        mod = _get_inference_module()
+
+        os.environ["RENDER"] = "true"
+        with self.assertRaises(HTTPException) as ctx:
+            mod.verify_service_secret(x_ml_service_secret="anything")
+        self.assertEqual(ctx.exception.status_code, 503)
+
+    def test_configured_secret_enforced_for_inference_routes(self):
+        from fastapi import HTTPException
+        mod = _get_inference_module()
+
+        os.environ["APP_ENV"] = "production"
+        os.environ["ML_SERVICE_SECRET"] = "test-shared-secret-value"
+
+        with self.assertRaises(HTTPException) as no_hdr_ctx:
+            mod.verify_service_secret(x_ml_service_secret=None)
+        self.assertEqual(no_hdr_ctx.exception.status_code, 401)
+
+        with self.assertRaises(HTTPException) as bad_hdr_ctx:
+            mod.verify_service_secret(x_ml_service_secret="wrong-secret")
+        self.assertEqual(bad_hdr_ctx.exception.status_code, 401)
+
+        # Valid shared secret authorizes downstream route execution
+        mod.verify_service_secret(x_ml_service_secret="test-shared-secret-value")
+        status_res = mod.get_models_status()
+        self.assertIn("ats_scorer", status_res)
+        self.assertIn("career_classifier", status_res)
+
+        ats_res = mod.predict_ats(
+            mod.ATSRequest(
+                resume_text="Experienced Python Developer with Django, FastAPI, PostgreSQL, Redis, Docker, and REST APIs.",
+                target_role="Python Developer",
+            )
+        )
+        self.assertIn("ats_score", ats_res)
+
+        career_res = mod.predict_career(
+            mod.CareerRequest(
+                resume_text="Senior DevOps Engineer skilled in Terraform, Kubernetes, Docker, AWS, and CI/CD pipelines.",
+            )
+        )
+        self.assertIn("predicted_role", career_res)
+
+    def test_production_env_detection_matrix(self):
+        mod = _get_inference_module()
+        self.assertFalse(mod.is_production_environment())
+
+        for env_key in ("APP_ENV", "ENVIRONMENT", "ENV", "NODE_ENV"):
+            for prod_val in ("production", "prod", " PRODUCTION "):
+                with self.subTest(env_key=env_key, prod_val=prod_val):
+                    os.environ[env_key] = prod_val
+                    self.assertTrue(mod.is_production_environment())
+                    os.environ.pop(env_key, None)
+
+            os.environ[env_key] = "development"
+            self.assertFalse(mod.is_production_environment())
+            os.environ.pop(env_key, None)
+
+        for flag_key in ("RENDER", "ML_REQUIRE_SECRET"):
+            for truthy in ("true", "1", "yes", " YES "):
+                with self.subTest(flag_key=flag_key, truthy=truthy):
+                    os.environ[flag_key] = truthy
+                    self.assertTrue(mod.is_production_environment())
+                    os.environ.pop(flag_key, None)
+
+            os.environ[flag_key] = "false"
+            self.assertFalse(mod.is_production_environment())
+            os.environ.pop(flag_key, None)
+
+    def test_auth_enforcement_missing_and_wrong_secrets_and_error_responses(self):
+        from fastapi import HTTPException
+        from starlette.requests import Request
+        import json
+        mod = _get_inference_module()
+
+        # Validate Header metadata on verify_service_secret parameter (ensures FastAPI extracts X-ML-Service-Secret)
+        import inspect
+        sig = inspect.signature(mod.verify_service_secret)
+        param = sig.parameters["x_ml_service_secret"]
+        self.assertEqual(getattr(param.default, "alias", None), "X-ML-Service-Secret")
+
+        # 1. APP_ENV=production with empty secret: /health stays 200, inference fails closed with 503
+        os.environ["APP_ENV"] = "production"
+        os.environ["ML_SERVICE_SECRET"] = ""
+        health = mod.health_check()
+        self.assertEqual(health.get("status"), "healthy")
+
+        with self.assertRaises(HTTPException) as missing_ctx:
+            mod.verify_service_secret(x_ml_service_secret=None)
+        self.assertEqual(missing_ctx.exception.status_code, 503)
+
+        # Verify FastAPI HTTPException serializes to expected JSON 503 status
+        from fastapi.exception_handlers import http_exception_handler
+        dummy_req = Request({"type": "http", "method": "POST", "path": "/predict/ats", "headers": []})
+        coro = http_exception_handler(dummy_req, missing_ctx.exception)
+        try:
+            coro.send(None)
+            self.fail("Expected coroutine to return JSONResponse")
+        except StopIteration as done:
+            resp_503 = done.value
+        self.assertEqual(resp_503.status_code, 503)
+        self.assertIn("not configured", json.loads(resp_503.body)["detail"].lower())
+
+        # 2. Configured secret: missing, empty, or wrong header fails with HTTP 401
+        os.environ["ML_SERVICE_SECRET"] = "asgi-shared-secret-value"
+        for bad_header in (None, "", "   ", "wrong-secret", "asgi-shared-secret-valu"):
+            with self.subTest(bad_header=bad_header):
+                with self.assertRaises(HTTPException) as bad_ctx:
+                    mod.verify_service_secret(x_ml_service_secret=bad_header)
+                self.assertEqual(bad_ctx.exception.status_code, 401)
+                bad_coro = http_exception_handler(dummy_req, bad_ctx.exception)
+                try:
+                    bad_coro.send(None)
+                    self.fail("Expected coroutine to return JSONResponse")
+                except StopIteration as done:
+                    resp_401 = done.value
+                self.assertEqual(resp_401.status_code, 401)
+
+        # Valid secret succeeds
+        self.assertIsNone(mod.verify_service_secret(x_ml_service_secret="asgi-shared-secret-value"))
 
 
 if __name__ == "__main__":

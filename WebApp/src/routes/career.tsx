@@ -5,6 +5,7 @@ import {
   MessageSquare,
   Target,
   Award,
+  ArrowRight,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useState, useEffect } from "react";
@@ -168,74 +169,18 @@ function Career() {
                 )}
               </div>
 
-              {/* Course roadmap suggestions */}
-              <div className="p-5 rounded-3xl bg-card shadow-card border border-border/10">
-                <h3 className="text-sm font-bold text-card-foreground mb-3 flex items-center gap-1.5">
-                  <Target className="h-4.5 w-4.5 text-primary" /> Recommended
-                  Course Roadmap
-                </h3>
-                <div className="space-y-3.5">
-                  {activePath.learningRoadmap.map(
-                    (course: string, i: number) => (
-                      <div key={course} className="flex gap-3 items-start">
-                        <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0 mt-0.5">
-                          {i + 1}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-card-foreground">
-                            {course}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            Accelerated course to build target competencies
-                          </p>
-                        </div>
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
+              {/* Action Navigation - Analyze Complete Skill Gap */}
+              <Link
+                to="/skill-gap"
+                className="w-full py-3.5 px-5 rounded-2xl bg-primary text-white font-bold text-sm shadow-glow hover:bg-primary/90 transition flex items-center justify-center gap-2"
+              >
+                <span>Analyze Complete Skill Gap</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </>
           )}
         </div>
       )}
-
-      <h3 className="text-lg font-bold mt-4 mb-3">Quick Actions</h3>
-      <div className="grid grid-cols-2 gap-3">
-        <Link
-          to="/jobs"
-          className="p-5 rounded-2xl bg-card shadow-card flex flex-col items-start gap-2"
-        >
-          <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center text-white">
-            <Briefcase className="h-5 w-5" />
-          </div>
-          <p className="font-bold">Job Search</p>
-          <p className="text-xs text-muted-foreground">Find matching roles</p>
-        </Link>
-        <Link
-          to="/courses"
-          className="p-5 rounded-2xl bg-card shadow-card flex flex-col items-start gap-2"
-        >
-          <div className="h-10 w-10 rounded-xl bg-gradient-pink flex items-center justify-center text-white">
-            <Target className="h-5 w-5" />
-          </div>
-          <p className="font-bold">Learning Path</p>
-          <p className="text-xs text-muted-foreground">Explore skills</p>
-        </Link>
-        <Link
-          to="/ai-assistant"
-          className="col-span-2 p-5 rounded-2xl bg-card shadow-card flex items-center gap-3"
-        >
-          <div className="h-10 w-10 rounded-xl bg-gradient-blue flex items-center justify-center text-white">
-            <MessageSquare className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="font-bold">Interview Prep with AI</p>
-            <p className="text-xs text-muted-foreground">
-              Practice real question banks
-            </p>
-          </div>
-        </Link>
-      </div>
     </AppShell>
   );
 }

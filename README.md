@@ -69,10 +69,12 @@ Configure the following variables before running the backend (template keys matc
 | `ML_ENGINE_URL` | Optional override for Python FastAPI service (default `http://127.0.0.1:8000`) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_EMAIL`, `SMTP_PASSWORD` | Optional SMTP credentials for transactional email triggers |
 
-### 2. MobileApp (`MobileApp/.env`)
+### 2. MobileApp (`MobileApp/.env`) & EAS Readiness
 | Variable | Description |
 | :--- | :--- |
 | `EXPO_PUBLIC_API_URL` | Express API base URL reachable by your phone over LAN (e.g., `http://<YOUR_PC_LAN_IP>:5000/api`) |
+
+> **Deployment Readiness Note (Pending Render Deployment):** In [MobileApp/eas.json](MobileApp/eas.json), both `preview` and `production` profiles point `EXPO_PUBLIC_API_URL` to `https://cognifyai-web.onrender.com/api` (derived from `cognifyai-web` in `render.yaml`, currently **pending deployment**). After deploying the Render Blueprint, verify the live assigned hostname and update `eas.json` if Render assigns a different subdomain before running an EAS build. The mobile Axios client uses a 65-second default timeout to tolerate Render free-tier cold starts.
 
 ---
 

@@ -6,13 +6,91 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
-import { supabaseAdmin, isSupabaseConfigured } from "../config/supabase.js";
+import { supabaseAdmin, isSupabaseConfigured, findAuthUserByEmail } from "../config/supabase.js";
 
-async function provisionAdmin() {
-  const email = (process.argv[2] || process.env.ADMIN_EMAIL || "admin@cognifyai.com").toLowerCase().trim();
-  const password = process.argv[3] || process.env.ADMIN_PASSWORD || "AdminPass123!";
-  const name = process.argv[4] || "System Administrator";
+const DISALLOWED_ADMIN_PASSWORDS = new Set([
+  "adminpass123!",
+  "password123",
+  "password123!",
+  "password123456",
+  "changeme123!",
+  "admin123456!",
+]);
 
+export interface AdminProvisionConfig {
+  email: string;
+  password: string;
+  name: string;
+}
+
+/**
+ * Validates that an administrator password meets complexity requirements and does not
+ * use any known weak or legacy default value.
+ */
+export function validateStrongAdminPassword(password: string): void {
+  const trimmed = password.trim();
+  if (!trimmed) {
+    throw new Error("Admin password is required via CLI argument <password> or ADMIN_PASSWORD.");
+  }
+  if (trimmed.length < 12) {
+    throw new Error("Admin password must be at least 12 characters long.");
+  }
+  if (DISALLOWED_ADMIN_PASSWORDS.has(trimmed.toLowerCase())) {
+    throw new Error("Admin password must not use a known placeholder or default credential.");
+  }
+  const hasUpper = /[A-Z]/.test(trimmed);
+  const hasLower = /[a-z]/.test(trimmed);
+  const hasDigit = /\d/.test(trimmed);
+  const hasSymbol = /[^A-Za-z0-9]/.test(trimmed);
+  if (!hasUpper || !hasLower || !hasDigit || !hasSymbol) {
+    throw new Error(
+      "Admin password must contain uppercase, lowercase, numeric, and special characters."
+    );
+  }
+}
+
+/**
+ * Resolves and validates explicit administrator provisioning parameters from CLI args or env.
+ */
+export function resolveAdminConfig(
+  argv: string[] = process.argv,
+  env: NodeJS.ProcessEnv = process.env
+): AdminProvisionConfig {
+  const email = (argv[2] || env.ADMIN_EMAIL || "").toLowerCase().trim();
+  const password = (argv[3] || env.ADMIN_PASSWORD || "").trim();
+  const name = (argv[4] || env.ADMIN_NAME || "System Administrator").trim();
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error(
+      "Valid admin email is required via CLI argument <email> or ADMIN_EMAIL environment variable."
+    );
+  }
+
+  validateStrongAdminPassword(password);
+
+  return {
+    email,
+    password,
+    name: name || "System Administrator",
+  };
+}
+
+export async function provisionAdmin(
+  argv: string[] = process.argv,
+  env: NodeJS.ProcessEnv = process.env
+): Promise<void> {
+  let config: AdminProvisionConfig;
+  try {
+    config = resolveAdminConfig(argv, env);
+  } catch (err: any) {
+    console.error(`[Admin Provisioning ERROR]: ${err.message}`);
+    console.error(
+      "Usage: tsx WebApp/backend/src/scripts/provision_admin.ts <ADMIN_EMAIL> <STRONG_PASSWORD> [ADMIN_NAME]"
+    );
+    process.exit(1);
+  }
+
+  const { email, password, name } = config;
   console.log(`[Admin Provisioning] Initializing for target: ${email}...`);
 
   if (!isSupabaseConfigured()) {
@@ -21,13 +99,8 @@ async function provisionAdmin() {
   }
 
   try {
-    // 1. Check if user exists in auth.users
-    const { data: listRes, error: listErr } = await supabaseAdmin.auth.admin.listUsers();
-    if (listErr) {
-      throw new Error(`Failed to list users: ${listErr.message}`);
-    }
-
-    const existingUser = listRes.users.find((u) => u.email?.toLowerCase() === email);
+    // 1. Check if user exists in auth.users across paginated pages
+    const existingUser = await findAuthUserByEmail(email);
     let userId: string;
 
     if (existingUser) {
@@ -95,4 +168,10 @@ async function provisionAdmin() {
   }
 }
 
-provisionAdmin();
+const isDirectEntry =
+  Boolean(process.argv[1]) &&
+  path.resolve(process.argv[1]) === path.resolve(__filename);
+
+if (isDirectEntry) {
+  provisionAdmin();
+}

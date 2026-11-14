@@ -11,6 +11,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { api } from "../services/api";
+import { colors } from "../theme/colors";
 import { CheckCircle2, Circle, Sparkles, MapPin } from "lucide-react-native";
 
 export function LearningRoadmapScreen() {
@@ -69,6 +70,8 @@ export function LearningRoadmapScreen() {
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
+          tintColor={colors.primary}
+          colors={[colors.primary]}
           onRefresh={() => {
             setRefreshing(true);
             loadRoadmap();
@@ -78,37 +81,44 @@ export function LearningRoadmapScreen() {
     >
       <Text style={styles.title}>Personalized Learning Roadmap</Text>
       <Text style={styles.subtitle}>
-        {roadmap?.title || roadmap?.goal || "AI-Guided Path to Technical Mastery"}
+        Milestone-driven path tailored to your verified technical gaps
       </Text>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#6366f1" style={{ marginTop: 40 }} />
-      ) : milestones.length > 0 ? (
-        <View style={{ marginTop: 10 }}>
-          {milestones.map((m: any, index: number) => {
-            const isDone = m.completed || m.status === "completed";
-            const mId = m.id || String(index + 1);
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+      ) : roadmap && milestones.length > 0 ? (
+        <View>
+          <View style={styles.roadmapHeaderCard}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <MapPin color={colors.primary} size={20} />
+              <Text style={styles.roadmapRole}>{roadmap.role || targetRole}</Text>
+            </View>
+            <Text style={styles.roadmapSub}>
+              {roadmap.company ? `Targeting ${roadmap.company} • ` : ""}
+              {milestones.length} milestones identified
+            </Text>
+          </View>
 
+          {milestones.map((m: any, i: number) => {
+            const isDone = m.status === "completed";
             return (
               <TouchableOpacity
-                key={mId}
+                key={m.id || i}
                 style={[styles.milestoneCard, isDone && styles.milestoneDone]}
-                onPress={() => handleToggleMilestone(mId, m.status)}
-                activeOpacity={0.8}
+                onPress={() => m.id && handleToggleMilestone(m.id, m.status)}
+                activeOpacity={0.7}
               >
                 <View style={styles.row}>
                   {isDone ? (
-                    <CheckCircle2 color="#10b981" size={24} />
+                    <CheckCircle2 color={colors.success} size={22} />
                   ) : (
-                    <Circle color="#64748b" size={24} />
+                    <Circle color={colors.textMuted} size={22} />
                   )}
                   <View style={{ marginLeft: 12, flex: 1 }}>
                     <Text style={[styles.mTitle, isDone && styles.mTitleDone]}>
-                      {m.title || m.label || `Phase ${index + 1}`}
+                      {m.title || m.label || `Milestone ${i + 1}`}
                     </Text>
-                    <Text style={styles.mDesc}>
-                      {m.description || "Master core frameworks, system concepts, and production architectures."}
-                    </Text>
+                    <Text style={styles.mDesc}>{m.description || m.desc}</Text>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -117,20 +127,20 @@ export function LearningRoadmapScreen() {
         </View>
       ) : (
         <View style={styles.emptyContainer}>
-          <Sparkles color="#6366f1" size={42} />
-          <Text style={styles.emptyTitle}>Generate Your Custom Learning Roadmap</Text>
+          <Sparkles color={colors.primary} size={36} />
+          <Text style={styles.emptyTitle}>Generate Your Custom Career Roadmap</Text>
           <Text style={styles.emptyDesc}>
-            CognifyAI analyzes your resume and current skills to construct a phased career path.
+            AI builds a step-by-step milestone schedule based on your target role and real-world tech requirements.
           </Text>
 
           <View style={styles.inputBox}>
-            <Text style={styles.inputLabel}>Target Role / Dream Job</Text>
+            <Text style={styles.inputLabel}>Target Role</Text>
             <TextInput
               style={styles.input}
               value={targetRole}
               onChangeText={setTargetRole}
               placeholder="e.g. Senior Machine Learning Engineer"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={colors.textMuted}
             />
           </View>
 
@@ -143,7 +153,7 @@ export function LearningRoadmapScreen() {
             {generating ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text style={styles.generateBtnText}>Generate AI Roadmap</Text>
+              <Text style={styles.generateBtnText}>Generate Learning Roadmap</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -153,52 +163,86 @@ export function LearningRoadmapScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#090d16" },
+  container: { flex: 1, backgroundColor: colors.background },
   content: { padding: 16, paddingBottom: 40 },
-  title: { color: "#ffffff", fontSize: 24, fontWeight: "bold", marginTop: 10 },
-  subtitle: { color: "#94a3b8", fontSize: 14, marginBottom: 16, marginTop: 4 },
-  milestoneCard: {
-    backgroundColor: "#1e293b",
+  title: { color: colors.textPrimary, fontSize: 24, fontWeight: "bold", marginTop: 6 },
+  subtitle: { color: colors.textSecondary, fontSize: 13, marginBottom: 16, marginTop: 4 },
+  roadmapHeaderCard: {
+    backgroundColor: colors.card,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  roadmapRole: { color: colors.textPrimary, fontSize: 17, fontWeight: "bold", marginLeft: 8 },
+  roadmapSub: { color: colors.textSecondary, fontSize: 12, marginTop: 4 },
+  milestoneCard: {
+    backgroundColor: colors.card,
+    padding: 16,
+    borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.cardBorder,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
-  milestoneDone: { borderColor: "#059669", backgroundColor: "#064e3b22" },
+  milestoneDone: {
+    borderColor: colors.successBorder,
+    backgroundColor: colors.successBg,
+  },
   row: { flexDirection: "row", alignItems: "flex-start" },
-  mTitle: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
-  mTitleDone: { color: "#34d399", textDecorationLine: "line-through" },
-  mDesc: { color: "#cbd5e1", fontSize: 13, marginTop: 6, lineHeight: 18 },
+  mTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: "700" },
+  mTitleDone: { color: colors.success, textDecorationLine: "line-through" },
+  mDesc: { color: colors.textSecondary, fontSize: 13, marginTop: 4, lineHeight: 18 },
   emptyContainer: {
-    backgroundColor: "#1e1b4b",
+    backgroundColor: colors.card,
     padding: 24,
-    borderRadius: 16,
+    borderRadius: 20,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 10,
     borderWidth: 1,
-    borderColor: "#3730a3",
+    borderColor: colors.cardBorder,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  emptyTitle: { color: "#ffffff", fontSize: 18, fontWeight: "bold", marginTop: 14, textAlign: "center" },
-  emptyDesc: { color: "#c7d2fe", fontSize: 13, textAlign: "center", marginTop: 6, lineHeight: 18 },
+  emptyTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: "bold", marginTop: 14, textAlign: "center" },
+  emptyDesc: { color: colors.textSecondary, fontSize: 13, textAlign: "center", marginTop: 6, lineHeight: 19 },
   inputBox: { width: "100%", marginTop: 20 },
-  inputLabel: { color: "#cbd5e1", fontSize: 12, marginBottom: 6 },
+  inputLabel: { color: colors.textSecondary, fontSize: 12, fontWeight: "600", marginBottom: 6 },
   input: {
-    backgroundColor: "#0f172a",
-    color: "#ffffff",
+    backgroundColor: colors.inputBg,
+    color: colors.textPrimary,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.inputBorder,
+    fontSize: 14,
   },
   generateBtn: {
-    backgroundColor: "#6366f1",
+    backgroundColor: colors.primary,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: 12,
     width: "100%",
     alignItems: "center",
     marginTop: 16,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  generateBtnText: { color: "#ffffff", fontWeight: "bold", fontSize: 15 },
+  generateBtnText: { color: "#ffffff", fontWeight: "700", fontSize: 15 },
 });

@@ -160,17 +160,31 @@ router.get("/gap", authMiddleware, async (req: AuthRequest, res: Response) => {
   const userId = req.user?.id;
   if (!userId) return res.status(401).json({ message: "Unauthorized" });
   try {
-    const { data: ats } = await supabaseAdmin
-      .from("ats_reports")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const [atsRes, profileRes] = await Promise.all([
+      supabaseAdmin
+        .from("ats_reports")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("profiles")
+        .select("target_role")
+        .eq("id", userId)
+        .maybeSingle(),
+    ]);
+
+    const ats = atsRes.data;
+    const userProfile = profileRes.data;
 
     let strengths = ats?.strengths || [];
     let weaknesses = ats?.weaknesses || [];
-    let targetRole = (ats as any)?.targetJob || "Senior Full Stack Architect";
+    let targetRole =
+      userProfile?.target_role ||
+      (ats as any)?.targetJob ||
+      (ats as any)?.target_role ||
+      "Senior Full Stack Architect";
     let matchPercentage = ats?.score || 78;
 
     // If no ATS report exists yet, inspect skills table or provide dynamic baseline

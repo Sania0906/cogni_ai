@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   StyleSheet,
   Text,
@@ -11,6 +12,7 @@ import {
   Alert,
 } from "react-native";
 import { api } from "../services/api";
+import { colors } from "../theme/colors";
 import {
   Briefcase,
   Search,
@@ -59,9 +61,13 @@ export function JobsScreen({ navigation }: any) {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+      const interval = setInterval(loadData, 10000);
+      return () => clearInterval(interval);
+    }, [])
+  );
 
   const handleApplyJob = async (job: any) => {
     const jobId = String(job.id || job._id);
@@ -121,11 +127,11 @@ export function JobsScreen({ navigation }: any) {
       {/* Search & Actions Header */}
       <View style={styles.header}>
         <View style={styles.searchBar}>
-          <Search color="#64748b" size={18} />
+          <Search color={colors.textSecondary} size={18} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search jobs, titles, companies..."
-            placeholderTextColor="#64748b"
+            placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -145,7 +151,7 @@ export function JobsScreen({ navigation }: any) {
             style={styles.savedNavBtn}
             onPress={() => navigation.navigate("SavedJobs")}
           >
-            <Bookmark color="#818cf8" size={15} fill="#818cf8" />
+            <Bookmark color={colors.primary} size={15} fill={colors.primary} />
             <Text style={styles.savedNavBtnText}>
               Saved ({savedJobIds.size})
             </Text>
@@ -154,7 +160,7 @@ export function JobsScreen({ navigation }: any) {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#6366f1" style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={filteredJobs}
@@ -163,6 +169,8 @@ export function JobsScreen({ navigation }: any) {
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
               onRefresh={() => {
                 setRefreshing(true);
                 loadData();
@@ -171,7 +179,7 @@ export function JobsScreen({ navigation }: any) {
           }
           ListEmptyComponent={
             <View style={styles.emptyBox}>
-              <Briefcase color="#64748b" size={36} />
+              <Briefcase color={colors.textMuted} size={40} />
               <Text style={styles.emptyTitle}>No matching jobs found</Text>
               <Text style={styles.emptySubtitle}>Try adjusting your search criteria</Text>
             </View>
@@ -185,7 +193,7 @@ export function JobsScreen({ navigation }: any) {
             return (
               <View style={styles.jobCard}>
                 <View style={styles.cardTop}>
-                  <View style={{ flex: 1 }}>
+                  <View style={{ flex: 1, paddingRight: 8 }}>
                     <Text style={styles.jobTitle}>{item.title}</Text>
                     <Text style={styles.companyName}>{item.company}</Text>
                   </View>
@@ -196,8 +204,8 @@ export function JobsScreen({ navigation }: any) {
                     activeOpacity={0.7}
                   >
                     <Bookmark
-                      color={isSaved ? "#fbbf24" : "#94a3b8"}
-                      fill={isSaved ? "#fbbf24" : "transparent"}
+                      color={isSaved ? "#f59e0b" : colors.textMuted}
+                      fill={isSaved ? "#f59e0b" : "transparent"}
                       size={22}
                     />
                   </TouchableOpacity>
@@ -206,12 +214,12 @@ export function JobsScreen({ navigation }: any) {
                 {/* Metadata Pills */}
                 <View style={styles.pillsRow}>
                   <View style={styles.pill}>
-                    <MapPin color="#94a3b8" size={12} />
+                    <MapPin color={colors.textSecondary} size={12} />
                     <Text style={styles.pillText}>{item.loc || "Remote"}</Text>
                   </View>
 
                   <View style={styles.pill}>
-                    <DollarSign color="#94a3b8" size={12} />
+                    <DollarSign color={colors.textSecondary} size={12} />
                     <Text style={styles.pillText}>{item.salary || "$120k+"}</Text>
                   </View>
 
@@ -247,13 +255,14 @@ export function JobsScreen({ navigation }: any) {
                     <TouchableOpacity
                       style={[
                         styles.applyBtn,
-                        appliedJobIds.has(jobId) && { backgroundColor: "#065f46" },
+                        appliedJobIds.has(jobId) && styles.appliedBtn,
                       ]}
                       disabled={appliedJobIds.has(jobId) || applyingId === jobId}
                       onPress={() => handleApplyJob(item)}
+                      activeOpacity={0.8}
                     >
-                      <CheckCircle color="#ffffff" size={16} />
-                      <Text style={styles.applyBtnText}>
+                      <CheckCircle color={appliedJobIds.has(jobId) ? colors.success : "#ffffff"} size={16} />
+                      <Text style={[styles.applyBtnText, appliedJobIds.has(jobId) && styles.appliedBtnText]}>
                         {applyingId === jobId
                           ? "Submitting..."
                           : appliedJobIds.has(jobId)
@@ -273,9 +282,9 @@ export function JobsScreen({ navigation }: any) {
                     {isExpanded ? "Show Less" : "View Details & Requirements"}
                   </Text>
                   {isExpanded ? (
-                    <ChevronUp color="#818cf8" size={16} />
+                    <ChevronUp color={colors.primary} size={16} />
                   ) : (
-                    <ChevronDown color="#818cf8" size={16} />
+                    <ChevronDown color={colors.primary} size={16} />
                   )}
                 </TouchableOpacity>
               </View>
@@ -288,80 +297,112 @@ export function JobsScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#090d16" },
-  header: { padding: 16, backgroundColor: "#090d16", borderBottomWidth: 1, borderBottomColor: "#1e293b" },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: {
+    padding: 16,
+    backgroundColor: colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.cardBorder,
+  },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1e293b",
+    backgroundColor: colors.inputBg,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.inputBorder,
   },
-  searchInput: { color: "#ffffff", marginLeft: 8, flex: 1, fontSize: 14 },
+  searchInput: { color: colors.textPrimary, marginLeft: 8, flex: 1, fontSize: 14 },
   filterRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 12 },
   filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#1e293b",
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 10,
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.cardBorder,
   },
-  filterChipActive: { backgroundColor: "#312e81", borderColor: "#6366f1" },
-  filterChipText: { color: "#94a3b8", fontSize: 12, fontWeight: "500" },
-  filterChipTextActive: { color: "#ffffff", fontWeight: "bold" },
+  filterChipActive: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  filterChipText: { color: colors.textSecondary, fontSize: 12, fontWeight: "600" },
+  filterChipTextActive: { color: colors.primary, fontWeight: "700" },
   savedNavBtn: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#1e1b4b",
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 10,
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: "#4338ca",
+    borderColor: colors.cardBorder,
   },
-  savedNavBtnText: { color: "#a5b4fc", fontSize: 12, fontWeight: "600", marginLeft: 6 },
+  savedNavBtnText: { color: colors.primary, fontSize: 12, fontWeight: "700", marginLeft: 6 },
   listContent: { padding: 16, paddingBottom: 40 },
   jobCard: {
-    backgroundColor: "#1e293b",
-    borderRadius: 12,
+    backgroundColor: colors.card,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.cardBorder,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  jobTitle: { color: "#ffffff", fontSize: 17, fontWeight: "bold" },
-  companyName: { color: "#818cf8", fontSize: 14, marginTop: 2 },
+  jobTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: "bold" },
+  companyName: { color: colors.primary, fontSize: 13, fontWeight: "600", marginTop: 2 },
   bookmarkTouch: { padding: 4 },
   pillsRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", marginTop: 10, gap: 8 },
-  pill: { flexDirection: "row", alignItems: "center", backgroundColor: "#0f172a", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  pillText: { color: "#cbd5e1", fontSize: 12, marginLeft: 4 },
-  matchBadge: { backgroundColor: "#065f46", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  matchText: { color: "#34d399", fontSize: 12, fontWeight: "bold" },
-  description: { color: "#94a3b8", fontSize: 13, marginTop: 10, lineHeight: 18 },
-  expandedSection: { marginTop: 12, borderTopWidth: 1, borderTopColor: "#334155", paddingTop: 10 },
-  sectionHeading: { color: "#e2e8f0", fontSize: 13, fontWeight: "600", marginBottom: 6 },
-  tagsContainer: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  tag: { backgroundColor: "#0f172a", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: "#334155" },
-  tagText: { color: "#a5b4fc", fontSize: 12 },
-  applyBtn: {
-    backgroundColor: "#6366f1",
-    paddingVertical: 10,
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.backgroundSecondary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 8,
+  },
+  pillText: { color: colors.textSecondary, fontSize: 12, marginLeft: 4, fontWeight: "500" },
+  matchBadge: {
+    backgroundColor: colors.successBg,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  matchText: { color: colors.success, fontSize: 12, fontWeight: "700" },
+  description: { color: colors.textSecondary, fontSize: 13, marginTop: 10, lineHeight: 19 },
+  expandedSection: { marginTop: 12, borderTopWidth: 1, borderTopColor: colors.cardBorderSubtle, paddingTop: 12 },
+  sectionHeading: { color: colors.textPrimary, fontSize: 13, fontWeight: "700", marginBottom: 6 },
+  tagsContainer: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  tag: {
+    backgroundColor: colors.backgroundSecondary,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  tagText: { color: colors.primary, fontSize: 12, fontWeight: "600" },
+  applyBtn: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: 10,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     marginTop: 14,
   },
-  applyBtnText: { color: "#ffffff", fontWeight: "600", fontSize: 14, marginLeft: 6 },
-  expandToggle: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 10, paddingTop: 8 },
-  expandToggleText: { color: "#818cf8", fontSize: 13, fontWeight: "500", marginRight: 4 },
+  appliedBtn: {
+    backgroundColor: colors.successBg,
+    borderWidth: 1,
+    borderColor: colors.successBorder,
+  },
+  applyBtnText: { color: "#ffffff", fontWeight: "700", fontSize: 14, marginLeft: 6 },
+  appliedBtnText: { color: colors.success },
+  expandToggle: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 12, paddingTop: 8 },
+  expandToggleText: { color: colors.primary, fontSize: 13, fontWeight: "600", marginRight: 4 },
   emptyBox: { alignItems: "center", marginTop: 60 },
-  emptyTitle: { color: "#ffffff", fontSize: 16, fontWeight: "600", marginTop: 12 },
-  emptySubtitle: { color: "#64748b", fontSize: 13, marginTop: 4 },
+  emptyTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: "700", marginTop: 12 },
+  emptySubtitle: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
 });
-

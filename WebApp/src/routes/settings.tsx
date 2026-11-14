@@ -18,12 +18,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
   beforeLoad: () => {
-    if (typeof window !== "undefined" && !localStorage.getItem("token")) {
-      throw redirect({ to: "/login" });
-    }
+    throw redirect({ to: "/profile" });
   },
-  head: () => ({ meta: [{ title: "Settings — CognifyAI" }] }),
-  component: Settings,
+  component: () => null,
 });
 
 const settingsList = [

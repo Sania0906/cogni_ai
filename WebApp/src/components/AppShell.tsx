@@ -1,1 +1,1 @@
-export { AppShell, BottomNav } from "./ui/AppShell";
+export { AppShell, BottomNav, DesktopNav, navItems } from "./ui/AppShell";

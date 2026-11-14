@@ -1,7 +1,9 @@
+import crypto from "crypto";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import { supabase, supabaseAdmin, isSupabaseConfigured } from "./supabase.js";
+import { assertLegacyDevScriptAllowed } from "./devScriptGuard.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,7 +11,8 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 async function testFullAuthLifecycle() {
-  console.log("=== TESTING FULL AUTH LIFECYCLE WITH REAL SUPABASE ===");
+  assertLegacyDevScriptAllowed("test_api_signup_login.ts");
+  console.log("=== TESTING FULL AUTH LIFECYCLE WITH SUPABASE ===");
 
   if (!isSupabaseConfigured()) {
     console.error("❌ Supabase is not configured.");
@@ -17,7 +20,7 @@ async function testFullAuthLifecycle() {
   }
 
   const testEmail = `live.test.${Date.now()}@saveetha.test.com`;
-  const testPassword = "ValidPassword123!";
+  const testPassword = `${crypto.randomBytes(16).toString("hex")}Aa1!`;
   const testName = "Live Test Student";
 
   console.log(`[Step 1] Creating user: ${testEmail}...`);

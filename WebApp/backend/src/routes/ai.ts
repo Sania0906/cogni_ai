@@ -342,7 +342,55 @@ router.get("/career-forecasting", authMiddleware, async (req: AuthRequest, res: 
 
 // 9. CHAT
 router.post("/chat", authMiddleware, async (req: AuthRequest, res: Response) => {
-  return res.json({ reply: "I am CognifyAI. This feature requires an active LLM integration, but I can tell you that your profile looks great based on your current inputs!" });
+  const message = (req.body?.message || "").trim();
+  const userId = req.user?.id;
+
+  if (!message) {
+    return res.status(400).json({ message: "Message is required" });
+  }
+
+  try {
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("name, target_role")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const { data: resume } = await supabaseAdmin
+      .from("resumes")
+      .select("ats_score, skills")
+      .eq("user_id", userId)
+      .order("upload_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const role = profile?.target_role || "Software Engineer";
+    const atsScore = resume?.ats_score || 85;
+    const skillsList = resume?.skills || [];
+
+    const lower = message.toLowerCase();
+    let reply = "";
+
+    if (lower.includes("ats") || lower.includes("resume") || lower.includes("score")) {
+      reply = `Your current ATS score benchmark is ${atsScore}%. To optimize it further for "${role}":\n\n1. Ensure your top verified skills (${skillsList.slice(0, 4).join(", ") || "core technical competencies"}) are prominently placed in your Experience bullets.\n2. Quantify project achievements using metrics (e.g., "improved query performance by 35%").\n3. Use clear section headers: Summary, Skills, Experience, Education.`;
+    } else if (lower.includes("skill") || lower.includes("learn") || lower.includes("gap")) {
+      reply = `For your target role of "${role}", top high-impact skills to build include:\n\n• Advanced System Design & Scalability\n• Cloud Architecture (AWS / GCP / Docker / Kubernetes)\n• Database Modeling & Performance Optimization\n\nCheck out the Skill Gap and Courses tabs to explore tailored modules!`;
+    } else if (lower.includes("job") || lower.includes("fit") || lower.includes("career")) {
+      reply = `Based on your profile as a ${role}, you are well-suited for modern software engineering positions. Check the Jobs tab to review active vacancies with high skill alignment scores.`;
+    } else if (lower.includes("interview") || lower.includes("prep")) {
+      reply = `To prepare for interviews as a ${role}:\n\n1. Review fundamental data structures and algorithms in your primary languages.\n2. Practice explaining architectural trade-offs using the STAR framework.\n3. Try the AI Mock Interview simulator from your platform tools.`;
+    } else if (lower.includes("path") || lower.includes("roadmap")) {
+      reply = `Your recommended learning pathway for ${role} focuses on closing competency gaps, completing targeted course certifications, and building portfolio-worthy end-to-end systems. Check the Personalized AI Roadmap on your Home screen for detailed stages!`;
+    } else {
+      reply = `As your CognifyAI Career Assistant for ${role}, I'm here to help with resume optimization, skill gap analysis, interview preparation, and job market trends. How can I guide you next?`;
+    }
+
+    return res.json({ reply });
+  } catch (err: any) {
+    return res.json({
+      reply: "I am your CognifyAI Career Assistant. How can I help you optimize your resume, analyze skill gaps, or plan your learning path today?",
+    });
+  }
 });
 
 // 10. RESUMES HISTORY & COMPARE

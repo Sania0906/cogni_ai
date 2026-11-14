@@ -14,49 +14,34 @@ function Saved() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadSaved() {
-      try {
-        setLoading(true);
-        const data = await api.getSavedJobs();
-        if (data && data.length > 0) {
-          setJobs(data);
-        } else {
-          // Fallback to sample bookmarked jobs if none saved yet
-          setJobs([
-            {
-              id: "job_1",
-              title: "Senior Data Scientist",
-              co: "TechCorp Global",
-              company: "TechCorp Global",
-              loc: "San Francisco, CA",
-              salary: "$140k - $180k",
-            },
-            {
-              id: "job_2",
-              title: "Machine Learning Engineer",
-              co: "AIVision Labs",
-              company: "AIVision Labs",
-              loc: "Remote",
-              salary: "$130k - $170k",
-            },
-            {
-              id: "job_3",
-              title: "Full Stack Engineer",
-              co: "Reactify Cloud",
-              company: "Reactify Cloud",
-              loc: "San Francisco, CA",
-              salary: "$120k - $155k",
-            },
-          ]);
-        }
-      } catch (err) {
-        console.error("Failed to load saved jobs", err);
-      } finally {
-        setLoading(false);
-      }
+  const loadSaved = async () => {
+    try {
+      const data = await api.getSavedJobs();
+      setJobs(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to load saved jobs", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadSaved();
+
+    const handleFocus = () => loadSaved();
+    window.addEventListener("focus", handleFocus);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") loadSaved();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    const interval = setInterval(loadSaved, 10000);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      clearInterval(interval);
+    };
   }, []);
 
   const handleRemove = async (jobId: string, e: React.MouseEvent) => {

@@ -1,9 +1,10 @@
-import { Router } from "express";
+import { Router, Response } from "express";
 import { supabaseAdmin } from "../config/supabase.js";
+import { authMiddleware, requireRole, AuthRequest } from "../middleware/auth.js";
 
 const router = Router();
 
-router.get("/android-vs-web", async (req, res) => {
+router.get("/android-vs-web", authMiddleware, requireRole("admin"), async (req: AuthRequest, res: Response) => {
   try {
     // Count actual registered users (profiles)
     const { count: usersCount, error: userError } = await supabaseAdmin

@@ -13,6 +13,7 @@ import {
 import { api } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Users, Search, Star, LogOut, CheckCircle } from "lucide-react-native";
+import { colors } from "../theme/colors";
 
 export function OrganizationDashboardScreen() {
   const { user, logout } = useAuth();
@@ -84,24 +85,24 @@ export function OrganizationDashboardScreen() {
           <Text style={styles.subTitle}>Welcome, {user?.name || "Recruiter"}</Text>
         </View>
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <LogOut color="#ef4444" size={20} />
+          <LogOut color={colors.destructive} size={20} />
         </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchBox}>
-        <Search color="#64748b" size={18} />
+        <Search color={colors.textSecondary} size={18} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search candidates by name, role or skill..."
-          placeholderTextColor="#64748b"
+          placeholderTextColor={colors.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#6366f1" style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={filteredCandidates}
@@ -117,7 +118,7 @@ export function OrganizationDashboardScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyBox}>
-              <Users color="#64748b" size={36} />
+              <Users color={colors.textSecondary} size={36} />
               <Text style={styles.emptyText}>No matching candidates found.</Text>
             </View>
           }
@@ -153,9 +154,9 @@ export function OrganizationDashboardScreen() {
                     onPress={() => handleToggleShortlist(candidateId)}
                   >
                     <Star
-                      color={isShortlisted ? "#fbbf24" : "#94a3b8"}
+                      color={isShortlisted ? colors.warning : colors.textSecondary}
                       size={16}
-                      fill={isShortlisted ? "#fbbf24" : "transparent"}
+                      fill={isShortlisted ? colors.warning : "transparent"}
                     />
                     <Text style={[styles.shortlistBtnText, isShortlisted && styles.shortlistBtnTextActive]}>
                       {isShortlisted ? "Shortlisted" : "Shortlist Candidate"}
@@ -172,52 +173,80 @@ export function OrganizationDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#090d16", padding: 16 },
+  container: { flex: 1, backgroundColor: colors.background, padding: 16 },
   topBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 },
-  headerTitle: { color: "#ffffff", fontSize: 24, fontWeight: "bold" },
-  subTitle: { color: "#94a3b8", fontSize: 13, marginTop: 2 },
-  logoutBtn: { backgroundColor: "#1e293b", padding: 10, borderRadius: 8, borderWidth: 1, borderColor: "#334155" },
+  headerTitle: { color: colors.textPrimary, fontSize: 24, fontWeight: "bold" },
+  subTitle: { color: colors.textSecondary, fontSize: 13, marginTop: 2 },
+  logoutBtn: {
+    backgroundColor: colors.destructiveBg,
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.destructiveBorder,
+  },
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1e293b",
+    backgroundColor: colors.card,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 12,
     marginTop: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.cardBorder,
   },
-  searchInput: { color: "#ffffff", marginLeft: 8, flex: 1, fontSize: 14 },
+  searchInput: { color: colors.textPrimary, marginLeft: 8, flex: 1, fontSize: 14 },
   candidateCard: {
-    backgroundColor: "#1e293b",
+    backgroundColor: colors.card,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.cardBorder,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  candidateName: { color: "#ffffff", fontSize: 17, fontWeight: "600" },
-  candidateRole: { color: "#818cf8", fontSize: 13, marginTop: 2 },
-  scoreBadge: { backgroundColor: "#065f46", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  scoreText: { color: "#34d399", fontSize: 12, fontWeight: "bold" },
-  skillsList: { color: "#cbd5e1", fontSize: 13, marginTop: 10, lineHeight: 18 },
-  cardFooter: { marginTop: 12, borderTopWidth: 1, borderTopColor: "#334155", paddingTop: 10, flexDirection: "row", justifyContent: "flex-end" },
+  candidateName: { color: colors.textPrimary, fontSize: 17, fontWeight: "bold" },
+  candidateRole: { color: colors.primary, fontSize: 13, marginTop: 2, fontWeight: "600" },
+  scoreBadge: {
+    backgroundColor: colors.successBg,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.successBorder,
+  },
+  scoreText: { color: colors.success, fontSize: 12, fontWeight: "bold" },
+  skillsList: { color: colors.textSecondary, fontSize: 13, marginTop: 10, lineHeight: 18 },
+  cardFooter: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.cardBorderSubtle,
+    paddingTop: 10,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
   shortlistBtn: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#0f172a",
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: colors.backgroundSecondary,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.cardBorder,
   },
-  shortlistBtnActive: { backgroundColor: "#422006", borderColor: "#78350f" },
-  shortlistBtnText: { color: "#94a3b8", fontSize: 12, marginLeft: 6, fontWeight: "500" },
-  shortlistBtnTextActive: { color: "#fbbf24" },
+  shortlistBtnActive: {
+    backgroundColor: colors.warningBg,
+    borderColor: colors.warningBorder,
+  },
+  shortlistBtnText: { color: colors.textSecondary, fontSize: 12, marginLeft: 6, fontWeight: "600" },
+  shortlistBtnTextActive: { color: colors.warning, fontWeight: "700" },
   emptyBox: { alignItems: "center", marginTop: 50 },
-  emptyText: { color: "#64748b", marginTop: 10, fontSize: 14 },
+  emptyText: { color: colors.textSecondary, marginTop: 10, fontSize: 14 },
 });

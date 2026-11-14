@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { api } from "@/lib/api/client";
 
 export const Route = createFileRoute("/jobs")({
-  head: () => ({ meta: [{ title: "Job Search — CognifyAI" }] }),
+  head: () => ({ meta: [{ title: "Jobs — CognifyAI" }] }),
   component: Jobs,
 });
 
@@ -17,29 +17,44 @@ function Jobs() {
   const [search, setSearch] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [jobsData, savedData] = await Promise.allSettled([
-          api.getJobs(),
-          api.getSavedJobs(),
-        ]);
+  const loadData = async () => {
+    try {
+      const [jobsData, savedData] = await Promise.allSettled([
+        api.getJobs(),
+        api.getSavedJobs(),
+      ]);
 
-        if (jobsData.status === "fulfilled" && Array.isArray(jobsData.value)) {
-          setJobsList(jobsData.value);
-        }
-        if (savedData.status === "fulfilled" && Array.isArray(savedData.value)) {
-          const ids = new Set<string>(savedData.value.map((s: any) => String(s.id)));
-          setSavedJobIds(ids);
-        }
-      } catch (err) {
-        console.error("Failed to load jobs", err);
-      } finally {
-        setLoading(false);
+      if (jobsData.status === "fulfilled" && Array.isArray(jobsData.value)) {
+        setJobsList(jobsData.value);
       }
+      if (savedData.status === "fulfilled" && Array.isArray(savedData.value)) {
+        const ids = new Set<string>(savedData.value.map((s: any) => String(s.job_id || s.id)));
+        setSavedJobIds(ids);
+      }
+    } catch (err) {
+      console.error("Failed to load jobs", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadData();
+
+    const handleFocus = () => loadData();
+    window.addEventListener("focus", handleFocus);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") loadData();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    const interval = setInterval(loadData, 10000);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      clearInterval(interval);
+    };
   }, []);
 
   const toggleSave = async (jobId: string) => {

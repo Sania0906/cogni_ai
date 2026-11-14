@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { api } from "../services/api";
+import { colors } from "../theme/colors";
 import { Bell, CheckCircle } from "lucide-react-native";
 
 export function NotificationsScreen() {
@@ -49,7 +50,7 @@ export function NotificationsScreen() {
       <Text style={styles.title}>Notifications & Alerts</Text>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#6366f1" style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={notifications}
@@ -57,6 +58,8 @@ export function NotificationsScreen() {
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
               onRefresh={() => {
                 setRefreshing(true);
                 loadNotifications();
@@ -65,7 +68,7 @@ export function NotificationsScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyBox}>
-              <Bell color="#64748b" size={36} />
+              <Bell color={colors.textMuted} size={40} />
               <Text style={styles.emptyTitle}>You're all caught up!</Text>
               <Text style={styles.emptySubtitle}>No pending alerts or notifications at this time.</Text>
             </View>
@@ -77,7 +80,9 @@ export function NotificationsScreen() {
               activeOpacity={0.8}
             >
               <View style={styles.row}>
-                <Bell color={item.read ? "#64748b" : "#6366f1"} size={20} />
+                <View style={[styles.iconBox, item.read && { backgroundColor: colors.disabledBg }]}>
+                  <Bell color={item.read ? colors.textMuted : colors.primary} size={18} />
+                </View>
                 <View style={{ marginLeft: 12, flex: 1 }}>
                   <Text style={[styles.itemTitle, item.read && styles.readText]}>
                     {item.title || "Notification"}
@@ -102,23 +107,36 @@ export function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#090d16", padding: 16 },
-  title: { color: "#ffffff", fontSize: 24, fontWeight: "bold", marginTop: 10, marginBottom: 16 },
+  container: { flex: 1, backgroundColor: colors.background, padding: 16 },
+  title: { color: colors.textPrimary, fontSize: 24, fontWeight: "bold", marginTop: 6, marginBottom: 16 },
   card: {
-    backgroundColor: "#1e293b",
+    backgroundColor: colors.card,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.cardBorder,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  readCard: { backgroundColor: "#0f172a", opacity: 0.7 },
+  readCard: { backgroundColor: colors.backgroundSecondary, opacity: 0.8 },
   row: { flexDirection: "row", alignItems: "flex-start" },
-  itemTitle: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
-  readText: { color: "#94a3b8" },
-  itemMessage: { color: "#cbd5e1", fontSize: 13, marginTop: 4, lineHeight: 18 },
-  dateText: { color: "#64748b", fontSize: 11, marginTop: 6 },
+  iconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(99, 102, 241, 0.12)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  itemTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: "700" },
+  readText: { color: colors.textSecondary },
+  itemMessage: { color: colors.textSecondary, fontSize: 13, marginTop: 4, lineHeight: 18 },
+  dateText: { color: colors.textMuted, fontSize: 11, marginTop: 6 },
   emptyBox: { alignItems: "center", marginTop: 80 },
-  emptyTitle: { color: "#ffffff", fontSize: 16, fontWeight: "bold", marginTop: 12 },
-  emptySubtitle: { color: "#64748b", fontSize: 13, marginTop: 4 },
+  emptyTitle: { color: colors.textPrimary, fontSize: 17, fontWeight: "700", marginTop: 12 },
+  emptySubtitle: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
 });

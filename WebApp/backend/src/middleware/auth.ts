@@ -10,6 +10,51 @@ export interface AuthRequest extends Request {
   };
 }
 
+/**
+ * Normalizes a role read from the database or verified profile, folding legacy 'recruiter' to 'organization'.
+ */
+export function normalizeLegacyRecruiterRole(role?: string | null): string {
+  const trimmed = typeof role === "string" ? role.toLowerCase().trim() : "";
+  if (!trimmed) return "user";
+  return trimmed === "recruiter" ? "organization" : trimmed;
+}
+
+/**
+ * Normalizes fallback role metadata when a database profile row is missing.
+ * Permits only non-privileged 'organization' (including legacy 'recruiter') or 'user'.
+ */
+export function normalizeRoleFallback(metadataRole?: string | null): "user" | "organization" {
+  const meta = typeof metadataRole === "string" ? metadataRole.toLowerCase().trim() : "";
+  return meta === "organization" || meta === "recruiter" ? "organization" : "user";
+}
+
+/**
+ * Resolves the authoritative role from `public.profiles` for a verified user ID,
+ * normalizing 'recruiter' -> 'organization' and safely falling back without trusting 'admin' metadata.
+ */
+export async function resolveTrustedUserRole(
+  userId?: string,
+  metadataRole?: string | null,
+): Promise<string> {
+  if (userId) {
+    try {
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (profile?.role) {
+        return normalizeLegacyRecruiterRole(profile.role);
+      }
+    } catch (_) {
+      // Fall back to safe non-privileged metadata check below
+    }
+  }
+
+  return normalizeRoleFallback(metadataRole);
+}
+
 export async function authMiddleware(
   req: AuthRequest,
   res: Response,
@@ -43,7 +88,7 @@ export async function authMiddleware(
     }
 
     // Query trusted profile record from database to obtain the real role (never trust 'admin' from user_metadata)
-    let trustedRole = "user";
+    let trustedRole: string = "user";
     try {
       const { data: profile } = await supabaseAdmin
         .from("profiles")
@@ -52,12 +97,9 @@ export async function authMiddleware(
         .maybeSingle();
 
       if (profile?.role) {
-        trustedRole = profile.role;
-      } else if (
-        user.user_metadata?.role === "organization" ||
-        user.user_metadata?.role === "recruiter"
-      ) {
-        trustedRole = user.user_metadata.role;
+        trustedRole = normalizeLegacyRecruiterRole(profile.role);
+      } else {
+        trustedRole = normalizeRoleFallback(user.user_metadata?.role);
       }
     } catch (_) {
       trustedRole = "user";

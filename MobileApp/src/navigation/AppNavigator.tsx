@@ -1,8 +1,9 @@
 import React from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 
 // Import Screens
@@ -16,9 +17,11 @@ import { ResumeHistoryScreen } from "../screens/ResumeHistoryScreen";
 import { SkillGapScreen } from "../screens/SkillGapScreen";
 import { CompanyReadinessScreen } from "../screens/CompanyReadinessScreen";
 import { CareerTwinScreen } from "../screens/CareerTwinScreen";
+import { CareerPathsScreen } from "../screens/CareerPathsScreen";
 import { AIInterviewScreen } from "../screens/AIInterviewScreen";
 import { LearningRoadmapScreen } from "../screens/LearningRoadmapScreen";
 import { NotificationsScreen } from "../screens/NotificationsScreen";
+import { AIAssistantScreen } from "../screens/AIAssistantScreen";
 import { SettingsScreen, ProfileScreen } from "../screens/SettingsScreen";
 import { JobsScreen } from "../screens/JobsScreen";
 import { SavedJobsScreen } from "../screens/SavedJobsScreen";
@@ -27,26 +30,38 @@ import { CourseDetailsScreen } from "../screens/CourseDetailsScreen";
 import { LessonScreen } from "../screens/LessonScreen";
 
 import { Home, Briefcase, GraduationCap, FileText, Settings } from "lucide-react-native";
+import { colors } from "../theme/colors";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function UserTabs() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: "#090d16" },
-        headerTintColor: "#ffffff",
+        headerStyle: {
+          backgroundColor: colors.headerBg,
+          borderBottomColor: colors.headerBorder,
+          borderBottomWidth: 1,
+        },
+        headerTintColor: colors.textPrimary,
+        headerTitleStyle: {
+          fontWeight: "700",
+          color: colors.textPrimary,
+        },
         tabBarStyle: {
-          backgroundColor: "#0f172a",
-          borderTopColor: "#1e293b",
-          height: 60,
-          paddingBottom: 8,
+          backgroundColor: colors.tabBarBg,
+          borderTopColor: colors.tabBarBorder,
+          borderTopWidth: 1,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
           paddingTop: 6,
         },
-        tabBarActiveTintColor: "#6366f1",
-        tabBarInactiveTintColor: "#64748b",
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "500" },
+        tabBarActiveTintColor: colors.tabActive,
+        tabBarInactiveTintColor: colors.tabInactive,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
       }}
     >
       <Tab.Screen
@@ -109,13 +124,27 @@ export function AppNavigator() {
     );
   }
 
+  const appTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: colors.background,
+      card: colors.card,
+      text: colors.textPrimary,
+      border: colors.cardBorder,
+      primary: colors.primary,
+    },
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={appTheme}>
       <Stack.Navigator
         screenOptions={{
-          headerStyle: { backgroundColor: "#090d16" },
-          headerTintColor: "#ffffff",
-          headerTitleStyle: { fontWeight: "bold" },
+          headerStyle: {
+            backgroundColor: colors.headerBg,
+          },
+          headerTintColor: colors.textPrimary,
+          headerTitleStyle: { fontWeight: "700", color: colors.textPrimary },
         }}
       >
         {!user ? (
@@ -146,9 +175,11 @@ export function AppNavigator() {
             <Stack.Screen name="SkillGap" component={SkillGapScreen} options={{ title: "Skill Gap Analysis" }} />
             <Stack.Screen name="CompanyReadiness" component={CompanyReadinessScreen} options={{ title: "Company Readiness" }} />
             <Stack.Screen name="CareerTwin" component={CareerTwinScreen} options={{ title: "Career Twin Simulation" }} />
+            <Stack.Screen name="CareerPaths" component={CareerPathsScreen} options={{ title: "AI Career Paths" }} />
             <Stack.Screen name="AIInterview" component={AIInterviewScreen} options={{ title: "AI Mock Interview" }} />
             <Stack.Screen name="LearningRoadmap" component={LearningRoadmapScreen} options={{ title: "AI Learning Roadmap" }} />
             <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: "Notifications" }} />
+            <Stack.Screen name="AIAssistant" component={AIAssistantScreen} options={{ title: "AI Career Assistant" }} />
           </>
         )}
       </Stack.Navigator>
@@ -159,7 +190,7 @@ export function AppNavigator() {
 const styles = StyleSheet.create({
   splashCenter: {
     flex: 1,
-    backgroundColor: "#090d16",
+    backgroundColor: colors.background,
     justifyContent: "center",
     alignItems: "center",
   },

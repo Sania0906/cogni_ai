@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   StyleSheet,
   Text,
@@ -9,6 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { api } from "../services/api";
+import { colors } from "../theme/colors";
 import {
   Play,
   CheckCircle,
@@ -35,7 +37,7 @@ export function LessonScreen({ route, navigation }: any) {
       const data = await api.getLesson(lessonId, courseId);
       const res = data?.data || data;
       setLesson(res);
-      setIsCompleted(!!res?.completed);
+      setIsCompleted(Boolean(res?.isDone || res?.completed || res?.done));
     } catch (e) {
       console.warn("Failed to load lesson:", e);
     } finally {
@@ -43,9 +45,13 @@ export function LessonScreen({ route, navigation }: any) {
     }
   };
 
-  useEffect(() => {
-    loadLesson();
-  }, [lessonId, courseId]);
+  useFocusEffect(
+    useCallback(() => {
+      loadLesson();
+      const interval = setInterval(loadLesson, 10000);
+      return () => clearInterval(interval);
+    }, [lessonId, courseId])
+  );
 
   const handleComplete = async () => {
     if (isCompleted) {
@@ -71,7 +77,7 @@ export function LessonScreen({ route, navigation }: any) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -82,7 +88,7 @@ export function LessonScreen({ route, navigation }: any) {
       <Text style={styles.title}>{lesson?.title || "Lesson Overview"}</Text>
 
       <View style={styles.durationRow}>
-        <Clock color="#94a3b8" size={14} />
+        <Clock color={colors.textSecondary} size={14} />
         <Text style={styles.durationText}>{lesson?.duration || "15 min"}</Text>
       </View>
 
@@ -110,7 +116,7 @@ export function LessonScreen({ route, navigation }: any) {
           <Text style={styles.sectionTitle}>Study Materials & Resources</Text>
           {lesson.resources.map((item: string, i: number) => (
             <View key={i} style={styles.resourceRow}>
-              <FileText color="#818cf8" size={16} />
+              <FileText color={colors.primary} size={16} />
               <Text style={styles.resourceText}>{item}</Text>
             </View>
           ))}
@@ -125,10 +131,10 @@ export function LessonScreen({ route, navigation }: any) {
         activeOpacity={0.8}
       >
         {completing ? (
-          <ActivityIndicator color="#ffffff" />
+          <ActivityIndicator color={isCompleted ? colors.success : "#ffffff"} />
         ) : (
           <View style={styles.btnRow}>
-            <CheckCircle color={isCompleted ? "#34d399" : "#ffffff"} size={20} />
+            <CheckCircle color={isCompleted ? colors.success : "#ffffff"} size={20} />
             <Text style={[styles.completeBtnText, isCompleted && styles.completedBtnText]}>
               {isCompleted ? "Completed ✓" : "Mark Lesson as Complete"}
             </Text>
@@ -149,7 +155,7 @@ export function LessonScreen({ route, navigation }: any) {
           }
         >
           <Text style={styles.nextBtnText}>Proceed to Next Lesson</Text>
-          <ArrowRight color="#818cf8" size={16} />
+          <ArrowRight color={colors.primary} size={16} />
         </TouchableOpacity>
       )}
     </ScrollView>
@@ -157,25 +163,30 @@ export function LessonScreen({ route, navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#090d16" },
-  center: { flex: 1, backgroundColor: "#090d16", justifyContent: "center", alignItems: "center" },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, backgroundColor: colors.background, justifyContent: "center", alignItems: "center" },
   content: { padding: 16, paddingBottom: 50 },
-  courseTag: { color: "#818cf8", fontSize: 13, fontWeight: "600", textTransform: "uppercase" },
-  title: { color: "#ffffff", fontSize: 22, fontWeight: "bold", marginTop: 4 },
+  courseTag: { color: colors.primary, fontSize: 13, fontWeight: "700", textTransform: "uppercase" },
+  title: { color: colors.textPrimary, fontSize: 22, fontWeight: "bold", marginTop: 4 },
   durationRow: { flexDirection: "row", alignItems: "center", marginTop: 8, marginBottom: 16 },
-  durationText: { color: "#94a3b8", fontSize: 13, marginLeft: 6 },
+  durationText: { color: colors.textSecondary, fontSize: 13, marginLeft: 6 },
   videoPlayer: {
-    backgroundColor: "#0f172a",
+    backgroundColor: "#1e1b4b",
     height: 200,
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "#312e81",
     marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   playCircle: {
-    backgroundColor: "#6366f1",
+    backgroundColor: colors.primary,
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -184,37 +195,57 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   videoText: { color: "#ffffff", fontSize: 15, fontWeight: "600" },
-  videoSubText: { color: "#64748b", fontSize: 12, marginTop: 2 },
+  videoSubText: { color: "#c7d2fe", fontSize: 12, marginTop: 2 },
   card: {
-    backgroundColor: "#1e293b",
+    backgroundColor: colors.card,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.cardBorder,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
-  sectionTitle: { color: "#f8fafc", fontSize: 15, fontWeight: "600", marginBottom: 8 },
-  summaryText: { color: "#94a3b8", fontSize: 14, lineHeight: 20 },
+  sectionTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: "700", marginBottom: 8 },
+  summaryText: { color: colors.textSecondary, fontSize: 14, lineHeight: 22 },
   resourceRow: { flexDirection: "row", alignItems: "center", marginTop: 8 },
-  resourceText: { color: "#cbd5e1", fontSize: 13, marginLeft: 8 },
+  resourceText: { color: colors.textPrimary, fontSize: 13, marginLeft: 8 },
   completeBtn: {
-    backgroundColor: "#6366f1",
+    backgroundColor: colors.primary,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: "center",
     marginTop: 10,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  completedBtn: { backgroundColor: "#064e3b", borderWidth: 1, borderColor: "#059669" },
+  completedBtn: {
+    backgroundColor: colors.successBg,
+    borderWidth: 1,
+    borderColor: colors.successBorder,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
   btnRow: { flexDirection: "row", alignItems: "center" },
-  completeBtnText: { color: "#ffffff", fontWeight: "bold", fontSize: 15, marginLeft: 8 },
-  completedBtnText: { color: "#34d399" },
+  completeBtnText: { color: "#ffffff", fontWeight: "700", fontSize: 15, marginLeft: 8 },
+  completedBtnText: { color: colors.success },
   nextBtn: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: 14,
     marginTop: 12,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
   },
-  nextBtnText: { color: "#818cf8", fontSize: 14, fontWeight: "600", marginRight: 6 },
+  nextBtnText: { color: colors.primary, fontSize: 14, fontWeight: "700", marginRight: 6 },
 });
 

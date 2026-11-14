@@ -1,16 +1,18 @@
+import crypto from "crypto";
 import dotenv from "dotenv";
 import { supabaseAdmin, supabase } from "./supabase.js";
+import { assertLegacyDevScriptAllowed } from "./devScriptGuard.js";
 
 dotenv.config();
 
 async function runRegisterAndLoginTest() {
+  assertLegacyDevScriptAllowed("test_register.ts");
+
   const email = `test.user.${Date.now()}@example.com`;
-  const password = "Password123456";
+  const password = `${crypto.randomBytes(16).toString("hex")}Aa1!`;
   const name = "Test User";
 
-  console.log(
-    `[Admin] Registering user: ${email} with password: ${password}...`,
-  );
+  console.log(`[Dev Test] Registering ephemeral user: ${email}...`);
 
   const { data: createData, error: createError } =
     await supabaseAdmin.auth.admin.createUser({
@@ -37,7 +39,7 @@ async function runRegisterAndLoginTest() {
     createData.user?.email_confirmed_at,
   );
 
-  console.log(`[Auth] Attempting login with: ${email} / ${password}...`);
+  console.log(`[Auth] Attempting login with ephemeral test user: ${email}...`);
 
   const { data: loginData, error: loginError } =
     await supabase.auth.signInWithPassword({
@@ -58,6 +60,11 @@ async function runRegisterAndLoginTest() {
       "✅ Login successful! Session token:",
       !!loginData.session?.access_token,
     );
+  }
+
+  if (createData.user?.id) {
+    await supabaseAdmin.from("profiles").delete().eq("id", createData.user.id);
+    await supabaseAdmin.auth.admin.deleteUser(createData.user.id);
   }
 }
 

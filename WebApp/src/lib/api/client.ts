@@ -4,12 +4,22 @@ const isLocalhostEnvUrl =
   typeof rawEnvApiUrl === "string" &&
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(rawEnvApiUrl);
 
-const BASE_URL = import.meta.env?.PROD
-  ? rawEnvApiUrl && !isLocalhostEnvUrl
-    ? rawEnvApiUrl
-    : "/api"
-  : rawEnvApiUrl || "http://localhost:5000/api";
+export function getBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    // When accessed in a browser from a network IP (e.g. mobile device on local Wi-Fi) or domain,
+    // use relative '/api' so requests route through the Vite proxy/web server instead of attempting
+    // to connect to localhost:5000 on the client device itself.
+    if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+      return "/api";
+    }
+  }
 
+  if (import.meta.env?.PROD) {
+    return rawEnvApiUrl && !isLocalhostEnvUrl ? rawEnvApiUrl : "/api";
+  }
+
+  return rawEnvApiUrl || "/api";
+}
 
 async function fetchAPI<T>(
   endpoint: string,
@@ -26,7 +36,8 @@ async function fetchAPI<T>(
     headers["Content-Type"] = "application/json";
   }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}${endpoint}`, {
     ...options,
     headers,
   });
@@ -115,6 +126,13 @@ export const api = {
 
   getProfile: async () => {
     return fetchAPI<any>("/auth/profile");
+  },
+
+  updateProfile: async (data: any) => {
+    return fetchAPI<any>("/auth/profile", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
   },
 
   getCertificates: async () => {

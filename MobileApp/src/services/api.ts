@@ -1,25 +1,149 @@
 import axios from "axios";
 
-// Default API Base URL pointing to Node Express backend
-// Detected LAN IP for physical device / Expo Go: 192.168.31.93
+// Default API Base URL pointing to Node Express backend.
+// Detected LAN IP for physical device / Expo Go dev: 192.168.31.93.
+// In EAS preview/production (MobileApp/eas.json), EXPO_PUBLIC_API_URL targets the
+// expected Render Blueprint hostname (https://cognifyai-web.onrender.com/api, pending deployment).
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.31.93:5000/api";
+
+// Render free-tier web services sleep after 15 minutes of inactivity and take ~30-60s on cold start.
+// Use a 65s default request timeout so first cold wake-up requests do not abort prematurely.
+const DEFAULT_TIMEOUT_MS = Number(process.env.EXPO_PUBLIC_API_TIMEOUT_MS) || 65000;
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 30000,
+  timeout: DEFAULT_TIMEOUT_MS,
 });
 
 let userToken: string | null = null;
+let userRefreshToken: string | null = null;
 
-export const setAuthToken = (token: string | null) => {
+export const setAuthToken = (token: string | null, refreshToken: string | null = null) => {
   userToken = token;
+  if (refreshToken !== null) {
+    userRefreshToken = refreshToken;
+  }
   if (token) {
     apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   } else {
     delete apiClient.defaults.headers.common["Authorization"];
+  }
+};
+
+export const getAuthToken = () => userToken;
+export const getRefreshToken = () => userRefreshToken;
+export const setRefreshToken = (token: string | null) => {
+  userRefreshToken = token;
+};
+
+// Request interceptor ensuring valid Bearer authorization header is always attached
+apiClient.interceptors.request.use(
+  (config) => {
+    if (userToken && !config.headers["Authorization"]) {
+      config.headers["Authorization"] = `Bearer ${userToken}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (error: any) => void;
+}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else if (token) {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// Response interceptor to handle token refresh and safe retry on 401
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes("/auth/login") &&
+      !originalRequest.url?.includes("/auth/refresh") &&
+      !originalRequest.url?.includes("/auth/signup")
+    ) {
+      if (isRefreshing) {
+        return new Promise<string>((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((newToken) => {
+            originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+            return apiClient(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const currentRefresh = getRefreshToken();
+      if (!currentRefresh) {
+        isRefreshing = false;
+        notifyAuthExpired();
+        return Promise.reject(error);
+      }
+
+      try {
+        const res = await axios.post(
+          `${BASE_URL}/auth/refresh`,
+          { refresh_token: currentRefresh },
+          { headers: { "Content-Type": "application/json" }, timeout: 15000 }
+        );
+
+        const newAccessToken = res.data?.token || res.data?.access_token;
+        const newRefreshToken = res.data?.refresh_token || currentRefresh;
+
+        if (newAccessToken) {
+          setAuthToken(newAccessToken, newRefreshToken);
+          processQueue(null, newAccessToken);
+          originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+          return apiClient(originalRequest);
+        } else {
+          throw new Error("No token returned from refresh");
+        }
+      } catch (refreshErr) {
+        processQueue(refreshErr, null);
+        setAuthToken(null, null);
+        notifyAuthExpired();
+        return Promise.reject(refreshErr);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+type AuthExpiredCallback = () => void;
+let authExpiredCallback: AuthExpiredCallback | null = null;
+
+export const setOnAuthExpired = (cb: AuthExpiredCallback | null) => {
+  authExpiredCallback = cb;
+};
+
+export const notifyAuthExpired = () => {
+  if (authExpiredCallback) {
+    authExpiredCallback();
   }
 };
 
@@ -66,6 +190,11 @@ export const api = {
 
   logout: async () => {
     const res = await apiClient.post("/auth/logout");
+    return res.data;
+  },
+
+  refreshToken: async (refreshToken: string) => {
+    const res = await apiClient.post("/auth/refresh", { refresh_token: refreshToken });
     return res.data;
   },
 
@@ -198,6 +327,11 @@ export const api = {
     return res.data;
   },
 
+  getCareerPaths: async () => {
+    const res = await apiClient.get("/ai/career-paths");
+    return res.data;
+  },
+
   getCareerSuccess: async () => {
     const res = await apiClient.get("/ai/career-success");
     return res.data;
@@ -281,6 +415,21 @@ export const api = {
 
   getResumeHistory: async () => {
     const res = await apiClient.get("/ai/resumes/history");
+    return res.data;
+  },
+
+  getResumeComparison: async () => {
+    const res = await apiClient.get("/ai/resumes/compare");
+    return res.data;
+  },
+
+  restoreResume: async (id: string) => {
+    const res = await apiClient.post(`/ai/resumes/restore/${id}`);
+    return res.data;
+  },
+
+  sendChatMessage: async (message: string) => {
+    const res = await apiClient.post("/ai/chat", { message });
     return res.data;
   },
 

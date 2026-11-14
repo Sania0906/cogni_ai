@@ -25,20 +25,35 @@ function Lesson() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [completing, setCompleting] = useState(false);
 
-  useEffect(() => {
-    async function fetchLesson() {
-      try {
-        setLoading(true);
-        const data = await api.getLessonById(lessonId, courseId);
-        setLesson(data);
-        setIsCompleted(Boolean(data?.isDone));
-      } catch (err) {
-        console.error("Failed to load lesson:", err);
-      } finally {
-        setLoading(false);
-      }
+  const fetchLesson = async () => {
+    try {
+      const data = await api.getLessonById(lessonId, courseId);
+      setLesson(data);
+      setIsCompleted(Boolean(data?.isDone));
+    } catch (err) {
+      console.error("Failed to load lesson:", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchLesson();
+
+    const handleFocus = () => fetchLesson();
+    window.addEventListener("focus", handleFocus);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") fetchLesson();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    const interval = setInterval(fetchLesson, 10000);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      clearInterval(interval);
+    };
   }, [lessonId, courseId]);
 
   // Video playback simulation
