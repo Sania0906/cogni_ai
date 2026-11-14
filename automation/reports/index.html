@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CognifyAI E2E Test Automation Dashboard</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #e0e7ff;
+      --success: #10b981;
+      --success-light: #d1fae5;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 24px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .header {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+    }
+    .header h1 {
+      margin: 0 0 8px 0;
+      color: var(--primary);
+      font-size: 26px;
+      font-weight: 800;
+    }
+    .header p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .stat-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .stat-value.success {
+      color: var(--success);
+    }
+    .table-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .table-card h2 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+    th, td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background-color: #f1f5f9;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+    .badge.passed {
+      background-color: var(--success-light);
+      color: #065f46;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 32px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>CognifyAI E2E Test Automation Dashboard</h1>
+      <p>Automated Enterprise Quality Assurance Execution Report • React Web & Android Mobile Applications</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Test Cases</div>
+        <div class="stat-value">28</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Passed Tests</div>
+        <div class="stat-value success">28</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Failed Tests</div>
+        <div class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pass Rate</div>
+        <div class="stat-value success">100.0%</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h2>Execution Summary by Suite</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Suite ID</th>
+            <th>Module Name</th>
+            <th>Platform / Browser</th>
+            <th>Tests</th>
+            <th>Passed</th>
+            <th>Failed</th>
+            <th>Duration</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>SUITE_01</strong></td>
+            <td>Authentication & Session Security</td>
+            <td>Chrome (Headless)</td>
+            <td>6</td>
+            <td>6</td>
+            <td>0</td>
+            <td>12.79s</td>
+            <td><span class="badge passed">PASSED</span></td>
+          </tr>
+          <tr>
+            <td><strong>SUITE_02</strong></td>
+            <td>Schema & Form Validation Rules</td>
+            <td>Chrome (Headless)</td>
+            <td>5</td>
+            <td>5</td>
+            <td>0</td>
+            <td>9.20s</td>
+            <td><span class="badge passed">PASSED</span></td>
+          </tr>
+          <tr>
+            <td><strong>SUITE_03</strong></td>
+            <td>UI Components & Viewport Responsiveness</td>
+            <td>Chrome (Headless)</td>
+            <td>3</td>
+            <td>3</td>
+            <td>0</td>
+            <td>8.65s</td>
+            <td><span class="badge passed">PASSED</span></td>
+          </tr>
+          <tr>
+            <td><strong>SUITE_04</strong></td>
+            <td>Navigation & Routing Parity (5 Tabs)</td>
+            <td>Chrome (Headless)</td>
+            <td>3</td>
+            <td>3</td>
+            <td>0</td>
+            <td>10.30s</td>
+            <td><span class="badge passed">PASSED</span></td>
+          </tr>
+          <tr>
+            <td><strong>SUITE_05</strong></td>
+            <td>Resume Analysis & ATS Workflows</td>
+            <td>Chrome (Headless)</td>
+            <td>2</td>
+            <td>2</td>
+            <td>0</td>
+            <td>7.26s</td>
+            <td><span class="badge passed">PASSED</span></td>
+          </tr>
+          <tr>
+            <td><strong>SUITE_06</strong></td>
+            <td>Mobile Appium E2E Android Scenarios</td>
+            <td>Pixel 7 Pro (API 34)</td>
+            <td>9</td>
+            <td>9</td>
+            <td>0</td>
+            <td>62.40s</td>
+            <td><span class="badge passed">PASSED</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer">
+      Generated automatically by CognifyAI Enterprise QA Automation Framework • Artifacts: E2E_Report.xlsx, Mobile_E2E_Report.xlsx
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,68 @@
+{
+  "loginForm": {
+    "email": {
+      "required": true,
+      "type": "email",
+      "messages": {
+        "required": "Email is required",
+        "email": "Please enter a valid email address"
+      }
+    },
+    "password": {
+      "required": true,
+      "minLength": 8,
+      "messages": {
+        "required": "Password is required",
+        "minLength": "Password must be at least 8 characters"
+      }
+    }
+  },
+  "signupForm": {
+    "name": {
+      "required": true,
+      "minLength": 2,
+      "maxLength": 100,
+      "messages": {
+        "required": "Full name is required",
+        "minLength": "Name must be at least 2 characters"
+      }
+    },
+    "email": {
+      "required": true,
+      "type": "email",
+      "messages": {
+        "required": "Email is required",
+        "email": "Enter a valid email address"
+      }
+    },
+    "password": {
+      "required": true,
+      "minLength": 8,
+      "isPasswordComplexity": true,
+      "messages": {
+        "required": "Password is required",
+        "minLength": "Password must contain at least 8 characters",
+        "complexity": "Password must contain uppercase, lowercase, numbers, and special characters"
+      }
+    },
+    "role": {
+      "required": true,
+      "pattern": "^(user|organization)$",
+      "messages": {
+        "pattern": "Selected account role is invalid"
+      }
+    }
+  },
+  "profileEditForm": {
+    "name": {
+      "required": true,
+      "minLength": 2
+    },
+    "phone": {
+      "pattern": "^[+0-9\\s-]{7,20}$",
+      "messages": {
+        "pattern": "Enter a valid phone number"
+      }
+    }
+  }
+}
