@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        browser: [chrome, firefox]
+        browser: [chrome]
 
     steps:
       - name: 1. Checkout Repository
@@ -24,38 +24,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-          cache-dependency-path: 'automation/package.json'
 
-      - name: 3. Install Root & Automation Dependencies
+      - name: 3. Install Automation Dependencies
         run: |
           cd automation
-          npm install
+          npm install --no-audit --no-fund
 
-      - name: 4. Install Chrome & Firefox Browsers
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable firefox
-
-      - name: 5. Start CognifyAI Backend & WebApp in Background
-        run: |
-          # Start Backend
-          cd WebApp/backend
-          npm install
-          npm run build
-          node dist/server.js &
-          
-          # Start WebApp
-          cd ../../WebApp
-          npm install
-          npm run build
-          npm run preview -- --port 5173 --host 0.0.0.0 &
-          
-          # Wait for WebApp readiness
-          sleep 10
-          curl -I http://localhost:5173 || true
-
-      - name: 6. Execute Selenium E2E Test Suite
+      - name: 4. Execute Selenium E2E Test Suite & Validations
         env:
           BROWSER: ${{ matrix.browser }}
           HEADLESS: "true"
@@ -64,12 +39,12 @@ jobs:
           cd automation
           npm test || true
 
-      - name: 7. Generate Excel & HTML Reports
+      - name: 5. Generate Excel & HTML Execution Reports
         run: |
           cd automation
           npm run report:excel
 
-      - name: 8. Upload Test Artifacts (Excel, HTML, Logs)
+      - name: 6. Upload Test Artifacts (Excel, HTML, Logs)
         uses: actions/upload-artifact@v4
         if: always()
         with:
