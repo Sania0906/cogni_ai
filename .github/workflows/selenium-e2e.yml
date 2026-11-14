@@ -12,10 +12,6 @@ jobs:
     name: Run Selenium E2E Tests on React WebApp
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        browser: [chrome]
-
     steps:
       - name: 1. Checkout Repository
         uses: actions/checkout@v4
@@ -25,30 +21,16 @@ jobs:
         with:
           node-version: 20
 
-      - name: 3. Install Automation Dependencies
+      - name: 3. Execute End-to-End Test Suite & Validations
         run: |
           cd automation
-          npm install --no-audit --no-fund
+          node scripts/runTestSuite.js
 
-      - name: 4. Execute Selenium E2E Test Suite & Validations
-        env:
-          BROWSER: ${{ matrix.browser }}
-          HEADLESS: "true"
-          BASE_URL: "http://localhost:5173"
-        run: |
-          cd automation
-          npm test || true
-
-      - name: 5. Generate Excel & HTML Execution Reports
-        run: |
-          cd automation
-          npm run report:excel
-
-      - name: 6. Upload Test Artifacts (Excel, HTML, Logs)
+      - name: 4. Upload E2E Test Artifacts (Excel & HTML Reports)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: selenium-e2e-reports-${{ matrix.browser }}
+          name: selenium-e2e-reports
           path: |
             automation/excel/E2E_Report.xlsx
             automation/reports/

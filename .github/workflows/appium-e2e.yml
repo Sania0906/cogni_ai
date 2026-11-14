@@ -21,22 +21,12 @@ jobs:
         with:
           node-version: 20
 
-      - name: 3. Install Automation Dependencies
+      - name: 3. Execute Mobile E2E Test Suite & Validations
         run: |
           cd automation
-          npm install --no-audit --no-fund
+          node scripts/runTestSuite.js
 
-      - name: 4. Execute Mobile E2E Test Suite
-        run: |
-          cd automation
-          npm run test:mobile || true
-
-      - name: 5. Generate Mobile Excel & HTML Execution Reports
-        run: |
-          cd automation
-          npm run report:excel
-
-      - name: 6. Upload Mobile Test Artifacts (Excel, HTML, Logs)
+      - name: 4. Upload Mobile E2E Artifacts (Excel & Logs)
         uses: actions/upload-artifact@v4
         if: always()
         with:

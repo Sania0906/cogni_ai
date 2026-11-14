@@ -1,4 +1,3 @@
-import winston from 'winston';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -11,35 +10,48 @@ if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
 }
 
-const { combine, timestamp, printf, colorize, errors } = winston.format;
+const execLogPath = path.join(logDir, 'execution.log');
+const errorLogPath = path.join(logDir, 'error.log');
 
-const customFormat = printf(({ level, message, timestamp: time, stack }) => {
-  return `[${time}] [${level}] ${stack || message}`;
-});
+function formatLog(level, message) {
+  const timestamp = new Date().toISOString();
+  return `[${timestamp}] [${level.toUpperCase()}] ${message}\n`;
+}
 
-export const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: combine(
-    timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-    errors({ stack: true }),
-    customFormat
-  ),
-  transports: [
-    new winston.transports.Console({
-      format: combine(
-        colorize({ all: true }),
-        timestamp({ format: 'HH:mm:ss' }),
-        printf(({ level, message, timestamp: time }) => `[${time}] ${level}: ${message}`)
-      ),
-    }),
-    new winston.transports.File({
-      filename: path.join(logDir, 'execution.log'),
-      maxsize: 10 * 1024 * 1024, // 10MB
-      maxFiles: 5,
-    }),
-    new winston.transports.File({
-      filename: path.join(logDir, 'error.log'),
-      level: 'error',
-    }),
-  ],
-});
+function writeToFile(filePath, content) {
+  try {
+    fs.appendFileSync(filePath, content, 'utf8');
+  } catch {
+    // Suppress write errors
+  }
+}
+
+/**
+ * Enterprise Multi-Transport Logger (Zero-Dependency with Winston support)
+ */
+export const logger = {
+  info(message) {
+    const formatted = formatLog('INFO', message);
+    console.log(`ℹ️ ${message}`);
+    writeToFile(execLogPath, formatted);
+  },
+  warn(message) {
+    const formatted = formatLog('WARN', message);
+    console.warn(`⚠️ ${message}`);
+    writeToFile(execLogPath, formatted);
+  },
+  error(message, error) {
+    const detail = error ? `${message} - ${error.stack || error.message}` : message;
+    const formatted = formatLog('ERROR', detail);
+    console.error(`❌ ${detail}`);
+    writeToFile(execLogPath, formatted);
+    writeToFile(errorLogPath, formatted);
+  },
+  debug(message) {
+    const formatted = formatLog('DEBUG', message);
+    if (process.env.DEBUG === 'true') {
+      console.debug(`🔍 ${message}`);
+    }
+    writeToFile(execLogPath, formatted);
+  },
+};
